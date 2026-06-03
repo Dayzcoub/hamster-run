@@ -7,6 +7,8 @@ export class GameScreen {
     this.level = level;
     this.controller = new LevelController(level);
     this.localEffects = [];
+    this.screenShakeMs = 0;
+    this.screenShakeSeed = 0;
     this.previousBread = 0;
     this.previousResources = 0;
     this.previousMistakesLeft = 3;
@@ -45,7 +47,9 @@ export class GameScreen {
     const result = this.controller.update(deltaMs, actions);
     const snapshot = this.controller.snapshot();
     this.updateLocalEffects(snapshot, deltaMs);
+    this.updateScreenShake(deltaMs);
     snapshot.effects = this.localEffects;
+    snapshot.screenShake = this.getScreenShake(now);
     this.renderer.render(snapshot);
     this.updateHud(snapshot);
 
@@ -62,7 +66,10 @@ export class GameScreen {
 
     if (snapshot.stats.bread > this.previousBread) this.spawnLocalEffect('pickup', `+${snapshot.stats.bread - this.previousBread}`);
     if (resources > this.previousResources) this.spawnLocalEffect('pickup', `+${resources - this.previousResources}`);
-    if (snapshot.player.mistakesLeft < this.previousMistakesLeft) this.spawnLocalEffect('hit', '-1');
+    if (snapshot.player.mistakesLeft < this.previousMistakesLeft) {
+      this.spawnLocalEffect('hit', '-1');
+      this.triggerScreenShake();
+    }
 
     this.previousBread = snapshot.stats.bread;
     this.previousResources = resources;
@@ -70,6 +77,25 @@ export class GameScreen {
 
     for (const effect of this.localEffects) effect.ageMs += deltaMs;
     this.localEffects = this.localEffects.filter((effect) => effect.ageMs < effect.durationMs);
+  }
+
+  triggerScreenShake() {
+    this.screenShakeMs = 220;
+    this.screenShakeSeed = Math.random() * 1000;
+  }
+
+  updateScreenShake(deltaMs) {
+    this.screenShakeMs = Math.max(0, this.screenShakeMs - deltaMs);
+  }
+
+  getScreenShake(now) {
+    if (this.screenShakeMs <= 0) return null;
+    const intensity = Math.pow(this.screenShakeMs / 220, 1.35);
+    return {
+      intensity,
+      seed: this.screenShakeSeed,
+      time: now,
+    };
   }
 
   spawnLocalEffect(type, label) {
