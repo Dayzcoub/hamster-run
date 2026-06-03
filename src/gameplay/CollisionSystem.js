@@ -4,7 +4,7 @@ export class CollisionSystem {
 
     for (const object of objects) {
       if (object.collected) continue;
-      if (Math.round(player.lane) !== object.lane) continue;
+      if (!this.isPlayerInObjectLane(player, object)) continue;
       const distance = Math.abs(object.x - player.x);
       if (distance > (object.kind === 'collectible' ? 54 : 72)) continue;
 
@@ -29,13 +29,19 @@ export class CollisionSystem {
         events.push({
           type: 'hit',
           x: object.x,
-          lane: object.lane,
+          lane: Math.round(player.lane),
           visualKey: object.visualKey,
         });
       }
     }
 
     return events;
+  }
+
+  isPlayerInObjectLane(player, object) {
+    const playerLane = Math.round(player.lane);
+    if (object.blockedLanes?.length) return object.blockedLanes.includes(playerLane);
+    return playerLane === object.lane;
   }
 
   isDodged(player, object) {
