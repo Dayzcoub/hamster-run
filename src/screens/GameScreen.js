@@ -22,7 +22,7 @@ export class GameScreen {
         <div class="progress-track"><div class="progress-fill" data-hud="progress"></div></div>
       </header>
       <div class="canvas-wrap"><canvas class="game-canvas" aria-label="Игровое поле"></canvas></div>
-      <footer class="event-bar"><span class="desktop-hint">A/Left ближе · D/Right дальше · W/Space прыжок · S/Down подкат</span><span class="touch-hint">Свайп: дорожка · вверх прыжок · вниз подкат</span></footer>
+      <footer class="event-bar">Свайп: дорожка · вверх прыжок · вниз подкат</footer>
     `;
   }
 
