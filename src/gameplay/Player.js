@@ -21,14 +21,14 @@ export class Player {
 
   get jumpOffset() {
     if (this.jumpMs <= 0) return 0;
-    const t = this.jumpMs / 660;
-    return Math.sin(t * Math.PI) * 142;
+    const t = this.jumpMs / 700;
+    return Math.sin(t * Math.PI) * 150;
   }
 
-  get isJumping() { return this.state === 'jumping' && this.jumpOffset > 46; }
-  get isSliding() { return this.state === 'sliding'; }
+  get isJumping() { return this.state === 'jumping' && this.jumpOffset > 32; }
+  get isSliding() { return this.state === 'sliding' || this.slideMs > -220; }
 
-  clearsHeight(height = 46) {
+  clearsHeight(height = 24) {
     return this.state === 'jumping' && this.jumpOffset >= height;
   }
 
@@ -39,13 +39,13 @@ export class Player {
 
     if (this.jumpMs > 0) {
       this.jumpMs += deltaMs;
-      if (this.jumpMs >= 660) {
+      if (this.jumpMs >= 700) {
         this.jumpMs = 0;
         if (this.state === 'jumping') this.state = 'running';
       }
     }
 
-    if (this.slideMs > 0) {
+    if (this.slideMs > -220) {
       this.slideMs -= deltaMs;
       if (this.slideMs <= 0 && this.state === 'sliding') this.state = 'running';
     }
@@ -61,11 +61,11 @@ export class Player {
     if (action === 'jump' && this.state !== 'jumping') {
       this.state = 'jumping';
       this.jumpMs = 1;
-      this.slideMs = 0;
+      this.slideMs = -220;
     }
     if (action === 'slide' && this.state !== 'jumping') {
       this.state = 'sliding';
-      this.slideMs = 520;
+      this.slideMs = 620;
     }
   }
 
