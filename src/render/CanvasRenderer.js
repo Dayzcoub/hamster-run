@@ -12,7 +12,7 @@ const SPRITE_SCALE_OVERRIDES = {
   bolt: 0.86,
   stage_deck: 0.78,
   flight_case: 0.78,
-  cable_loop: 0.68,
+  cable_loop: 0.62,
   mic_stand: 0.82,
   mystery_box: 0.74,
   cart: 0.8,
