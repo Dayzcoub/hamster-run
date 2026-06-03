@@ -17,7 +17,8 @@ export class AssetLoader {
     const fallback = sprite.png;
     const image = await this.loadImage(preferred).catch(() => this.loadImage(fallback));
     const cleaned = this.cleanSprite(image, sprite);
-    this.images.set(sprite.visualKey, { image: cleaned, meta: sprite });
+    const trimmed = this.trimTransparentBounds(cleaned, sprite);
+    this.images.set(sprite.visualKey, { image: trimmed, meta: sprite });
   }
 
   loadImage(path) {
@@ -76,6 +77,44 @@ export class AssetLoader {
 
     ctx.putImageData(imageData, 0, 0);
     return canvas;
+  }
+
+  trimTransparentBounds(source, sprite) {
+    const sourceCtx = source.getContext('2d', { willReadFrequently: true });
+    const imageData = sourceCtx.getImageData(0, 0, source.width, source.height);
+    const data = imageData.data;
+    const threshold = sprite.type === 'character' ? 14 : 10;
+    let minX = source.width;
+    let minY = source.height;
+    let maxX = -1;
+    let maxY = -1;
+
+    for (let y = 0; y < source.height; y += 1) {
+      for (let x = 0; x < source.width; x += 1) {
+        const alpha = data[(y * source.width + x) * 4 + 3];
+        if (alpha <= threshold) continue;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+
+    if (maxX < minX || maxY < minY) return source;
+
+    const padding = sprite.type === 'character' ? 10 : 6;
+    minX = Math.max(0, minX - padding);
+    minY = Math.max(0, minY - padding);
+    maxX = Math.min(source.width - 1, maxX + padding);
+    maxY = Math.min(source.height - 1, maxY + padding);
+
+    const width = maxX - minX + 1;
+    const height = maxY - minY + 1;
+    const target = document.createElement('canvas');
+    target.width = width;
+    target.height = height;
+    target.getContext('2d').drawImage(source, minX, minY, width, height, 0, 0, width, height);
+    return target;
   }
 
   get(visualKey) {
