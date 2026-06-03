@@ -1,0 +1,19 @@
+{
+  "name": "PACK.IT RUN",
+  "short_name": "PACK.RUN",
+  "description": "Псевдо-изометрический мобильный раннер про хомяка на монтаже.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0d1320",
+  "theme_color": "#0d1320",
+  "icons": [
+    {
+      "src": "assets/sprites/characters/hamster/png/hamster_run_01.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
