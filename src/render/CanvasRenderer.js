@@ -54,7 +54,7 @@ export class CanvasRenderer {
 
     const drawable = [...levelState.objects].sort((a, b) => a.lane - b.lane || a.x - b.x);
     for (const object of drawable) this.drawObject(object, levelState.elapsedMs);
-    this.drawPlayer(levelState.player);
+    this.drawPlayer(levelState.player, levelState.elapsedMs);
     this.drawEffects(levelState.effects || []);
   }
 
@@ -121,13 +121,86 @@ export class CanvasRenderer {
     }
   }
 
-  drawPlayer(player) {
+  drawPlayer(player, elapsedMs = 0) {
     const visualKey = player.visualKey;
     const projected = this.projector.project(player.x, player.renderLane, this.width, this.height);
     const yJump = player.jumpOffset * (this.isCompact ? 0.82 : 1);
     const baseSize = this.isWideShort ? 106 : this.isCompact ? 100 : 122;
     const size = baseSize * projected.scale * this.spriteScale(visualKey);
-    this.drawSprite(visualKey, projected.x, projected.y - yJump, size, projected.scale, true, true);
+    const animation = this.playerAnimation(player, elapsedMs);
+    this.drawSprite(visualKey, projected.x + animation.x, projected.y - yJump + animation.y, size, projected.scale, true, true, animation);
+  }
+
+  playerAnimation(player, elapsedMs = 0) {
+    const phase = elapsedMs / 96;
+    const step = Math.sin(phase);
+    const stepAbs = Math.abs(step);
+    const fastStep = Math.sin(phase * 2);
+    const animation = {
+      x: Math.sin(phase * 0.5) * 1.4,
+      y: -stepAbs * 5.5,
+      rotation: step * 0.045,
+      scaleX: 1 + stepAbs * 0.035,
+      scaleY: 1 - stepAbs * 0.026,
+      shadowScale: 1 + stepAbs * 0.08,
+      shadowAlpha: 0.22 + stepAbs * 0.04,
+    };
+
+    if (player.state === 'jumping') {
+      const t = Math.min(1, Math.max(0, player.jumpMs / 620));
+      const lift = Math.sin(t * Math.PI);
+      const takeoff = Math.max(0, 1 - t * 7);
+      const landing = Math.max(0, (t - 0.86) / 0.14);
+      animation.x += lift * 3;
+      animation.y -= lift * 2;
+      animation.rotation = -0.13 + lift * 0.2;
+      animation.scaleX = 0.94 + takeoff * 0.08 + landing * 0.1;
+      animation.scaleY = 1.12 - takeoff * 0.08 - landing * 0.1;
+      animation.shadowScale = 0.72 + (1 - lift) * 0.28;
+      animation.shadowAlpha = 0.12 + (1 - lift) * 0.12;
+      return animation;
+    }
+
+    if (player.state === 'sliding') {
+      const t = Math.min(1, Math.max(0, player.slideMs / 520));
+      const slideKick = Math.sin((1 - t) * Math.PI);
+      animation.x += 8 + slideKick * 5;
+      animation.y += 7;
+      animation.rotation = 0.22;
+      animation.scaleX = 1.16;
+      animation.scaleY = 0.82;
+      animation.shadowScale = 1.18;
+      animation.shadowAlpha = 0.28;
+      return animation;
+    }
+
+    if (player.hitMs > 0) {
+      const t = Math.min(1, Math.max(0, player.hitMs / 420));
+      const shake = Math.sin(elapsedMs / 18) * t;
+      animation.x += -10 * t + shake * 5;
+      animation.y += Math.sin(elapsedMs / 24) * t * 3;
+      animation.rotation = -0.28 * t + shake * 0.08;
+      animation.scaleX = 1.08 - t * 0.08;
+      animation.scaleY = 0.92 + t * 0.08;
+      animation.shadowScale = 1.06;
+      animation.shadowAlpha = 0.3;
+      return animation;
+    }
+
+    if (player.state === 'finished') {
+      const cheer = Math.sin(elapsedMs / 150);
+      animation.x = cheer * 1.5;
+      animation.y = -6 - Math.abs(cheer) * 5;
+      animation.rotation = cheer * 0.08;
+      animation.scaleX = 1;
+      animation.scaleY = 1.03;
+      animation.shadowScale = 0.92;
+      animation.shadowAlpha = 0.2;
+      return animation;
+    }
+
+    animation.rotation += fastStep * 0.012;
+    return animation;
   }
 
   drawObject(object, elapsedMs = 0) {
@@ -212,7 +285,7 @@ export class CanvasRenderer {
     return SPRITE_SCALE_OVERRIDES[visualKey] || 1;
   }
 
-  drawSprite(visualKey, x, y, size, scale, isPlayer, flipX = false) {
+  drawSprite(visualKey, x, y, size, scale, isPlayer, flipX = false, animation = null) {
     const sprite = this.assets.get(visualKey);
     const ctx = this.ctx;
     if (!sprite) {
@@ -229,18 +302,25 @@ export class CanvasRenderer {
     const height = size * heightScale;
     const drawX = -width * anchor.x;
     const drawY = -height * anchor.y;
+    const animScaleX = animation?.scaleX ?? 1;
+    const animScaleY = animation?.scaleY ?? 1;
+    const animRotation = animation?.rotation ?? 0;
+    const shadowScale = animation?.shadowScale ?? 1;
+    const shadowAlpha = animation?.shadowAlpha ?? 0.24;
 
     ctx.save();
-    ctx.globalAlpha = 0.24;
+    ctx.globalAlpha = shadowAlpha;
     ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.ellipse(x, y + 8 * scale, width * 0.24, height * 0.07, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + 8 * scale, width * 0.24 * shadowScale, height * 0.07 / Math.max(0.75, shadowScale), 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
     ctx.save();
     ctx.translate(x, y);
-    if (flipX) ctx.transform(-1, 0, 0, 1, 0, 0);
+    if (flipX) ctx.scale(-1, 1);
+    ctx.rotate(animRotation);
+    ctx.scale(animScaleX, animScaleY);
     ctx.drawImage(image, drawX, drawY, width, height);
     ctx.restore();
   }
