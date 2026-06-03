@@ -10,7 +10,7 @@ export class MainMenuScreen {
     this.element.innerHTML = `
       <div class="menu-hero">
         <div class="kicker">pseudo-isometric runner</div>
-        <h1 class="title">PACK.IT<br />RUN</h1>
+        <h1 class="title">HAMSTER<br />CREW</h1>
         <p class="subtitle">Хомяк на монтаже спасает мероприятия от кабелей, кофров, дедлайнов и бытового хаоса.</p>
         <div class="hero-card">${hero ? `<img class="hero-hamster" src="${hero.meta.webp}" alt="Хомяк-техник" />` : ''}</div>
         <div class="phrase">${phrase}</div>
