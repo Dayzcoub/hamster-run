@@ -367,8 +367,70 @@ p { margin-top: 0; }
   }
   .hero-card { min-height: 0; height: 30svh; }
   .menu-actions { align-self: center; }
-  .level-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .level-card { min-height: 240px; }
+  .levels-screen {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0.8rem;
+    padding: max(12px, env(safe-area-inset-top)) clamp(18px, 4vw, 36px) max(10px, env(safe-area-inset-bottom));
+    overflow: hidden;
+  }
+  .levels-screen .screen-header {
+    margin-bottom: 0;
+    align-items: end;
+  }
+  .levels-screen .screen-header h2 {
+    font-size: clamp(1.55rem, 3.8vw, 2.2rem);
+    line-height: 1;
+  }
+  .levels-screen .screen-header button {
+    min-height: 44px;
+    padding: 0.55rem 0.9rem;
+    border-radius: 16px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .level-grid {
+    display: flex;
+    gap: 0.72rem;
+    min-height: 0;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 0 0.28rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .level-grid::-webkit-scrollbar { display: none; }
+  .level-card {
+    flex: 0 0 clamp(150px, 22vw, 230px);
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    padding: 0.72rem;
+    border-radius: 18px;
+    gap: 0.46rem;
+    scroll-snap-align: start;
+  }
+  .badge {
+    padding: 0.26rem 0.48rem;
+    font-size: 0.58rem;
+  }
+  .level-card h3 {
+    font-size: clamp(0.9rem, 2.4vw, 1.12rem);
+    line-height: 1.12;
+  }
+  .level-card p {
+    font-size: clamp(0.72rem, 2vw, 0.9rem);
+    line-height: 1.22;
+    overflow: hidden;
+  }
+  .level-card button {
+    min-height: 38px;
+    margin-top: auto;
+    padding: 0.44rem 0.62rem;
+    border-radius: 14px;
+    font-size: 0.72rem;
+  }
   .hud { padding: 0.42rem 0.7rem 0.32rem; }
   .hud-title strong { display: block; max-width: 32%; font-size: 0.76rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hud-title .kicker { font-size: 0.54rem; }
@@ -385,6 +447,13 @@ p { margin-top: 0; }
   .metric { padding: 0.22rem 0.22rem; border-radius: 12px; }
   .progress-track { height: 6px; }
   .event-bar { font-size: 0.6rem; }
+  .levels-screen { gap: 0.54rem; }
+  .levels-screen .screen-header h2 { font-size: 1.55rem; }
+  .levels-screen .screen-header button { min-height: 38px; font-size: 0.72rem; }
+  .level-card { flex-basis: clamp(138px, 21vw, 190px); padding: 0.58rem; border-radius: 16px; }
+  .level-card h3 { font-size: 0.86rem; }
+  .level-card p { font-size: 0.68rem; }
+  .level-card button { min-height: 34px; font-size: 0.66rem; }
 }
 
 @media (max-height: 720px) and (orientation: portrait) {
