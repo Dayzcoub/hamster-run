@@ -1,8 +1,18 @@
 import { objectCatalog } from '../data/objects.js';
 
+const DEFAULT_SPAWN_TUNING = {
+  obstacleBaseChance: 0.32,
+  obstacleProgressChance: 0.12,
+  minDelayStart: 1180,
+  minDelayProgressDrop: 340,
+  maxDelayStart: 1560,
+  maxDelayProgressDrop: 420,
+};
+
 export class ObjectSpawner {
   constructor(level) {
     this.level = level;
+    this.tuning = { ...DEFAULT_SPAWN_TUNING, ...(level.spawnTuning || {}) };
     this.timerMs = 500;
     this.lastObstacleLane = null;
   }
@@ -12,11 +22,12 @@ export class ObjectSpawner {
     if (this.timerMs > 0) return null;
 
     const progress = elapsedMs / (this.level.duration * 1000);
-    const minDelay = 1180 - progress * 340;
-    const maxDelay = 1560 - progress * 420;
+    const minDelay = this.tuning.minDelayStart - progress * this.tuning.minDelayProgressDrop;
+    const maxDelay = this.tuning.maxDelayStart - progress * this.tuning.maxDelayProgressDrop;
     this.timerMs = minDelay + Math.random() * Math.max(220, maxDelay - minDelay);
 
-    const isObstacle = Math.random() < 0.32 + progress * 0.12;
+    const obstacleChance = this.tuning.obstacleBaseChance + progress * this.tuning.obstacleProgressChance;
+    const isObstacle = Math.random() < obstacleChance;
     const source = isObstacle ? this.level.obstacles : this.level.collectibles;
     const id = source[Math.floor(Math.random() * source.length)];
     const catalogItem = objectCatalog[id];
@@ -31,6 +42,7 @@ export class ObjectSpawner {
       resource: catalogItem.resource,
       value: catalogItem.value || 1,
       dodge: catalogItem.dodge,
+      clearanceHeight: catalogItem.clearanceHeight,
       lane,
       laneSpan: catalogItem.laneSpan || 1,
       blockedLanes,
