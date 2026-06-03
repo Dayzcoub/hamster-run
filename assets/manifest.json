@@ -1,0 +1,248 @@
+{
+  "version": 1,
+  "pack": "PACKIT_RUN_Assets_v0_1_All",
+  "date": "2026-06-03",
+  "status": "repo-ready clean-pass",
+  "notes": [
+    "Runtime should prefer WebP and use PNG as fallback/source.",
+    "Anchors are preliminary and must be tuned after first in-game render.",
+    "This archive is meant to be extracted into the repository root."
+  ],
+  "sprites": {
+    "hamster_run_01": {
+      "type": "character",
+      "visualKey": "hamster_run_01",
+      "png": "assets/sprites/characters/hamster/png/hamster_run_01.png",
+      "webp": "assets/sprites/characters/hamster/webp/hamster_run_01.webp",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1024
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.88
+      },
+      "status": "clean-pass"
+    },
+    "hamster_jump": {
+      "type": "character",
+      "visualKey": "hamster_jump",
+      "png": "assets/sprites/characters/hamster/png/hamster_jump.png",
+      "webp": "assets/sprites/characters/hamster/webp/hamster_jump.webp",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1024
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.88
+      },
+      "status": "clean-pass"
+    },
+    "hamster_slide": {
+      "type": "character",
+      "visualKey": "hamster_slide",
+      "png": "assets/sprites/characters/hamster/png/hamster_slide.png",
+      "webp": "assets/sprites/characters/hamster/webp/hamster_slide.webp",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1024
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.82
+      },
+      "status": "clean-pass"
+    },
+    "hamster_hit": {
+      "type": "character",
+      "visualKey": "hamster_hit",
+      "png": "assets/sprites/characters/hamster/png/hamster_hit.png",
+      "webp": "assets/sprites/characters/hamster/webp/hamster_hit.webp",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1024
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.88
+      },
+      "status": "clean-pass"
+    },
+    "hamster_celebrate": {
+      "type": "character",
+      "visualKey": "hamster_celebrate",
+      "png": "assets/sprites/characters/hamster/png/hamster_celebrate.png",
+      "webp": "assets/sprites/characters/hamster/webp/hamster_celebrate.webp",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1024
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.88
+      },
+      "status": "clean-pass"
+    },
+    "bread": {
+      "type": "collectible",
+      "visualKey": "bread",
+      "role": "main currency / bread",
+      "png": "assets/sprites/collectibles/png/bread.png",
+      "webp": "assets/sprites/collectibles/webp/bread.webp",
+      "sourceSize": {
+        "width": 768,
+        "height": 768
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.72
+      },
+      "status": "approved_direction"
+    },
+    "cable_coil": {
+      "type": "collectible",
+      "visualKey": "cable_coil",
+      "role": "project resource / cable",
+      "png": "assets/sprites/collectibles/png/cable_coil.png",
+      "webp": "assets/sprites/collectibles/webp/cable_coil.webp",
+      "sourceSize": {
+        "width": 768,
+        "height": 768
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.72
+      },
+      "status": "approved_direction"
+    },
+    "c2_connector": {
+      "type": "collectible",
+      "visualKey": "c2_connector",
+      "role": "project resource / C2",
+      "png": "assets/sprites/collectibles/png/c2_connector.png",
+      "webp": "assets/sprites/collectibles/webp/c2_connector.webp",
+      "sourceSize": {
+        "width": 768,
+        "height": 768
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.72
+      },
+      "status": "approved_direction"
+    },
+    "bolt": {
+      "type": "collectible",
+      "visualKey": "bolt",
+      "role": "project resource / bolts",
+      "png": "assets/sprites/collectibles/png/bolt.png",
+      "webp": "assets/sprites/collectibles/webp/bolt.webp",
+      "sourceSize": {
+        "width": 768,
+        "height": 768
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.72
+      },
+      "status": "approved_direction"
+    },
+    "stage_deck": {
+      "type": "collectible",
+      "visualKey": "stage_deck",
+      "role": "project resource / stage deck",
+      "png": "assets/sprites/collectibles/png/stage_deck.png",
+      "webp": "assets/sprites/collectibles/webp/stage_deck.webp",
+      "sourceSize": {
+        "width": 768,
+        "height": 768
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.72
+      },
+      "status": "approved_direction"
+    },
+    "flight_case": {
+      "type": "obstacle",
+      "visualKey": "flight_case",
+      "role": "jump / lane-change obstacle",
+      "png": "assets/sprites/obstacles/png/flight_case.png",
+      "webp": "assets/sprites/obstacles/webp/flight_case.webp",
+      "sourceSize": {
+        "width": 768,
+        "height": 768
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.84
+      },
+      "status": "approved_direction"
+    },
+    "cable_loop": {
+      "type": "obstacle",
+      "visualKey": "cable_loop",
+      "role": "trip hazard / jump obstacle",
+      "png": "assets/sprites/obstacles/png/cable_loop.png",
+      "webp": "assets/sprites/obstacles/webp/cable_loop.webp",
+      "sourceSize": {
+        "width": 768,
+        "height": 768
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.84
+      },
+      "status": "approved_direction"
+    },
+    "mic_stand": {
+      "type": "obstacle",
+      "visualKey": "mic_stand",
+      "role": "narrow obstacle",
+      "png": "assets/sprites/obstacles/png/mic_stand.png",
+      "webp": "assets/sprites/obstacles/webp/mic_stand.webp",
+      "sourceSize": {
+        "width": 768,
+        "height": 768
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.84
+      },
+      "status": "approved_direction"
+    },
+    "mystery_box": {
+      "type": "obstacle",
+      "visualKey": "mystery_box",
+      "role": "chaotic cable box obstacle",
+      "png": "assets/sprites/obstacles/png/mystery_box.png",
+      "webp": "assets/sprites/obstacles/webp/mystery_box.webp",
+      "sourceSize": {
+        "width": 768,
+        "height": 768
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.84
+      },
+      "status": "approved_direction"
+    },
+    "cart": {
+      "type": "obstacle",
+      "visualKey": "cart",
+      "role": "rolling cart obstacle",
+      "png": "assets/sprites/obstacles/png/cart.png",
+      "webp": "assets/sprites/obstacles/webp/cart.webp",
+      "sourceSize": {
+        "width": 768,
+        "height": 768
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.84
+      },
+      "status": "approved_direction"
+    }
+  }
+}
