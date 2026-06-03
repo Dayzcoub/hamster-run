@@ -106,7 +106,7 @@ export class CanvasRenderer {
     const visualKey = player.visualKey;
     const projected = this.projector.project(player.x, player.renderLane, this.width, this.height);
     const yJump = player.jumpOffset * (this.isCompact ? 0.82 : 1);
-    const baseSize = this.isWideShort ? 132 : this.isCompact ? 116 : 142;
+    const baseSize = this.isWideShort ? 116 : this.isCompact ? 108 : 132;
     const size = baseSize * projected.scale;
     this.drawSprite(visualKey, projected.x, projected.y - yJump, size, projected.scale, true, true);
   }
@@ -114,8 +114,8 @@ export class CanvasRenderer {
   drawObject(object) {
     const projected = this.projector.project(object.x, object.lane, this.width, this.height);
     const baseSize = object.kind === 'collectible'
-      ? (this.isWideShort ? 54 : this.isCompact ? 48 : 60)
-      : (this.isWideShort ? 98 : this.isCompact ? 88 : 112);
+      ? (this.isWideShort ? 50 : this.isCompact ? 46 : 58)
+      : (this.isWideShort ? 84 : this.isCompact ? 78 : 102);
     this.drawSprite(object.visualKey, projected.x, projected.y, baseSize * projected.scale, projected.scale, false, false);
   }
 
