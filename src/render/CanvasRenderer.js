@@ -22,22 +22,29 @@ export class CanvasRenderer {
 
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
+    this.isLandscape = canvasWidth > canvasHeight;
 
-    const actualAspect = canvasWidth / canvasHeight;
-    if (actualAspect > TARGET_SCENE_ASPECT) {
-      this.width = Math.floor(canvasHeight * TARGET_SCENE_ASPECT);
+    if (!this.isLandscape) {
+      this.width = canvasWidth;
       this.height = canvasHeight;
-      this.viewportX = Math.floor((canvasWidth - this.width) / 2);
+      this.viewportX = 0;
       this.viewportY = 0;
     } else {
-      this.width = canvasWidth;
-      this.height = Math.floor(canvasWidth / TARGET_SCENE_ASPECT);
-      this.viewportX = 0;
-      this.viewportY = Math.floor((canvasHeight - this.height) / 2);
+      const actualAspect = canvasWidth / canvasHeight;
+      if (actualAspect > TARGET_SCENE_ASPECT) {
+        this.width = Math.floor(canvasHeight * TARGET_SCENE_ASPECT);
+        this.height = canvasHeight;
+        this.viewportX = Math.floor((canvasWidth - this.width) / 2);
+        this.viewportY = 0;
+      } else {
+        this.width = canvasWidth;
+        this.height = Math.floor(canvasWidth / TARGET_SCENE_ASPECT);
+        this.viewportX = 0;
+        this.viewportY = Math.floor((canvasHeight - this.height) / 2);
+      }
     }
 
     this.isCompact = this.width < 700 || this.height < 500;
-    this.isWideShort = false;
   }
 
   render(levelState) {
