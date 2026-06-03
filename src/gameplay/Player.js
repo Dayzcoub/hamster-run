@@ -21,12 +21,16 @@ export class Player {
 
   get jumpOffset() {
     if (this.jumpMs <= 0) return 0;
-    const t = this.jumpMs / 620;
-    return Math.sin(t * Math.PI) * 120;
+    const t = this.jumpMs / 660;
+    return Math.sin(t * Math.PI) * 142;
   }
 
   get isJumping() { return this.state === 'jumping' && this.jumpOffset > 46; }
   get isSliding() { return this.state === 'sliding'; }
+
+  clearsHeight(height = 46) {
+    return this.state === 'jumping' && this.jumpOffset >= height;
+  }
 
   update(deltaMs, actions) {
     for (const action of actions) this.apply(action);
@@ -35,7 +39,7 @@ export class Player {
 
     if (this.jumpMs > 0) {
       this.jumpMs += deltaMs;
-      if (this.jumpMs >= 620) {
+      if (this.jumpMs >= 660) {
         this.jumpMs = 0;
         if (this.state === 'jumping') this.state = 'running';
       }
