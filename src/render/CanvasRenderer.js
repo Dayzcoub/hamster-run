@@ -18,6 +18,16 @@ const SPRITE_SCALE_OVERRIDES = {
   cart: 0.8,
 };
 
+const PICKUP_PARTICLES = [
+  { angle: -2.7, distance: 26, size: 3.6, delay: 0.02 },
+  { angle: -2.15, distance: 34, size: 2.8, delay: 0.1 },
+  { angle: -1.55, distance: 42, size: 3.3, delay: 0 },
+  { angle: -0.92, distance: 36, size: 2.7, delay: 0.16 },
+  { angle: -0.28, distance: 28, size: 3.8, delay: 0.06 },
+  { angle: 0.35, distance: 22, size: 2.6, delay: 0.14 },
+  { angle: -1.2, distance: 54, size: 2.2, delay: 0.22 },
+];
+
 export class CanvasRenderer {
   constructor(canvas, assets) {
     this.canvas = canvas;
@@ -305,6 +315,11 @@ export class CanvasRenderer {
       ctx.beginPath();
       ctx.arc(projected.x, projected.y - 42, 24 + t * 34, 0, Math.PI * 2);
       ctx.fill();
+
+      if (pickup) {
+        this.drawPickupParticles(projected.x, projected.y - 42, t, alpha);
+      }
+
       ctx.globalCompositeOperation = 'source-over';
       ctx.font = '900 20px system-ui, -apple-system, Segoe UI, sans-serif';
       ctx.textAlign = 'center';
@@ -315,6 +330,35 @@ export class CanvasRenderer {
       ctx.fillText(effect.label, projected.x, y);
       ctx.restore();
     }
+  }
+
+  drawPickupParticles(x, y, t, alpha) {
+    const ctx = this.ctx;
+    const eased = 1 - Math.pow(1 - t, 2);
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+
+    for (let index = 0; index < PICKUP_PARTICLES.length; index++) {
+      const particle = PICKUP_PARTICLES[index];
+      const localT = Math.max(0, Math.min(1, (t - particle.delay) / (1 - particle.delay)));
+      if (localT <= 0) continue;
+
+      const drift = particle.distance * (0.28 + eased * 0.72) * localT;
+      const px = x + Math.cos(particle.angle) * drift;
+      const py = y + Math.sin(particle.angle) * drift - localT * 12;
+      const particleAlpha = alpha * (1 - localT * 0.72);
+      const radius = particle.size * (1 - localT * 0.35);
+
+      ctx.globalAlpha = particleAlpha;
+      ctx.shadowColor = index % 2 === 0 ? 'rgba(103,232,249,0.9)' : 'rgba(244,185,66,0.9)';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = index % 2 === 0 ? '#67e8f9' : '#f4b942';
+      ctx.beginPath();
+      ctx.arc(px, py, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
 
   spriteScale(visualKey) {
