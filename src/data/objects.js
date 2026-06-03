@@ -5,11 +5,11 @@ export const objectCatalog = {
   bolts: { type: 'collectible', visualKey: 'bolt', resource: 'bolts', value: 1 },
   deck: { type: 'collectible', visualKey: 'stage_deck', resource: 'deck', value: 1 },
 
-  case: { type: 'obstacle', visualKey: 'flight_case', dodge: 'jump', damage: 1 },
-  cable_loop: { type: 'obstacle', visualKey: 'cable_loop', dodge: 'jump', damage: 1 },
+  case: { type: 'obstacle', visualKey: 'flight_case', dodge: 'jump', damage: 1, clearanceHeight: 62 },
+  cable_loop: { type: 'obstacle', visualKey: 'cable_loop', dodge: 'jump', damage: 1, clearanceHeight: 34 },
   mic_stand: { type: 'obstacle', visualKey: 'mic_stand', dodge: 'slide', damage: 1 },
-  mystery_box: { type: 'obstacle', visualKey: 'mystery_box', dodge: 'jump', damage: 1 },
-  cart: { type: 'obstacle', visualKey: 'cart', dodge: 'jump', damage: 1 },
+  mystery_box: { type: 'obstacle', visualKey: 'mystery_box', dodge: 'jump', damage: 1, clearanceHeight: 58 },
+  cart: { type: 'obstacle', visualKey: 'cart', dodge: 'jump', damage: 1, clearanceHeight: 70 },
 
   // Future two-lane obstacles. They are not included in any level until the PNG assets are placed in the repo.
   truss_section_left: {
