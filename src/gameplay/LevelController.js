@@ -62,11 +62,33 @@ class LevelStats {
     this.bread = 0;
     this.resources = {};
     this.mistakes = 0;
+    this.stylePoints = 0;
+    this.styleCombo = 0;
+    this.bestStyleCombo = 0;
+    this.styleDodges = { jump: 0, slide: 0 };
   }
 
   collect(resource, value = 1) {
     if (resource === 'bread') this.bread += value;
     else this.resources[resource] = (this.resources[resource] || 0) + value;
+  }
+
+  addStyleDodge(action) {
+    const normalized = action === 'slide' ? 'slide' : 'jump';
+    this.styleCombo += 1;
+    this.bestStyleCombo = Math.max(this.bestStyleCombo, this.styleCombo);
+    this.styleDodges[normalized] = (this.styleDodges[normalized] || 0) + 1;
+
+    const base = normalized === 'slide' ? 75 : 60;
+    const comboBonus = Math.min(90, Math.max(0, this.styleCombo - 1) * 15);
+    const points = base + comboBonus;
+    this.stylePoints += points;
+
+    return { points, combo: this.styleCombo };
+  }
+
+  resetStyleCombo() {
+    this.styleCombo = 0;
   }
 
   result(player, elapsedMs) {
@@ -79,7 +101,7 @@ class LevelStats {
     const resourcePercent = collectedTotal / targetTotal;
     const finalPercent = Math.max(0, Math.round((resourcePercent - this.mistakes * 0.1) * 100));
     const grade = finalPercent >= 95 ? 'S' : finalPercent >= 80 ? 'A' : finalPercent >= 65 ? 'B' : finalPercent >= 45 ? 'C' : 'D';
-    const score = Math.max(0, Math.round(finalPercent * 10 + this.bread * 15 + player.mistakesLeft * 120));
+    const score = Math.max(0, Math.round(finalPercent * 10 + this.bread * 15 + player.mistakesLeft * 120 + this.stylePoints));
 
     return {
       level: this.level,
@@ -87,6 +109,9 @@ class LevelStats {
       resources: this.resources,
       mistakes: this.mistakes,
       mistakesLeft: player.mistakesLeft,
+      stylePoints: this.stylePoints,
+      styleDodges: this.styleDodges,
+      bestStyleCombo: this.bestStyleCombo,
       finalPercent,
       grade,
       score,
