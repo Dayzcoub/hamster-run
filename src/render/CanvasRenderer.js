@@ -59,6 +59,7 @@ export class CanvasRenderer {
   render(levelState) {
     this.resize();
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.applyScreenShake(levelState.screenShake);
     this.drawBackground(levelState);
     this.drawLanes();
 
@@ -68,6 +69,16 @@ export class CanvasRenderer {
     this.drawEffects(levelState.effects || []);
   }
 
+  applyScreenShake(screenShake) {
+    if (!screenShake?.intensity) return;
+    const power = Math.max(0, Math.min(1, screenShake.intensity));
+    const seed = screenShake.seed || 0;
+    const time = screenShake.time || 0;
+    const x = Math.sin(time / 17 + seed) * 7 * power + Math.sin(time / 43 + seed * 0.7) * 3 * power;
+    const y = Math.cos(time / 23 + seed * 1.3) * 5 * power;
+    this.ctx.translate(x, y);
+  }
+
   drawBackground(levelState) {
     const ctx = this.ctx;
     const gradient = ctx.createLinearGradient(0, 0, this.width, this.height);
@@ -75,22 +86,22 @@ export class CanvasRenderer {
     gradient.addColorStop(0.45, '#1b1d2c');
     gradient.addColorStop(1, '#0d1320');
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, this.width, this.height);
+    ctx.fillRect(-16, -16, this.width + 32, this.height + 32);
 
     ctx.save();
     ctx.globalAlpha = this.isCompact ? 0.15 : 0.2;
     ctx.fillStyle = '#7f1d1d';
-    ctx.fillRect(0, 0, this.width, this.height * 0.28);
+    ctx.fillRect(-16, -16, this.width + 32, this.height * 0.28 + 16);
     ctx.fillStyle = '#f4b942';
     const stripeStep = this.isCompact ? 240 : 300;
     const stripeCount = Math.ceil(this.width / stripeStep) + 4;
     for (let i = 0; i < stripeCount; i++) {
       const x = ((i * stripeStep - (levelState.distance * 0.12) % stripeStep) % (this.width + stripeStep)) - 130;
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x + 84, 0);
-      ctx.lineTo(x - 90, this.height);
-      ctx.lineTo(x - 146, this.height);
+      ctx.moveTo(x, -16);
+      ctx.lineTo(x + 84, -16);
+      ctx.lineTo(x - 90, this.height + 16);
+      ctx.lineTo(x - 146, this.height + 16);
       ctx.closePath();
       ctx.fill();
     }
