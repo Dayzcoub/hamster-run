@@ -20,7 +20,8 @@ export class ObjectSpawner {
     const source = isObstacle ? this.level.obstacles : this.level.collectibles;
     const id = source[Math.floor(Math.random() * source.length)];
     const catalogItem = objectCatalog[id];
-    const lane = this.pickLane(isObstacle);
+    const lane = this.pickLane(isObstacle, catalogItem);
+    const blockedLanes = this.resolveBlockedLanes(catalogItem, lane);
 
     return {
       id: `${id}_${Math.random().toString(36).slice(2)}`,
@@ -31,15 +32,25 @@ export class ObjectSpawner {
       value: catalogItem.value || 1,
       dodge: catalogItem.dodge,
       lane,
+      laneSpan: catalogItem.laneSpan || 1,
+      blockedLanes,
       x: 1180,
       collected: false,
     };
   }
 
-  pickLane(isObstacle) {
+  pickLane(isObstacle, catalogItem = {}) {
+    if (catalogItem.blockedLanes?.length) return catalogItem.blockedLanes[0];
+
     let lane = Math.floor(Math.random() * 3);
     if (isObstacle && lane === this.lastObstacleLane) lane = (lane + 1 + Math.floor(Math.random() * 2)) % 3;
     if (isObstacle) this.lastObstacleLane = lane;
     return lane;
+  }
+
+  resolveBlockedLanes(catalogItem = {}, lane) {
+    if (catalogItem.blockedLanes?.length) return [...catalogItem.blockedLanes];
+    const span = Math.max(1, catalogItem.laneSpan || 1);
+    return Array.from({ length: span }, (_, index) => Math.min(2, lane + index));
   }
 }
