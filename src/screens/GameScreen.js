@@ -6,6 +6,10 @@ export class GameScreen {
     this.game = game;
     this.level = level;
     this.controller = new LevelController(level);
+    this.localEffects = [];
+    this.previousBread = 0;
+    this.previousResources = 0;
+    this.previousMistakesLeft = 3;
     this.element = document.createElement('section');
     this.element.className = 'screen game-screen';
     this.element.innerHTML = `
@@ -40,6 +44,8 @@ export class GameScreen {
     const actions = this.game.input.consume();
     const result = this.controller.update(deltaMs, actions);
     const snapshot = this.controller.snapshot();
+    this.updateLocalEffects(snapshot, deltaMs);
+    snapshot.effects = this.localEffects;
     this.renderer.render(snapshot);
     this.updateHud(snapshot);
 
@@ -50,6 +56,34 @@ export class GameScreen {
 
     this.frame = requestAnimationFrame(this.tick);
   };
+
+  updateLocalEffects(snapshot, deltaMs) {
+    const resources = Object.values(snapshot.stats.resources).reduce((sum, value) => sum + value, 0);
+
+    if (snapshot.stats.bread > this.previousBread) this.spawnLocalEffect('pickup', `+${snapshot.stats.bread - this.previousBread}`);
+    if (resources > this.previousResources) this.spawnLocalEffect('pickup', `+${resources - this.previousResources}`);
+    if (snapshot.player.mistakesLeft < this.previousMistakesLeft) this.spawnLocalEffect('hit', '-1');
+
+    this.previousBread = snapshot.stats.bread;
+    this.previousResources = resources;
+    this.previousMistakesLeft = snapshot.player.mistakesLeft;
+
+    for (const effect of this.localEffects) effect.ageMs += deltaMs;
+    this.localEffects = this.localEffects.filter((effect) => effect.ageMs < effect.durationMs);
+  }
+
+  spawnLocalEffect(type, label) {
+    const player = this.controller.player;
+    this.localEffects.push({
+      id: `fx_${Math.random().toString(36).slice(2)}`,
+      type,
+      label,
+      x: player.x + 34,
+      lane: player.renderLane,
+      ageMs: 0,
+      durationMs: type === 'pickup' ? 560 : 420,
+    });
+  }
 
   updateHud(snapshot) {
     this.element.querySelector('[data-hud="bread"]').textContent = `Хлеб: ${snapshot.stats.bread}`;
