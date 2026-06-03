@@ -212,6 +212,42 @@ export class CanvasRenderer {
     const size = baseSize * projected.scale * this.spriteScale(object.visualKey) * pulse;
     this.drawSpriteContourGlow(object.visualKey, projected.x, projected.y, size, object.kind === 'collectible');
     this.drawSprite(object.visualKey, projected.x, projected.y, size, projected.scale, false, false);
+    this.drawObjectMarker(object, projected.x, projected.y, size, projected.scale, elapsedMs);
+  }
+
+  drawObjectMarker(object, x, y, size, scale, elapsedMs = 0) {
+    const collectible = object.kind === 'collectible';
+    const label = collectible ? '+' : '!';
+    const ctx = this.ctx;
+    const markerSize = Math.max(16, Math.min(24, size * 0.34));
+    const bob = collectible ? Math.sin((elapsedMs || 0) / 180) * 2.2 : 0;
+    const markerY = y - size * 0.84 - markerSize * 0.38 + bob;
+    const markerX = x + size * 0.18;
+    const radius = markerSize * 0.52;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = collectible ? 0.92 : 0.96;
+    ctx.shadowColor = collectible ? 'rgba(103,232,249,0.82)' : 'rgba(239,68,68,0.86)';
+    ctx.shadowBlur = collectible ? 10 : 12;
+    ctx.fillStyle = collectible ? 'rgba(13,34,43,0.86)' : 'rgba(54,20,20,0.9)';
+    ctx.strokeStyle = collectible ? 'rgba(244,185,66,0.92)' : 'rgba(255,107,53,0.95)';
+    ctx.lineWidth = Math.max(1.5, 2 * scale);
+    ctx.beginPath();
+    ctx.arc(markerX, markerY, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.font = `900 ${markerSize}px system-ui, -apple-system, Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(13,19,32,0.92)';
+    ctx.fillStyle = collectible ? '#67e8f9' : '#fb7185';
+    ctx.strokeText(label, markerX, markerY - markerSize * 0.04);
+    ctx.fillText(label, markerX, markerY - markerSize * 0.04);
+    ctx.restore();
   }
 
   drawSpriteContourGlow(visualKey, x, y, size, collectible) {
