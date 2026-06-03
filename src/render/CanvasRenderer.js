@@ -137,26 +137,47 @@ export class CanvasRenderer {
       : (this.isWideShort ? 74 : this.isCompact ? 68 : 90);
     const pulse = object.kind === 'collectible' ? 1 + Math.sin((elapsedMs || 0) / 140) * 0.055 : 1;
     const size = baseSize * projected.scale * this.spriteScale(object.visualKey) * pulse;
-    this.drawObjectGlow(object, projected.x, projected.y, size, projected.scale);
+    this.drawSpriteContourGlow(object.visualKey, projected.x, projected.y, size, object.kind === 'collectible');
     this.drawSprite(object.visualKey, projected.x, projected.y, size, projected.scale, false, false);
   }
 
-  drawObjectGlow(object, x, y, size, scale) {
+  drawSpriteContourGlow(visualKey, x, y, size, collectible) {
+    const sprite = this.assets.get(visualKey);
     const ctx = this.ctx;
-    const collectible = object.kind === 'collectible';
+    if (!sprite) return;
+
+    const { image, meta } = sprite;
+    const anchor = meta.anchor || { x: 0.5, y: 0.85 };
+    const aspect = image.width / image.height;
+    const width = size * aspect;
+    const height = size;
+    const drawX = -width * anchor.x;
+    const drawY = -height * anchor.y;
+    const outer = collectible ? 'rgba(103,232,249,0.95)' : 'rgba(255,107,53,0.98)';
+    const inner = collectible ? 'rgba(244,185,66,0.72)' : 'rgba(239,68,68,0.74)';
+
     ctx.save();
+    ctx.translate(x, y);
     ctx.globalCompositeOperation = 'screen';
-    ctx.globalAlpha = collectible ? 0.34 : 0.28;
-    ctx.strokeStyle = collectible ? 'rgba(103,232,249,0.85)' : 'rgba(255,107,53,0.86)';
-    ctx.lineWidth = collectible ? 2.2 : 2.4;
-    ctx.beginPath();
-    ctx.ellipse(x, y - size * 0.44, size * 0.36, size * 0.24, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.globalAlpha = collectible ? 0.2 : 0.16;
-    ctx.fillStyle = collectible ? 'rgba(244,185,66,0.45)' : 'rgba(239,68,68,0.42)';
-    ctx.beginPath();
-    ctx.ellipse(x, y + 8 * scale, size * 0.42, size * 0.12, 0, 0, Math.PI * 2);
-    ctx.fill();
+
+    ctx.globalAlpha = collectible ? 0.64 : 0.7;
+    ctx.shadowColor = outer;
+    ctx.shadowBlur = collectible ? 18 : 16;
+    ctx.drawImage(image, drawX, drawY, width, height);
+
+    ctx.globalAlpha = collectible ? 0.46 : 0.48;
+    ctx.shadowColor = inner;
+    ctx.shadowBlur = collectible ? 8 : 7;
+    ctx.drawImage(image, drawX, drawY, width, height);
+
+    ctx.globalAlpha = collectible ? 0.18 : 0.22;
+    ctx.shadowColor = outer;
+    ctx.shadowBlur = 0;
+    ctx.drawImage(image, drawX - 1.5, drawY, width, height);
+    ctx.drawImage(image, drawX + 1.5, drawY, width, height);
+    ctx.drawImage(image, drawX, drawY - 1.5, width, height);
+    ctx.drawImage(image, drawX, drawY + 1.5, width, height);
+
     ctx.restore();
   }
 
