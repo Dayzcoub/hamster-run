@@ -42,10 +42,13 @@ export class AssetLoader {
     const width = canvas.width;
     const height = canvas.height;
     const isCharacter = sprite.type === 'character';
+    const isCableLoop = sprite.visualKey === 'cable_loop';
 
     for (let i = 0; i < data.length; i += 4) {
       const pixel = i / 4;
+      const x = pixel % width;
       const y = Math.floor(pixel / width);
+      const xNorm = x / width;
       const yNorm = y / height;
       const r = data[i];
       const g = data[i + 1];
@@ -59,8 +62,16 @@ export class AssetLoader {
       const bakedObjectShadow = !isCharacter && yNorm > 0.62 && chroma < 42 && max > 130;
       const softNeutralHalo = a > 0.02 && a < 0.82 && chroma < 48 && max > 35;
       const whiteMatteEdge = a > 0.02 && a < 0.98 && chroma < 52 && max > 214;
+      const cableLoopInnerWhiteMatte = isCableLoop
+        && a > 0.62
+        && chroma < 62
+        && max > 175
+        && xNorm > 0.18
+        && xNorm < 0.82
+        && yNorm > 0.18
+        && yNorm < 0.76;
 
-      if (bakedCharacterShadow || bakedObjectShadow || softNeutralHalo || whiteMatteEdge) {
+      if (bakedCharacterShadow || bakedObjectShadow || softNeutralHalo || whiteMatteEdge || cableLoopInnerWhiteMatte) {
         data[i + 3] = 0;
         continue;
       }
