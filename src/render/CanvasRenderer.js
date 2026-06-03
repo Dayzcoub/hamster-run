@@ -1,6 +1,6 @@
 import { IsoProjector } from './IsoProjector.js';
 
-const TARGET_SCENE_ASPECT = 16 / 9;
+const TARGET_SCENE_ASPECT = 4 / 3;
 
 export class CanvasRenderer {
   constructor(canvas, assets) {
