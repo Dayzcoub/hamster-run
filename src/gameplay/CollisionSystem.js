@@ -1,5 +1,7 @@
 export class CollisionSystem {
   check(player, objects, stats) {
+    const events = [];
+
     for (const object of objects) {
       if (object.collected) continue;
       if (Math.round(player.lane) !== object.lane) continue;
@@ -9,6 +11,14 @@ export class CollisionSystem {
       if (object.kind === 'collectible') {
         object.collected = true;
         stats.collect(object.resource, object.value);
+        events.push({
+          type: 'pickup',
+          x: object.x,
+          lane: object.lane,
+          resource: object.resource,
+          value: object.value || 1,
+          visualKey: object.visualKey,
+        });
         continue;
       }
 
@@ -16,8 +26,16 @@ export class CollisionSystem {
       if (player.hit()) {
         object.collected = true;
         stats.mistakes += 1;
+        events.push({
+          type: 'hit',
+          x: object.x,
+          lane: object.lane,
+          visualKey: object.visualKey,
+        });
       }
     }
+
+    return events;
   }
 
   isDodged(player, object) {
