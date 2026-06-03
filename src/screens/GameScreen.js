@@ -10,7 +10,7 @@ export class GameScreen {
     this.element.className = 'screen game-screen';
     this.element.innerHTML = `
       <header class="hud">
-        <div>
+        <div class="hud-title">
           <strong>${level.title}</strong>
           <span class="kicker">${level.intro}</span>
         </div>
@@ -22,7 +22,7 @@ export class GameScreen {
         <div class="progress-track"><div class="progress-fill" data-hud="progress"></div></div>
       </header>
       <div class="canvas-wrap"><canvas class="game-canvas" aria-label="Игровое поле"></canvas></div>
-      <footer class="event-bar">A/← ближе · D/→ дальше · W/Space прыжок · S/↓ подкат</footer>
+      <footer class="event-bar"><span class="desktop-hint">A/Left ближе · D/Right дальше · W/Space прыжок · S/Down подкат</span><span class="touch-hint">Свайп: дорожка · вверх прыжок · вниз подкат</span></footer>
     `;
   }
 
