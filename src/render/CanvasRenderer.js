@@ -1,5 +1,23 @@
 import { IsoProjector } from './IsoProjector.js';
 
+const SPRITE_SCALE_OVERRIDES = {
+  hamster_run_01: 0.92,
+  hamster_jump: 0.92,
+  hamster_slide: 0.92,
+  hamster_hit: 0.92,
+  hamster_celebrate: 0.92,
+  bread: 0.84,
+  cable_coil: 0.66,
+  c2_connector: 0.9,
+  bolt: 0.86,
+  stage_deck: 0.78,
+  flight_case: 0.78,
+  cable_loop: 0.68,
+  mic_stand: 0.82,
+  mystery_box: 0.74,
+  cart: 0.8,
+};
+
 export class CanvasRenderer {
   constructor(canvas, assets) {
     this.canvas = canvas;
@@ -35,8 +53,9 @@ export class CanvasRenderer {
     this.drawLanes();
 
     const drawable = [...levelState.objects].sort((a, b) => a.lane - b.lane || a.x - b.x);
-    for (const object of drawable) this.drawObject(object);
+    for (const object of drawable) this.drawObject(object, levelState.elapsedMs);
     this.drawPlayer(levelState.player);
+    this.drawEffects(levelState.effects || []);
   }
 
   drawBackground(levelState) {
@@ -106,17 +125,70 @@ export class CanvasRenderer {
     const visualKey = player.visualKey;
     const projected = this.projector.project(player.x, player.renderLane, this.width, this.height);
     const yJump = player.jumpOffset * (this.isCompact ? 0.82 : 1);
-    const baseSize = this.isWideShort ? 116 : this.isCompact ? 108 : 132;
-    const size = baseSize * projected.scale;
+    const baseSize = this.isWideShort ? 106 : this.isCompact ? 100 : 122;
+    const size = baseSize * projected.scale * this.spriteScale(visualKey);
     this.drawSprite(visualKey, projected.x, projected.y - yJump, size, projected.scale, true, true);
   }
 
-  drawObject(object) {
+  drawObject(object, elapsedMs = 0) {
     const projected = this.projector.project(object.x, object.lane, this.width, this.height);
     const baseSize = object.kind === 'collectible'
-      ? (this.isWideShort ? 50 : this.isCompact ? 46 : 58)
-      : (this.isWideShort ? 84 : this.isCompact ? 78 : 102);
-    this.drawSprite(object.visualKey, projected.x, projected.y, baseSize * projected.scale, projected.scale, false, false);
+      ? (this.isWideShort ? 44 : this.isCompact ? 42 : 52)
+      : (this.isWideShort ? 74 : this.isCompact ? 68 : 90);
+    const pulse = object.kind === 'collectible' ? 1 + Math.sin((elapsedMs || 0) / 140) * 0.055 : 1;
+    const size = baseSize * projected.scale * this.spriteScale(object.visualKey) * pulse;
+    this.drawObjectGlow(object, projected.x, projected.y, size, projected.scale);
+    this.drawSprite(object.visualKey, projected.x, projected.y, size, projected.scale, false, false);
+  }
+
+  drawObjectGlow(object, x, y, size, scale) {
+    const ctx = this.ctx;
+    const collectible = object.kind === 'collectible';
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = collectible ? 0.34 : 0.28;
+    ctx.strokeStyle = collectible ? 'rgba(103,232,249,0.85)' : 'rgba(255,107,53,0.86)';
+    ctx.lineWidth = collectible ? 2.2 : 2.4;
+    ctx.beginPath();
+    ctx.ellipse(x, y - size * 0.44, size * 0.36, size * 0.24, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = collectible ? 0.2 : 0.16;
+    ctx.fillStyle = collectible ? 'rgba(244,185,66,0.45)' : 'rgba(239,68,68,0.42)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 8 * scale, size * 0.42, size * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawEffects(effects) {
+    const ctx = this.ctx;
+    for (const effect of effects) {
+      const t = Math.min(1, effect.ageMs / effect.durationMs);
+      const projected = this.projector.project(effect.x, effect.lane, this.width, this.height);
+      const y = projected.y - 64 - t * 34;
+      const alpha = 1 - t;
+      const pickup = effect.type === 'pickup';
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.globalCompositeOperation = 'screen';
+      ctx.fillStyle = pickup ? 'rgba(103,232,249,0.28)' : 'rgba(239,68,68,0.28)';
+      ctx.beginPath();
+      ctx.arc(projected.x, projected.y - 42, 24 + t * 34, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.font = '900 20px system-ui, -apple-system, Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(13,19,32,0.9)';
+      ctx.fillStyle = pickup ? '#67e8f9' : '#fb7185';
+      ctx.strokeText(effect.label, projected.x, y);
+      ctx.fillText(effect.label, projected.x, y);
+      ctx.restore();
+    }
+  }
+
+  spriteScale(visualKey) {
+    return SPRITE_SCALE_OVERRIDES[visualKey] || 1;
   }
 
   drawSprite(visualKey, x, y, size, scale, isPlayer, flipX = false) {
