@@ -45,7 +45,7 @@ export class CollisionSystem {
   }
 
   isDodged(player, object) {
-    if (object.dodge === 'jump') return player.isJumping;
+    if (object.dodge === 'jump') return player.clearsHeight?.(object.clearanceHeight || 46) || false;
     if (object.dodge === 'slide') return player.isSliding;
     return false;
   }
