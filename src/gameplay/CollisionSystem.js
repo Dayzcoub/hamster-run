@@ -22,10 +22,25 @@ export class CollisionSystem {
         continue;
       }
 
-      if (this.isDodged(player, object)) continue;
+      if (this.isDodged(player, object)) {
+        object.collected = true;
+        const style = stats.addStyleDodge?.(object.dodge) || { points: 0, combo: 0 };
+        events.push({
+          type: 'style',
+          action: object.dodge,
+          x: object.x,
+          lane: Math.round(player.lane),
+          visualKey: object.visualKey,
+          points: style.points,
+          combo: style.combo,
+        });
+        continue;
+      }
+
       if (player.hit()) {
         object.collected = true;
         stats.mistakes += 1;
+        stats.resetStyleCombo?.();
         events.push({
           type: 'hit',
           x: object.x,
