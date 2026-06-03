@@ -12,7 +12,7 @@ export class CanvasRenderer {
   resize() {
     const rect = this.canvas.getBoundingClientRect();
     const width = Math.max(320, Math.floor(rect.width));
-    const height = Math.max(260, Math.floor(rect.height));
+    const height = Math.max(300, Math.floor(rect.height));
     if (this.canvas.width !== width * this.dpr || this.canvas.height !== height * this.dpr) {
       this.canvas.width = width * this.dpr;
       this.canvas.height = height * this.dpr;
@@ -20,7 +20,8 @@ export class CanvasRenderer {
     }
     this.width = width;
     this.height = height;
-    this.isCompact = width < 620 || height < 540;
+    this.isCompact = width < 700 || height < 500;
+    this.isWideShort = width / height > 2.05;
   }
 
   render(levelState) {
@@ -43,18 +44,18 @@ export class CanvasRenderer {
     ctx.fillRect(0, 0, this.width, this.height);
 
     ctx.save();
-    ctx.globalAlpha = this.isCompact ? 0.16 : 0.22;
+    ctx.globalAlpha = this.isCompact ? 0.15 : 0.2;
     ctx.fillStyle = '#7f1d1d';
-    ctx.fillRect(0, 0, this.width, this.height * 0.3);
+    ctx.fillRect(0, 0, this.width, this.height * 0.28);
     ctx.fillStyle = '#f4b942';
-    const stripeStep = this.isCompact ? 210 : 260;
-    for (let i = 0; i < 6; i++) {
+    const stripeStep = this.isCompact ? 240 : 300;
+    for (let i = 0; i < 7; i++) {
       const x = ((i * stripeStep - (levelState.distance * 0.12) % stripeStep) % (this.width + stripeStep)) - 130;
       ctx.beginPath();
       ctx.moveTo(x, 0);
-      ctx.lineTo(x + 90, 0);
+      ctx.lineTo(x + 84, 0);
       ctx.lineTo(x - 90, this.height);
-      ctx.lineTo(x - 155, this.height);
+      ctx.lineTo(x - 146, this.height);
       ctx.closePath();
       ctx.fill();
     }
@@ -63,29 +64,33 @@ export class CanvasRenderer {
 
   drawLanes() {
     const ctx = this.ctx;
+    const depthBase = this.isWideShort ? 64 : this.isCompact ? 52 : 58;
+    const depthStep = this.isWideShort ? 14 : this.isCompact ? 10 : 12;
+    const laneOffset = this.isWideShort ? 74 : this.isCompact ? 56 : 78;
+
     for (let lane = 0; lane < 3; lane++) {
       const y = this.projector.laneY(lane, this.height);
-      const depth = (this.isCompact ? 46 : 54) + lane * (this.isCompact ? 7 : 10);
-      const offset = (1 - lane) * (this.isCompact ? 42 : 72);
+      const depth = depthBase + lane * depthStep;
+      const offset = (1 - lane) * laneOffset;
       ctx.save();
-      ctx.globalAlpha = 0.82;
+      ctx.globalAlpha = 0.84;
       ctx.fillStyle = lane === 2 ? '#2b1f18' : lane === 1 ? '#241c17' : '#211817';
-      ctx.strokeStyle = 'rgba(244,185,66,0.24)';
-      ctx.lineWidth = this.isCompact ? 1.6 : 2;
+      ctx.strokeStyle = 'rgba(244,185,66,0.27)';
+      ctx.lineWidth = this.isCompact ? 1.7 : 2;
       ctx.beginPath();
       ctx.moveTo(-80 + offset, y + depth);
-      ctx.lineTo(this.width + 90 + offset, y + depth - 26);
+      ctx.lineTo(this.width + 90 + offset, y + depth - 28);
       ctx.lineTo(this.width + 130 + offset, y - depth);
-      ctx.lineTo(-40 + offset, y - depth + 26);
+      ctx.lineTo(-40 + offset, y - depth + 28);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      ctx.globalAlpha = 0.55;
+      ctx.globalAlpha = 0.6;
       ctx.strokeStyle = 'rgba(103,232,249,0.18)';
       ctx.beginPath();
       ctx.moveTo(-40 + offset, y);
-      ctx.lineTo(this.width + 100 + offset, y - 26);
+      ctx.lineTo(this.width + 100 + offset, y - 28);
       ctx.stroke();
       ctx.restore();
     }
@@ -94,20 +99,21 @@ export class CanvasRenderer {
   drawPlayer(player) {
     const visualKey = player.visualKey;
     const projected = this.projector.project(player.x, player.renderLane, this.width, this.height);
-    const yJump = player.jumpOffset * (this.isCompact ? 0.78 : 1);
-    const size = (this.isCompact ? 110 : 138) * projected.scale;
-    this.drawSprite(visualKey, projected.x, projected.y - yJump, size, projected.scale, true);
+    const yJump = player.jumpOffset * (this.isCompact ? 0.82 : 1);
+    const baseSize = this.isWideShort ? 132 : this.isCompact ? 116 : 142;
+    const size = baseSize * projected.scale;
+    this.drawSprite(visualKey, projected.x, projected.y - yJump, size, projected.scale, true, true);
   }
 
   drawObject(object) {
     const projected = this.projector.project(object.x, object.lane, this.width, this.height);
     const baseSize = object.kind === 'collectible'
-      ? (this.isCompact ? 46 : 58)
-      : (this.isCompact ? 86 : 112);
-    this.drawSprite(object.visualKey, projected.x, projected.y, baseSize * projected.scale, projected.scale, false);
+      ? (this.isWideShort ? 54 : this.isCompact ? 48 : 60)
+      : (this.isWideShort ? 98 : this.isCompact ? 88 : 112);
+    this.drawSprite(object.visualKey, projected.x, projected.y, baseSize * projected.scale, projected.scale, false, false);
   }
 
-  drawSprite(visualKey, x, y, size, scale, isPlayer) {
+  drawSprite(visualKey, x, y, size, scale, isPlayer, flipX = false) {
     const sprite = this.assets.get(visualKey);
     const ctx = this.ctx;
     if (!sprite) {
@@ -120,18 +126,22 @@ export class CanvasRenderer {
     const aspect = image.width / image.height;
     const width = size * aspect;
     const height = size;
-    const drawX = x - width * anchor.x;
-    const drawY = y - height * anchor.y;
+    const drawX = -width * anchor.x;
+    const drawY = -height * anchor.y;
 
     ctx.save();
-    ctx.globalAlpha = 0.23;
+    ctx.globalAlpha = 0.24;
     ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.ellipse(x, y + 8 * scale, width * 0.28, height * 0.08, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + 8 * scale, width * 0.24, height * 0.07, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
+    ctx.save();
+    ctx.translate(x, y);
+    if (flipX) ctx.transform(-1, 0, 0, 1, 0, 0);
     ctx.drawImage(image, drawX, drawY, width, height);
+    ctx.restore();
   }
 
   drawFallback(x, y, size, isPlayer) {

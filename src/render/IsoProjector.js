@@ -1,14 +1,24 @@
 export class IsoProjector {
   constructor() {
-    this.lanes = [
+    this.defaultLanes = [
       { y: 0.36, scale: 0.82, xOffset: 80 },
       { y: 0.52, scale: 1.0, xOffset: 0 },
       { y: 0.69, scale: 1.18, xOffset: -80 },
     ];
+    this.shortLanes = [
+      { y: 0.29, scale: 0.82, xOffset: 86 },
+      { y: 0.53, scale: 1.0, xOffset: 0 },
+      { y: 0.78, scale: 1.18, xOffset: -86 },
+    ];
+  }
+
+  lanesFor(height) {
+    return height < 460 ? this.shortLanes : this.defaultLanes;
   }
 
   project(x, lane, width, height) {
-    const laneData = this.lanes[Math.max(0, Math.min(2, Math.round(lane)))] || this.lanes[1];
+    const lanes = this.lanesFor(height);
+    const laneData = lanes[Math.max(0, Math.min(2, Math.round(lane)))] || lanes[1];
     return {
       x: x + laneData.xOffset + width * 0.02,
       y: height * laneData.y,
@@ -17,6 +27,6 @@ export class IsoProjector {
   }
 
   laneY(lane, height) {
-    return height * this.lanes[lane].y;
+    return height * this.lanesFor(height)[lane].y;
   }
 }
