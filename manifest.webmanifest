@@ -1,6 +1,6 @@
 {
-  "name": "PACK.IT RUN",
-  "short_name": "PACK.RUN",
+  "name": "Hamster Crew",
+  "short_name": "Hamster Crew",
   "description": "Псевдо-изометрический мобильный раннер про хомяка на монтаже.",
   "start_url": "./index.html",
   "scope": "./",
