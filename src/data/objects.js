@@ -10,4 +10,22 @@ export const objectCatalog = {
   mic_stand: { type: 'obstacle', visualKey: 'mic_stand', dodge: 'slide', damage: 1 },
   mystery_box: { type: 'obstacle', visualKey: 'mystery_box', dodge: 'jump', damage: 1 },
   cart: { type: 'obstacle', visualKey: 'cart', dodge: 'jump', damage: 1 },
+
+  // Future two-lane obstacles. They are not included in any level until the PNG assets are placed in the repo.
+  truss_section_left: {
+    type: 'obstacle',
+    visualKey: 'truss_section_left',
+    dodge: 'lane_change',
+    damage: 1,
+    laneSpan: 2,
+    blockedLanes: [0, 1],
+  },
+  truss_section_right: {
+    type: 'obstacle',
+    visualKey: 'truss_section_right',
+    dodge: 'lane_change',
+    damage: 1,
+    laneSpan: 2,
+    blockedLanes: [1, 2],
+  },
 };
