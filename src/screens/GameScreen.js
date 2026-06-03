@@ -12,6 +12,8 @@ export class GameScreen {
     this.previousBread = 0;
     this.previousResources = 0;
     this.previousMistakesLeft = 3;
+    this.previousStylePoints = 0;
+    this.previousStyleCombo = 0;
     this.element = document.createElement('section');
     this.element.className = 'screen game-screen';
     this.element.innerHTML = `
@@ -24,11 +26,12 @@ export class GameScreen {
           <span class="metric" data-hud="bread">Хлеб: 0</span>
           <span class="metric" data-hud="resources">Ресурсы: 0</span>
           <span class="metric" data-hud="mistakes">Косяки: 3</span>
+          <span class="metric" data-hud="style">Финты: 0</span>
         </div>
         <div class="progress-track"><div class="progress-fill" data-hud="progress"></div></div>
       </header>
       <div class="canvas-wrap"><canvas class="game-canvas" aria-label="Игровое поле"></canvas></div>
-      <footer class="event-bar">Свайп: дорожка · вверх прыжок · вниз подкат</footer>
+      <footer class="event-bar">Свайп: дорожка · вверх прыжок · вниз подкат · финты дают бонус</footer>
     `;
   }
 
@@ -66,6 +69,12 @@ export class GameScreen {
 
     if (snapshot.stats.bread > this.previousBread) this.spawnLocalEffect('pickup', `+${snapshot.stats.bread - this.previousBread}`);
     if (resources > this.previousResources) this.spawnLocalEffect('pickup', `+${resources - this.previousResources}`);
+    if (snapshot.stats.stylePoints > this.previousStylePoints) {
+      const gained = snapshot.stats.stylePoints - this.previousStylePoints;
+      const combo = snapshot.stats.styleCombo || 1;
+      const label = combo > 1 ? `ФИНТ +${gained} ×${combo}` : `ФИНТ +${gained}`;
+      this.spawnLocalEffect('style', label);
+    }
     if (snapshot.player.mistakesLeft < this.previousMistakesLeft) {
       this.spawnLocalEffect('hit', '-1');
       this.triggerScreenShake();
@@ -74,6 +83,8 @@ export class GameScreen {
     this.previousBread = snapshot.stats.bread;
     this.previousResources = resources;
     this.previousMistakesLeft = snapshot.player.mistakesLeft;
+    this.previousStylePoints = snapshot.stats.stylePoints || 0;
+    this.previousStyleCombo = snapshot.stats.styleCombo || 0;
 
     for (const effect of this.localEffects) effect.ageMs += deltaMs;
     this.localEffects = this.localEffects.filter((effect) => effect.ageMs < effect.durationMs);
@@ -107,7 +118,7 @@ export class GameScreen {
       x: player.x + 34,
       lane: player.renderLane,
       ageMs: 0,
-      durationMs: type === 'pickup' ? 560 : 420,
+      durationMs: type === 'pickup' ? 560 : type === 'style' ? 720 : 420,
     });
   }
 
@@ -116,6 +127,7 @@ export class GameScreen {
     const resources = Object.values(snapshot.stats.resources).reduce((sum, value) => sum + value, 0);
     this.element.querySelector('[data-hud="resources"]').textContent = `Ресурсы: ${resources}`;
     this.element.querySelector('[data-hud="mistakes"]').textContent = `Косяки: ${snapshot.player.mistakesLeft}`;
+    this.element.querySelector('[data-hud="style"]').textContent = `Финты: ${snapshot.stats.stylePoints || 0}`;
     this.element.querySelector('[data-hud="progress"]').style.width = `${Math.round(snapshot.progress * 100)}%`;
   }
 
