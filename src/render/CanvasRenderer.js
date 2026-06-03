@@ -130,8 +130,10 @@ export class CanvasRenderer {
     const { image, meta } = sprite;
     const anchor = meta.anchor || { x: 0.5, y: 0.85 };
     const aspect = image.width / image.height;
-    const width = size * aspect;
-    const height = size;
+    const widthScale = isPlayer ? 0.86 : 1;
+    const heightScale = isPlayer ? 1.08 : 1;
+    const width = size * aspect * widthScale;
+    const height = size * heightScale;
     const drawX = -width * anchor.x;
     const drawY = -height * anchor.y;
 
