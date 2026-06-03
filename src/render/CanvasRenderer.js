@@ -1,5 +1,7 @@
 import { IsoProjector } from './IsoProjector.js';
 
+const TARGET_SCENE_ASPECT = 16 / 9;
+
 export class CanvasRenderer {
   constructor(canvas, assets) {
     this.canvas = canvas;
@@ -11,27 +13,53 @@ export class CanvasRenderer {
 
   resize() {
     const rect = this.canvas.getBoundingClientRect();
-    const width = Math.max(320, Math.floor(rect.width));
-    const height = Math.max(300, Math.floor(rect.height));
-    if (this.canvas.width !== width * this.dpr || this.canvas.height !== height * this.dpr) {
-      this.canvas.width = width * this.dpr;
-      this.canvas.height = height * this.dpr;
-      this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    const canvasWidth = Math.max(320, Math.floor(rect.width));
+    const canvasHeight = Math.max(300, Math.floor(rect.height));
+    if (this.canvas.width !== canvasWidth * this.dpr || this.canvas.height !== canvasHeight * this.dpr) {
+      this.canvas.width = canvasWidth * this.dpr;
+      this.canvas.height = canvasHeight * this.dpr;
     }
-    this.width = width;
-    this.height = height;
-    this.isCompact = width < 700 || height < 500;
-    this.isWideShort = width / height > 2.05;
+
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
+
+    const actualAspect = canvasWidth / canvasHeight;
+    if (actualAspect > TARGET_SCENE_ASPECT) {
+      this.width = Math.floor(canvasHeight * TARGET_SCENE_ASPECT);
+      this.height = canvasHeight;
+      this.viewportX = Math.floor((canvasWidth - this.width) / 2);
+      this.viewportY = 0;
+    } else {
+      this.width = canvasWidth;
+      this.height = Math.floor(canvasWidth / TARGET_SCENE_ASPECT);
+      this.viewportX = 0;
+      this.viewportY = Math.floor((canvasHeight - this.height) / 2);
+    }
+
+    this.isCompact = this.width < 700 || this.height < 500;
+    this.isWideShort = false;
   }
 
   render(levelState) {
     this.resize();
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.ctx.fillStyle = '#0d1320';
+    this.ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+    this.ctx.save();
+    this.ctx.translate(this.viewportX, this.viewportY);
+    this.ctx.beginPath();
+    this.ctx.rect(0, 0, this.width, this.height);
+    this.ctx.clip();
+
     this.drawBackground(levelState);
     this.drawLanes();
 
     const drawable = [...levelState.objects].sort((a, b) => a.lane - b.lane || a.x - b.x);
     for (const object of drawable) this.drawObject(object);
     this.drawPlayer(levelState.player);
+
+    this.ctx.restore();
   }
 
   drawBackground(levelState) {
@@ -64,9 +92,9 @@ export class CanvasRenderer {
 
   drawLanes() {
     const ctx = this.ctx;
-    const depthBase = this.isWideShort ? 64 : this.isCompact ? 52 : 58;
-    const depthStep = this.isWideShort ? 14 : this.isCompact ? 10 : 12;
-    const laneOffset = this.isWideShort ? 74 : this.isCompact ? 56 : 78;
+    const depthBase = this.isCompact ? 52 : 58;
+    const depthStep = this.isCompact ? 10 : 12;
+    const laneOffset = this.isCompact ? 56 : 78;
 
     for (let lane = 0; lane < 3; lane++) {
       const y = this.projector.laneY(lane, this.height);
@@ -100,7 +128,7 @@ export class CanvasRenderer {
     const visualKey = player.visualKey;
     const projected = this.projector.project(player.x, player.renderLane, this.width, this.height);
     const yJump = player.jumpOffset * (this.isCompact ? 0.82 : 1);
-    const baseSize = this.isWideShort ? 132 : this.isCompact ? 116 : 142;
+    const baseSize = this.isCompact ? 116 : 142;
     const size = baseSize * projected.scale;
     this.drawSprite(visualKey, projected.x, projected.y - yJump, size, projected.scale, true, true);
   }
@@ -108,8 +136,8 @@ export class CanvasRenderer {
   drawObject(object) {
     const projected = this.projector.project(object.x, object.lane, this.width, this.height);
     const baseSize = object.kind === 'collectible'
-      ? (this.isWideShort ? 54 : this.isCompact ? 48 : 60)
-      : (this.isWideShort ? 98 : this.isCompact ? 88 : 112);
+      ? (this.isCompact ? 48 : 60)
+      : (this.isCompact ? 88 : 112);
     this.drawSprite(object.visualKey, projected.x, projected.y, baseSize * projected.scale, projected.scale, false, false);
   }
 
