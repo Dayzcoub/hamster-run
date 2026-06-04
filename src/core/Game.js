@@ -80,4 +80,21 @@ export class Game {
   isLevelUnlocked(levelId) {
     return this.state.unlockedLevels.includes(levelId);
   }
+
+  setRenderQuality(renderQuality) {
+    const allowed = ['auto', 'performance', 'quality'];
+    this.state.settings.renderQuality = allowed.includes(renderQuality) ? renderQuality : 'auto';
+    this.storage.save(this.state);
+    window.dispatchEvent(new CustomEvent('hamster-render-quality-change', {
+      detail: { renderQuality: this.state.settings.renderQuality },
+    }));
+  }
+
+  cycleRenderQuality() {
+    const order = ['auto', 'performance', 'quality'];
+    const current = this.state.settings.renderQuality || 'auto';
+    const next = order[(order.indexOf(current) + 1) % order.length] || 'auto';
+    this.setRenderQuality(next);
+    return next;
+  }
 }
