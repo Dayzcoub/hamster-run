@@ -18,6 +18,50 @@
   color: var(--accent-cyan);
 }
 
+.game-screen.is-final-phase::before {
+  content: "ФИНАЛЬНАЯ ФАЗА!";
+  position: absolute;
+  z-index: 23;
+  left: 50%;
+  top: 43%;
+  width: min(520px, 72vw);
+  padding: clamp(12px, 2.6vh, 22px) clamp(18px, 4vw, 34px);
+  border-radius: clamp(18px, 4vw, 28px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  text-align: center;
+  color: var(--accent-gold);
+  font-size: clamp(1.4rem, 5vw, 3.6rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  font-weight: 1000;
+  background: linear-gradient(180deg, rgba(28, 38, 55, 0.94), rgba(8, 12, 20, 0.9));
+  border: 1px solid rgba(255, 194, 71, 0.42);
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: final-phase-readable-banner 3.1s ease forwards;
+}
+
+.game-screen.is-final-phase::after {
+  content: "Дожми монтаж до сирены";
+  position: absolute;
+  z-index: 24;
+  left: 50%;
+  top: calc(43% + clamp(42px, 8vw, 76px));
+  transform: translateX(-50%);
+  pointer-events: none;
+  color: var(--accent-cyan);
+  font-size: clamp(0.62rem, 1.6vw, 0.92rem);
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  animation: final-phase-readable-banner 3.1s ease forwards;
+}
+
+.game-screen.is-final-phase.is-package-complete::after {
+  content: "Добирай хлеб и чистые финты";
+}
+
 .result-package {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -76,7 +120,28 @@
   color: var(--accent-cyan);
 }
 
+@keyframes final-phase-readable-banner {
+  0% { opacity: 0; transform: translate(-50%, -47%) scale(0.97); }
+  12% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  78% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -53%) scale(0.98); }
+}
+
 @media (orientation: landscape) and (max-height: 560px) {
+  .game-screen.is-final-phase::before {
+    top: 44%;
+    width: min(390px, 58vw);
+    padding: 10px 18px;
+    border-radius: 18px;
+    font-size: clamp(1.15rem, 4.2vw, 2.35rem);
+  }
+
+  .game-screen.is-final-phase::after {
+    top: calc(44% + clamp(34px, 6vw, 54px));
+    font-size: clamp(0.52rem, 1.45vw, 0.72rem);
+    letter-spacing: 0.12em;
+  }
+
   .result-card {
     padding-bottom: 112px;
   }
