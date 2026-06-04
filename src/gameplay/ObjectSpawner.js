@@ -17,7 +17,7 @@ export class ObjectSpawner {
     this.lastObstacleLane = null;
   }
 
-  update(deltaMs, elapsedMs) {
+  update(deltaMs, elapsedMs, stats = null) {
     this.timerMs -= deltaMs;
     if (this.timerMs > 0) return null;
 
@@ -28,7 +28,7 @@ export class ObjectSpawner {
 
     const obstacleChance = this.tuning.obstacleBaseChance + progress * this.tuning.obstacleProgressChance;
     const isObstacle = Math.random() < obstacleChance;
-    const source = isObstacle ? this.level.obstacles : this.level.collectibles;
+    const source = isObstacle ? this.level.obstacles : this.pickCollectibleSource(progress, stats);
     const id = source[Math.floor(Math.random() * source.length)];
     const catalogItem = objectCatalog[id];
     const lane = this.pickLane(isObstacle, catalogItem);
@@ -49,6 +49,23 @@ export class ObjectSpawner {
       x: 1180,
       collected: false,
     };
+  }
+
+  pickCollectibleSource(progress, stats) {
+    if (!stats || progress < 0.48) return this.level.collectibles;
+
+    const missingIds = this.level.collectibles.filter((id) => {
+      const item = objectCatalog[id];
+      const resource = item?.resource;
+      if (!resource || resource === 'bread') return false;
+      const target = this.level.targetResources?.[resource] || 0;
+      if (target <= 0) return false;
+      return (stats.resources?.[resource] || 0) < target;
+    });
+
+    if (!missingIds.length) return this.level.collectibles;
+    const biasChance = progress > 0.78 ? 0.82 : progress > 0.62 ? 0.66 : 0.48;
+    return Math.random() < biasChance ? missingIds : this.level.collectibles;
   }
 
   pickLane(isObstacle, catalogItem = {}) {
