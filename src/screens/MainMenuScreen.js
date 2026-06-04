@@ -5,8 +5,14 @@ const menuItems = [
   { action: 'levels', label: 'Уровни', icon: '▱', kind: 'secondary' },
   { label: 'Склад — скоро', icon: '▤', kind: 'disabled' },
   { label: 'Магазин — скоро', icon: '🛒', kind: 'disabled' },
-  { action: 'settings', label: 'Настройки — позже', icon: '⚙', kind: 'secondary muted' },
+  { action: 'quality', label: 'Качество: auto', icon: '⚙', kind: 'secondary muted' },
 ];
+
+const qualityLabels = {
+  auto: 'Качество: авто',
+  performance: 'Качество: FPS',
+  quality: 'Качество: красиво',
+};
 
 export class MainMenuScreen {
   constructor(game) {
@@ -15,6 +21,7 @@ export class MainMenuScreen {
     this.element.className = 'screen menu-screen game-bg game-bg--menu';
     const phrase = menuPhrases[Math.floor(Math.random() * menuPhrases.length)];
     const hero = game.assets.get('hamster_run_01');
+    const renderQuality = game.state.settings.renderQuality || 'auto';
     this.element.innerHTML = `
       <div class="player-badge" aria-label="Профиль игрока">
         ${hero ? `<img src="${hero.meta.webp}" alt="Хомяк-монтажник" />` : '<span class="player-badge__avatar">🐹</span>'}
@@ -46,7 +53,7 @@ export class MainMenuScreen {
         ${menuItems.map((item) => `
           <button class="menu-action menu-action--${item.kind.replace(' ', ' menu-action--')} ${item.kind === 'primary' ? 'btn-primary' : item.kind.includes('disabled') ? 'btn-disabled' : 'btn-secondary'}" ${item.action ? `data-action="${item.action}"` : 'disabled'} type="button">
             <span class="menu-action__icon" aria-hidden="true">${item.icon}</span>
-            <span>${item.label}</span>
+            <span ${item.action === 'quality' ? 'data-quality-label' : ''}>${item.action === 'quality' ? qualityLabels[renderQuality] : item.label}</span>
           </button>
         `).join('')}
       </nav>
@@ -71,6 +78,11 @@ export class MainMenuScreen {
     const action = event.target?.closest('[data-action]')?.dataset?.action;
     if (action === 'play') this.game.startLevel('dk_almost_ready');
     if (action === 'levels') this.game.showLevels();
+    if (action === 'quality') {
+      const next = this.game.cycleRenderQuality();
+      const label = this.element.querySelector('[data-quality-label]');
+      if (label) label.textContent = qualityLabels[next] || qualityLabels.auto;
+    }
   };
 
   destroy() {
