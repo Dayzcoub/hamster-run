@@ -6,6 +6,34 @@ import { LevelController } from '../gameplay/LevelController.js';
 
 const COUNTDOWN_TOTAL_MS = 3200;
 
+const RESOURCE_LABELS = {
+  bread: 'хлеб',
+  deck: 'настил',
+  cable: 'кабель',
+  bolts: 'болты',
+  c2: 'C2',
+  powercon: 'PowerCON',
+  tape: 'тейп',
+  led: 'LED',
+  truss: 'фермы',
+};
+
+function targetEntries(level) {
+  return Object.entries(level.targetResources || {});
+}
+
+function targetTotal(level) {
+  return targetEntries(level).reduce((sum, [, value]) => sum + value, 0);
+}
+
+function packageSummary(level) {
+  const entries = targetEntries(level);
+  if (!entries.length) return 'Собери пакет ресурсов';
+  return entries
+    .map(([key, value]) => `${RESOURCE_LABELS[key] || key} ×${value}`)
+    .join(' · ');
+}
+
 export class GameScreen {
   constructor(game, level) {
     this.game = game;
@@ -15,13 +43,14 @@ export class GameScreen {
     this.screenShakeMs = 0;
     this.screenShakeSeed = 0;
     this.previousBread = 0;
-    this.previousResources = 0;
+    this.previousPackage = 0;
     this.previousMistakesLeft = 3;
     this.previousStylePoints = 0;
     this.previousStyleCombo = 0;
     this.paused = false;
     this.countdownMs = COUNTDOWN_TOTAL_MS;
     this.lastCountdownLabel = '';
+    this.packageTargetTotal = targetTotal(level);
     this.lastSnapshot = null;
     this.element = document.createElement('section');
     this.element.className = `screen game-screen game-screen--${level.theme} is-countdown`;
@@ -36,18 +65,18 @@ export class GameScreen {
         <div class="hud-score" aria-label="Очки финтов"><span aria-hidden="true">⚡</span><strong data-hud-value="score">0</strong></div>
         <div class="hud-chips">
           <span class="hud-chip hud-chip--bread"><i aria-hidden="true">🍞</i><b>Хлеб</b><strong data-hud-value="bread">0</strong></span>
-          <span class="hud-chip hud-chip--resources"><i aria-hidden="true">🧵</i><b>Ресурсы</b><strong data-hud-value="resources">0</strong></span>
+          <span class="hud-chip hud-chip--package" title="${packageSummary(level)}"><i aria-hidden="true">📦</i><b>Пакет</b><strong data-hud-value="package">0/${this.packageTargetTotal || 0}</strong></span>
           <span class="hud-chip hud-chip--danger"><i aria-hidden="true">⚠</i><b>Косяки</b><strong data-hud-value="mistakes">3</strong></span>
           <span class="hud-chip hud-chip--style"><i aria-hidden="true">★</i><b>Финты</b><strong data-hud-value="style">0</strong></span>
         </div>
         <div class="progress-track" aria-hidden="true"><div class="progress-fill" data-hud="progress"></div></div>
       </header>
       <div class="canvas-wrap"><canvas class="game-canvas" aria-label="Игровое поле"></canvas></div>
-      <footer class="event-bar"><span aria-hidden="true">☝</span><strong>Свайп:</strong> дорожка · вверх прыжок · вниз подкат · финты дают бонус</footer>
+      <footer class="event-bar"><span aria-hidden="true">📦</span><strong>Цель:</strong> собери пакет ресурсов · хлеб и финты дают рекорд</footer>
       <aside class="start-countdown" aria-live="polite" aria-label="Старт уровня">
-        <span class="start-countdown__kicker">ГОТОВНОСТЬ К МОНТАЖУ</span>
+        <span class="start-countdown__kicker">ПАКЕТ НА УРОВЕНЬ</span>
         <strong data-countdown-label>3</strong>
-        <span class="start-countdown__hint">Приготовь свайпы</span>
+        <span class="start-countdown__hint">${packageSummary(level)}</span>
       </aside>
       <aside class="pause-overlay" aria-hidden="true">
         <div class="pause-card game-panel">
@@ -153,11 +182,19 @@ export class GameScreen {
     return '';
   }
 
+  packageCollected(snapshot) {
+    const targets = snapshot.level.targetResources || {};
+    return Object.entries(targets).reduce((sum, [key, value]) => {
+      const collected = key === 'bread' ? snapshot.stats.bread : snapshot.stats.resources[key] || 0;
+      return sum + Math.min(value, collected);
+    }, 0);
+  }
+
   updateLocalEffects(snapshot, deltaMs) {
-    const resources = Object.values(snapshot.stats.resources).reduce((sum, value) => sum + value, 0);
+    const packageCollected = this.packageCollected(snapshot);
 
     if (snapshot.stats.bread > this.previousBread) this.spawnLocalEffect('pickup', `+${snapshot.stats.bread - this.previousBread}`);
-    if (resources > this.previousResources) this.spawnLocalEffect('pickup', `+${resources - this.previousResources}`);
+    if (packageCollected > this.previousPackage) this.spawnLocalEffect('pickup', `ПАКЕТ +${packageCollected - this.previousPackage}`);
     if (snapshot.stats.stylePoints > this.previousStylePoints) {
       const gained = snapshot.stats.stylePoints - this.previousStylePoints;
       const combo = snapshot.stats.styleCombo || 1;
@@ -170,7 +207,7 @@ export class GameScreen {
     }
 
     this.previousBread = snapshot.stats.bread;
-    this.previousResources = resources;
+    this.previousPackage = packageCollected;
     this.previousMistakesLeft = snapshot.player.mistakesLeft;
     this.previousStylePoints = snapshot.stats.stylePoints || 0;
     this.previousStyleCombo = snapshot.stats.styleCombo || 0;
@@ -212,9 +249,9 @@ export class GameScreen {
   }
 
   updateHud(snapshot) {
-    const resources = Object.values(snapshot.stats.resources).reduce((sum, value) => sum + value, 0);
+    const packageCollected = this.packageCollected(snapshot);
     this.element.querySelector('[data-hud-value="bread"]').textContent = snapshot.stats.bread;
-    this.element.querySelector('[data-hud-value="resources"]').textContent = resources;
+    this.element.querySelector('[data-hud-value="package"]').textContent = `${packageCollected}/${this.packageTargetTotal || 0}`;
     this.element.querySelector('[data-hud-value="mistakes"]').textContent = snapshot.player.mistakesLeft;
     this.element.querySelector('[data-hud-value="style"]').textContent = snapshot.stats.stylePoints || 0;
     this.element.querySelector('[data-hud-value="score"]').textContent = snapshot.stats.stylePoints || 0;
