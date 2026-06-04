@@ -27,6 +27,7 @@ export class Player {
 
   get isJumping() { return this.state === 'jumping' && this.jumpOffset > 32; }
   get isSliding() { return this.state === 'sliding' || this.slideMs > -220; }
+  get canChangeLane() { return this.state !== 'jumping' && this.state !== 'sliding'; }
 
   clearsHeight(height = 24) {
     return this.state === 'jumping' && this.jumpOffset >= height;
@@ -60,7 +61,7 @@ export class Player {
 
   apply(action) {
     if (this.state === 'finished') return;
-    if (this.state !== 'jumping') {
+    if (this.canChangeLane) {
       if (action === 'laneNear') this.lane = Math.min(2, this.lane + 1);
       if (action === 'laneFar') this.lane = Math.max(0, this.lane - 1);
     }
