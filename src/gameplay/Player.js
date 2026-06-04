@@ -60,8 +60,10 @@ export class Player {
 
   apply(action) {
     if (this.state === 'finished') return;
-    if (action === 'laneNear') this.lane = Math.min(2, this.lane + 1);
-    if (action === 'laneFar') this.lane = Math.max(0, this.lane - 1);
+    if (this.state !== 'jumping') {
+      if (action === 'laneNear') this.lane = Math.min(2, this.lane + 1);
+      if (action === 'laneFar') this.lane = Math.max(0, this.lane - 1);
+    }
     if (action === 'jump' && this.state !== 'jumping') {
       this.state = 'jumping';
       this.jumpMs = 1;
