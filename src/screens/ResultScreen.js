@@ -20,7 +20,7 @@ export class ResultScreen {
             <i aria-hidden="true">◎</i>
             <strong>Выполнение</strong>
             <b>${result.finalPercent}%</b>
-            <span class="mini-progress"><em style="width:${result.finalPercent}%"></em></span>
+            <span class="mini-progress"><em data-progress="completion"></em></span>
           </div>
           <div class="stat-card"><i aria-hidden="true">🍞</i><strong>Хлеб</strong><b>${result.bread}</b></div>
           <div class="stat-card stat-card--danger"><i aria-hidden="true">⚠</i><strong>Косяки</strong><b>${result.mistakes}</b></div>
@@ -36,7 +36,10 @@ export class ResultScreen {
     `;
   }
 
-  mount() { this.element.addEventListener('click', this.onClick); }
+  mount() {
+    this.element.addEventListener('click', this.onClick);
+    this.element.querySelector('[data-progress="completion"]').style.width = `${this.result.finalPercent}%`;
+  }
 
   onClick = (event) => {
     const action = event.target?.closest('[data-action]')?.dataset?.action;
