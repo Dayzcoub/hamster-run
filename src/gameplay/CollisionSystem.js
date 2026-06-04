@@ -4,9 +4,19 @@ export class CollisionSystem {
 
     for (const object of objects) {
       if (object.collected) continue;
-      if (!this.isPlayerInObjectLane(player, object)) continue;
+
+      const isObstacle = object.kind !== 'collectible';
+      const inLane = this.isPlayerInObjectLane(player, object);
       const distance = Math.abs(object.x - player.x);
-      if (distance > (object.kind === 'collectible' ? 54 : 72)) continue;
+      const collisionDistance = object.kind === 'collectible' ? 54 : 72;
+
+      if (isObstacle) {
+        const passEvent = this.resolvePassedObstacle(player, object, stats);
+        if (passEvent) events.push(passEvent);
+      }
+
+      if (!inLane) continue;
+      if (distance > collisionDistance) continue;
 
       if (object.kind === 'collectible') {
         object.collected = true;
@@ -23,17 +33,9 @@ export class CollisionSystem {
       }
 
       if (this.isDodged(player, object)) {
-        object.collected = true;
-        const style = stats.addStyleDodge?.(object.dodge) || { points: 0, combo: 0 };
-        events.push({
-          type: 'style',
-          action: object.dodge,
-          x: object.x,
-          lane: Math.round(player.lane),
-          visualKey: object.visualKey,
-          points: style.points,
-          combo: style.combo,
-        });
+        object.dodgePending = true;
+        object.dodgeAction = object.dodge;
+        object.dodgeLane = Math.round(player.lane);
         continue;
       }
 
@@ -51,6 +53,28 @@ export class CollisionSystem {
     }
 
     return events;
+  }
+
+  resolvePassedObstacle(player, object, stats) {
+    if (object.collected || object.passed) return null;
+    const passedX = player.x - 78;
+    if (object.x > passedX) return null;
+
+    object.passed = true;
+
+    if (!object.dodgePending) return null;
+
+    object.collected = true;
+    const style = stats.addStyleDodge?.(object.dodgeAction || object.dodge) || { points: 0, combo: 0 };
+    return {
+      type: 'style',
+      action: object.dodgeAction || object.dodge,
+      x: player.x + 28,
+      lane: object.dodgeLane ?? Math.round(player.lane),
+      visualKey: object.visualKey,
+      points: style.points,
+      combo: style.combo,
+    };
   }
 
   isPlayerInObjectLane(player, object) {
