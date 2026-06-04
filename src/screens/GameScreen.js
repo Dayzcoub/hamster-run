@@ -5,6 +5,7 @@ import { CanvasRenderer } from '../render/CanvasRenderer.js';
 import { LevelController } from '../gameplay/LevelController.js';
 
 const COUNTDOWN_TOTAL_MS = 3200;
+const FINAL_PHASE_SECONDS = 20;
 
 const RESOURCE_LABELS = {
   bread: 'хлеб',
@@ -34,13 +35,22 @@ function packageSummary(level) {
     .join(' · ');
 }
 
-function formatRemainingTime(snapshot) {
+function remainingSeconds(snapshot) {
   const durationMs = (snapshot.level.duration || 0) * 1000;
   const remainingMs = Math.max(0, durationMs - (snapshot.elapsedMs || 0));
-  const totalSeconds = Math.ceil(remainingMs / 1000);
+  return Math.ceil(remainingMs / 1000);
+}
+
+function formatRemainingTime(snapshot) {
+  const totalSeconds = remainingSeconds(snapshot);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function isFinalPhase(snapshot) {
+  if (!snapshot?.level?.duration) return false;
+  return remainingSeconds(snapshot) <= FINAL_PHASE_SECONDS;
 }
 
 export class GameScreen {
@@ -59,6 +69,7 @@ export class GameScreen {
     this.previousStyleCombo = 0;
     this.previousPrecisionDodges = 0;
     this.packageCompleteAnnounced = false;
+    this.finalPhaseAnnounced = false;
     this.paused = false;
     this.countdownMs = COUNTDOWN_TOTAL_MS;
     this.lastCountdownLabel = '';
@@ -210,7 +221,12 @@ export class GameScreen {
     const packageCollected = this.packageCollected(snapshot);
     const resourceTotal = this.resourceTotal(snapshot);
     const precisionDodges = snapshot.stats.precisionDodges || 0;
+    const finalPhase = isFinalPhase(snapshot);
 
+    if (finalPhase && !this.finalPhaseAnnounced) {
+      this.finalPhaseAnnounced = true;
+      this.spawnLocalEffect('complete', 'ФИНАЛЬНАЯ ФАЗА!');
+    }
     if (snapshot.stats.bread > this.previousBread) this.spawnLocalEffect('pickup', `+${snapshot.stats.bread - this.previousBread}`);
     if (packageCollected > this.previousPackage) this.spawnLocalEffect('pickup', `ПАКЕТ +${packageCollected - this.previousPackage}`);
     if (!this.packageCompleteAnnounced && this.packageTargetTotal > 0 && packageCollected >= this.packageTargetTotal) {
@@ -280,14 +296,24 @@ export class GameScreen {
   updateHud(snapshot) {
     const packageCollected = this.packageCollected(snapshot);
     const packageComplete = this.packageTargetTotal > 0 && packageCollected >= this.packageTargetTotal;
+    const finalPhase = isFinalPhase(snapshot);
     const packageChip = this.element.querySelector('.hud-chip--package');
     if (packageChip) packageChip.classList.toggle('is-package-complete', packageComplete);
     this.element.classList.toggle('is-package-complete', packageComplete);
+    this.element.classList.toggle('is-final-phase', finalPhase);
     const eventTitle = this.element.querySelector('[data-event-title]');
     const eventText = this.element.querySelector('[data-event-text]');
     if (eventTitle && eventText) {
-      eventTitle.textContent = packageComplete ? 'Пакет собран:' : 'Цель:';
-      eventText.textContent = packageComplete ? 'добирай хлеб и финты до конца таймера' : 'собери пакет ресурсов · хлеб и финты дают рекорд';
+      if (packageComplete) {
+        eventTitle.textContent = finalPhase ? 'Финал:' : 'Пакет собран:';
+        eventText.textContent = finalPhase ? 'добирай хлеб и чистые финты до сирены' : 'добирай хлеб и финты до конца таймера';
+      } else if (finalPhase) {
+        eventTitle.textContent = 'Финал:';
+        eventText.textContent = 'дожми пакет до конца таймера';
+      } else {
+        eventTitle.textContent = 'Цель:';
+        eventText.textContent = 'собери пакет ресурсов · хлеб и финты дают рекорд';
+      }
     }
     this.element.querySelector('[data-hud-value="bread"]').textContent = snapshot.stats.bread;
     this.element.querySelector('[data-hud-value="package"]').textContent = `${packageCollected}/${this.packageTargetTotal || 0}`;
