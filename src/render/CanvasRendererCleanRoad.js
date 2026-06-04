@@ -1,6 +1,7 @@
 import { CanvasRenderer } from './CanvasRenderer.js';
 
 const drawObjectBase = CanvasRenderer.prototype.drawObject;
+const drawSpriteBase = CanvasRenderer.prototype.drawSprite;
 
 CanvasRenderer.prototype.drawLanes = function drawThreeLaneStageRoad(levelState = {}) {
   const ctx = this.ctx;
@@ -8,6 +9,7 @@ CanvasRenderer.prototype.drawLanes = function drawThreeLaneStageRoad(levelState 
   const h = this.height;
   const distance = levelState.distance || 0;
   const activeLane = levelState.player?.renderLane ?? 1;
+  const player = levelState.player || null;
   const laneYs = [0, 1, 2].map((lane) => this.projector.laneY(lane, h));
   const laneHeights = this.isWideShort ? [44, 56, 70] : [52, 66, 82];
   const slant = this.isWideShort ? 22 : 28;
@@ -24,6 +26,8 @@ CanvasRenderer.prototype.drawLanes = function drawThreeLaneStageRoad(levelState 
   }
 
   this.drawRoadMotionDashes(ctx, w, laneYs, distance);
+  if (player) this.drawPlayerLanePatch(ctx, player);
+  this.drawFloorScratches(ctx, w, h, distance);
   ctx.restore();
 };
 
@@ -74,7 +78,7 @@ CanvasRenderer.prototype.drawLaneSlab = function drawLaneSlab(ctx, width, center
     laneGrad.addColorStop(1, '#080f1a');
   }
 
-  ctx.globalAlpha = active ? 0.94 : 0.8;
+  ctx.globalAlpha = active ? 0.9 : 0.8;
   ctx.fillStyle = laneGrad;
   ctx.beginPath();
   ctx.moveTo(leftTop, top + slant);
@@ -84,8 +88,8 @@ CanvasRenderer.prototype.drawLaneSlab = function drawLaneSlab(ctx, width, center
   ctx.closePath();
   ctx.fill();
 
-  ctx.globalAlpha = active ? 0.36 : 0.18;
-  ctx.fillStyle = active ? 'rgba(255,194,71,0.16)' : 'rgba(92,235,255,0.08)';
+  ctx.globalAlpha = active ? 0.22 : 0.15;
+  ctx.fillStyle = active ? 'rgba(255,194,71,0.12)' : 'rgba(92,235,255,0.07)';
   ctx.beginPath();
   ctx.moveTo(leftTop, top + slant + 2);
   ctx.lineTo(rightTop, top + 2);
@@ -94,16 +98,16 @@ CanvasRenderer.prototype.drawLaneSlab = function drawLaneSlab(ctx, width, center
   ctx.closePath();
   ctx.fill();
 
-  ctx.globalAlpha = active ? 0.62 : 0.36;
-  ctx.strokeStyle = active ? 'rgba(255,194,71,0.62)' : 'rgba(92,235,255,0.34)';
-  ctx.lineWidth = active ? 1.8 : 1.2;
+  ctx.globalAlpha = active ? 0.4 : 0.34;
+  ctx.strokeStyle = active ? 'rgba(255,194,71,0.38)' : 'rgba(92,235,255,0.32)';
+  ctx.lineWidth = active ? 1.4 : 1.1;
   ctx.beginPath();
   ctx.moveTo(leftTop + 18, centerY + 4);
   ctx.lineTo(rightTop - 12, centerY - 14);
   ctx.stroke();
 
-  ctx.globalAlpha = 0.2;
-  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+  ctx.globalAlpha = 0.18;
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(leftBottom + 20, bottom + slant * 0.12);
@@ -111,8 +115,29 @@ CanvasRenderer.prototype.drawLaneSlab = function drawLaneSlab(ctx, width, center
   ctx.stroke();
 };
 
+CanvasRenderer.prototype.drawPlayerLanePatch = function drawPlayerLanePatch(ctx, player) {
+  const point = this.projector.project(player.x, player.renderLane, this.width, this.height);
+  const scale = point.scale;
+  const width = (this.lowPerf ? 106 : 126) * scale;
+  const y = point.y + 14 * scale;
+
+  ctx.globalAlpha = this.lowPerf ? 0.24 : 0.3;
+  ctx.fillStyle = 'rgba(255,194,71,0.16)';
+  ctx.beginPath();
+  ctx.ellipse(point.x - 8 * scale, y + 5 * scale, width * 0.5, 7 * scale, -0.05, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = this.lowPerf ? 0.34 : 0.42;
+  ctx.strokeStyle = 'rgba(255,194,71,0.38)';
+  ctx.lineWidth = this.lowPerf ? 1 : 1.2;
+  ctx.beginPath();
+  ctx.moveTo(point.x - width * 0.38, y);
+  ctx.lineTo(point.x + width * 0.38, y - 5 * scale);
+  ctx.stroke();
+};
+
 CanvasRenderer.prototype.drawRoadMotionDashes = function drawRoadMotionDashes(ctx, width, laneYs, distance) {
-  ctx.globalAlpha = this.lowPerf ? 0.09 : 0.14;
+  ctx.globalAlpha = this.lowPerf ? 0.08 : 0.12;
   ctx.strokeStyle = 'rgba(255,255,255,0.22)';
   ctx.lineWidth = 1;
   const offset = (distance * 0.18) % 150;
@@ -127,6 +152,23 @@ CanvasRenderer.prototype.drawRoadMotionDashes = function drawRoadMotionDashes(ct
   }
 };
 
+CanvasRenderer.prototype.drawFloorScratches = function drawFloorScratches(ctx, width, height, distance) {
+  const baseY = height * 0.74;
+  const offset = (distance * 0.055) % 190;
+  ctx.globalAlpha = this.lowPerf ? 0.08 : 0.11;
+  ctx.strokeStyle = 'rgba(92,235,255,0.22)';
+  ctx.lineWidth = 1;
+
+  for (let i = 0; i < 7; i++) {
+    const x = ((i * 190 - offset) % (width + 240)) - 120;
+    const y = baseY + (i % 3) * 22;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 70 + (i % 2) * 24, y - 4);
+    ctx.stroke();
+  }
+};
+
 CanvasRenderer.prototype.drawObject = function drawObjectWithCleanAnchor(object, elapsedMs = 0) {
   this.drawCleanObjectAnchor(object);
   drawObjectBase.call(this, object, elapsedMs);
@@ -137,22 +179,43 @@ CanvasRenderer.prototype.drawCleanObjectAnchor = function drawCleanObjectAnchor(
   const point = this.projector.project(object.x, object.lane, this.width, this.height);
   const collectible = object.kind === 'collectible';
   const scale = point.scale;
-  const half = (collectible ? 22 : 30) * scale;
+  const half = (collectible ? 24 : 32) * scale;
   const y = point.y + (collectible ? 8 : 13) * scale;
 
   ctx.save();
-  ctx.globalAlpha = this.lowPerf ? 0.34 : 0.42;
-  ctx.fillStyle = 'rgba(0,0,0,0.34)';
+  ctx.globalAlpha = this.lowPerf ? 0.52 : 0.58;
+  ctx.fillStyle = 'rgba(0,0,0,0.46)';
   ctx.beginPath();
-  ctx.ellipse(point.x, y + 7 * scale, half * 0.9, 3.6 * scale, -0.05, 0, Math.PI * 2);
+  ctx.ellipse(point.x, y + 7 * scale, half, 4.8 * scale, -0.05, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.globalAlpha = this.lowPerf ? 0.34 : 0.46;
-  ctx.strokeStyle = collectible ? 'rgba(92,235,255,0.56)' : 'rgba(255,90,78,0.62)';
-  ctx.lineWidth = this.lowPerf ? 1 : 1.3;
+  ctx.globalAlpha = this.lowPerf ? 0.26 : 0.34;
+  ctx.strokeStyle = collectible ? 'rgba(92,235,255,0.48)' : 'rgba(255,90,78,0.54)';
+  ctx.lineWidth = this.lowPerf ? 1 : 1.2;
   ctx.beginPath();
-  ctx.moveTo(point.x - half, y);
-  ctx.lineTo(point.x + half, y - 3 * scale);
+  ctx.moveTo(point.x - half * 0.86, y);
+  ctx.lineTo(point.x + half * 0.86, y - 3 * scale);
   ctx.stroke();
   ctx.restore();
+};
+
+CanvasRenderer.prototype.drawSprite = function drawSpriteWithBetterContactShadow(visualKey, x, y, size, scale, isPlayer, flipX = false, animation = null) {
+  if (!isPlayer) {
+    drawSpriteBase.call(this, visualKey, x, y, size, scale, isPlayer, flipX, animation);
+    return;
+  }
+
+  const ctx = this.ctx;
+  const shadowScale = animation?.shadowScale ?? 1;
+  const shadowAlpha = Math.max(animation?.shadowAlpha ?? 0.24, this.lowPerf ? 0.34 : 0.3);
+
+  ctx.save();
+  ctx.globalAlpha = shadowAlpha;
+  ctx.fillStyle = 'rgba(0,0,0,0.72)';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 11 * scale, size * 0.28 * shadowScale, size * 0.065, -0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  drawSpriteBase.call(this, visualKey, x, y, size, scale, isPlayer, flipX, animation);
 };
