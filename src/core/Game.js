@@ -58,8 +58,17 @@ export class Game {
 
   applyResult(result) {
     const saved = this.state.completedLevels[result.level.id];
-    const bestScore = Math.max(saved?.bestScore || 0, result.score);
-    const bestGrade = this.pickBetterGrade(saved?.bestGrade, result.grade);
+    const previousBestScore = saved?.bestScore || 0;
+    const previousBestGrade = saved?.bestGrade || null;
+    const bestScore = Math.max(previousBestScore, result.score);
+    const bestGrade = this.pickBetterGrade(previousBestGrade, result.grade);
+
+    result.previousBestScore = previousBestScore;
+    result.previousBestGrade = previousBestGrade;
+    result.bestScore = bestScore;
+    result.bestGrade = bestGrade;
+    result.isNewRecord = result.score > previousBestScore;
+    result.isFirstClear = !saved;
 
     this.state.bread += result.bread;
     this.state.completedLevels[result.level.id] = {
