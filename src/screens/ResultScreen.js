@@ -30,6 +30,8 @@ function packageProgress(result) {
 
 function resultTip(result) {
   const progress = packageProgress(result);
+  if (!result.passed) return 'Объект на доработку: для сдачи нужен минимум C. Добери пакет и избегай косяков.';
+  if (result.firstPassed) return 'Объект сдан: следующий уровень открыт. Теперь можно улучшать оценку и рекорд.';
   if (result.mistakes > 0) return 'Меньше косяков: каждый косяк режет выполнение примерно на 10%.';
   if (progress.collectedTotal < progress.targetTotal) return 'Добери пакет: оценка растёт от нужных ресурсов, хлеб отдельно даёт очки.';
   if ((result.stylePoints || 0) < 220) return 'Больше финтов: прыгай и подкатывайся впритык к препятствиям ради бонусов.';
@@ -43,24 +45,29 @@ function recordLabel(result) {
   return 'Лучший результат';
 }
 
+function passLabel(result) {
+  if (result.passed && result.firstPassed) return 'Объект сдан · открыт следующий';
+  if (result.passed) return 'Объект сдан';
+  return 'На доработку · нужен минимум C';
+}
+
 export class ResultScreen {
   constructor(game, result) {
     this.game = game;
     this.result = result;
-    const jumpDodges = result.styleDodges?.jump || 0;
-    const slideDodges = result.styleDodges?.slide || 0;
     const bestScore = result.bestScore ?? result.score;
     const previousBestScore = result.previousBestScore || 0;
     const deltaScore = result.score - previousBestScore;
     const packageInfo = packageProgress(result);
     this.element = document.createElement('section');
-    this.element.className = `screen result-screen game-bg game-bg--result result-screen--grade-${String(result.grade || 'd').toLowerCase()} ${result.isNewRecord ? 'result-screen--record' : ''}`;
+    this.element.className = `screen result-screen game-bg game-bg--result result-screen--grade-${String(result.grade || 'd').toLowerCase()} ${result.isNewRecord ? 'result-screen--record' : ''} ${result.passed ? 'result-screen--passed' : 'result-screen--failed'}`;
     this.element.innerHTML = `
       <article class="result-card game-panel">
         <div class="result-left">
           <div class="kicker">ТЕХСВОДКА</div>
           <h2>${result.level.title}</h2>
           <div class="result-grade" aria-label="Оценка ${result.grade}">${result.grade}</div>
+          <div class="result-pass ${result.passed ? 'is-passed' : 'is-failed'}">${passLabel(result)}</div>
           <p class="result-phrase"><span aria-hidden="true">🐹</span>${result.phrase}</p>
           <div class="result-package" aria-label="Пакет ресурсов">
             <span>Пакет</span>
