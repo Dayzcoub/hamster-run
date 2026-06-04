@@ -95,7 +95,6 @@ export class ResultScreen {
           <div class="stat-card stat-card--danger"><i aria-hidden="true">⚠</i><strong>Косяки</strong><b>${result.mistakes}</b></div>
           <div class="stat-card"><i aria-hidden="true">☆</i><strong>Финты</strong><b>${result.stylePoints || 0}</b></div>
           <div class="stat-card stat-card--precision"><i aria-hidden="true">✦</i><strong>Чистые финты</strong><b>${result.precisionDodges || 0}</b></div>
-          <div class="stat-card stat-card--record"><i aria-hidden="true">🏆</i><strong>Рекорд</strong><b>${bestScore}</b></div>
         </div>
         <div class="result-actions">
           <button class="btn-secondary" data-action="levels" type="button"><span aria-hidden="true">▱</span>К уровням</button>
