@@ -69,14 +69,14 @@
 
 @media (orientation: landscape) and (max-height: 560px) {
   .result-card {
-    padding-bottom: 66px;
+    padding-bottom: 112px;
   }
 
   .result-actions {
     position: absolute;
     left: clamp(14px, 3vw, 28px);
     right: clamp(14px, 3vw, 28px);
-    bottom: 14px;
+    bottom: 52px;
     z-index: 3;
   }
 
@@ -130,13 +130,13 @@
 @media (orientation: landscape) and (max-width: 760px),
        (orientation: landscape) and (max-height: 430px) {
   .result-card {
-    padding-bottom: 58px;
+    padding-bottom: 98px;
   }
 
   .result-actions {
     left: 12px;
     right: 12px;
-    bottom: 10px;
+    bottom: 46px;
     gap: 8px;
   }
 
