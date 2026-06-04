@@ -65,6 +65,7 @@ class LevelStats {
     this.stylePoints = 0;
     this.styleCombo = 0;
     this.bestStyleCombo = 0;
+    this.precisionDodges = 0;
     this.styleDodges = { jump: 0, slide: 0 };
   }
 
@@ -73,7 +74,7 @@ class LevelStats {
     else this.resources[resource] = (this.resources[resource] || 0) + value;
   }
 
-  addStyleDodge(action) {
+  addStyleDodge(action, dodgeDistance = 72) {
     const normalized = action === 'slide' ? 'slide' : 'jump';
     this.styleCombo += 1;
     this.bestStyleCombo = Math.max(this.bestStyleCombo, this.styleCombo);
@@ -81,10 +82,17 @@ class LevelStats {
 
     const base = normalized === 'slide' ? 75 : 60;
     const comboBonus = Math.min(90, Math.max(0, this.styleCombo - 1) * 15);
-    const points = base + comboBonus;
+    const precisionBonus = dodgeDistance <= 28 ? 35 : dodgeDistance <= 44 ? 20 : 0;
+    if (precisionBonus > 0) this.precisionDodges += 1;
+    const points = base + comboBonus + precisionBonus;
     this.stylePoints += points;
 
-    return { points, combo: this.styleCombo };
+    return {
+      points,
+      combo: this.styleCombo,
+      precisionBonus,
+      clean: precisionBonus > 0,
+    };
   }
 
   resetStyleCombo() {
@@ -112,6 +120,7 @@ class LevelStats {
       stylePoints: this.stylePoints,
       styleDodges: this.styleDodges,
       bestStyleCombo: this.bestStyleCombo,
+      precisionDodges: this.precisionDodges,
       finalPercent,
       grade,
       score,
