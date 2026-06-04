@@ -68,6 +68,18 @@
 }
 
 @media (orientation: landscape) and (max-height: 560px) {
+  .result-card {
+    padding-bottom: 66px;
+  }
+
+  .result-actions {
+    position: absolute;
+    left: clamp(14px, 3vw, 28px);
+    right: clamp(14px, 3vw, 28px);
+    bottom: 14px;
+    z-index: 3;
+  }
+
   .result-package {
     margin-top: 0.32rem;
     padding: 0.42rem 0.56rem;
@@ -117,6 +129,17 @@
 
 @media (orientation: landscape) and (max-width: 760px),
        (orientation: landscape) and (max-height: 430px) {
+  .result-card {
+    padding-bottom: 58px;
+  }
+
+  .result-actions {
+    left: 12px;
+    right: 12px;
+    bottom: 10px;
+    gap: 8px;
+  }
+
   .hud-chip--package b {
     letter-spacing: -0.02em;
   }
