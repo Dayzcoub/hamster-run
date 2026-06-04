@@ -1,0 +1,42 @@
+/* Landscape lock UX.
+   Real rotation lock works only where the browser allows it (fullscreen/PWA on Android).
+   This overlay prevents portrait gameplay UI from appearing when lock is rejected. */
+
+.app-shell.app-shell--portrait-game::before {
+  content: "Поверните устройство\A Hamster Crew работает в горизонтальном режиме";
+  white-space: pre-line;
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-main, #f4f7fb);
+  font-weight: 950;
+  font-size: clamp(1.4rem, 7vw, 2.4rem);
+  line-height: 1.25;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(92,235,255,0.18), transparent 16rem),
+    radial-gradient(circle at 50% 70%, rgba(255,194,71,0.15), transparent 18rem),
+    #060b14;
+}
+
+.app-shell.app-shell--portrait-game::after {
+  content: "↻";
+  position: fixed;
+  z-index: 10000;
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%, -50%);
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  color: var(--accent-gold, #ffc247);
+  font-size: 3rem;
+  border: 1px solid rgba(92,235,255,0.34);
+  background: rgba(12,22,38,0.92);
+  box-shadow: 0 0 28px rgba(92,235,255,0.18);
+}
