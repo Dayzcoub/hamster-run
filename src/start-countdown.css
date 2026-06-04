@@ -1,0 +1,116 @@
+/* Lightweight level start countdown overlay.
+   DOM/CSS only: no sprites, no canvas glow, no heavy filters on compact phones. */
+
+.start-countdown {
+  position: absolute;
+  z-index: 24;
+  left: 50%;
+  top: calc(var(--hud-h, 116px) + 50%);
+  width: min(520px, 72vw);
+  display: grid;
+  place-items: center;
+  gap: clamp(4px, 1.2vh, 10px);
+  padding: clamp(14px, 3vh, 26px) clamp(18px, 4vw, 34px);
+  border-radius: clamp(20px, 4vw, 30px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  text-align: center;
+  color: var(--text-main);
+  background:
+    linear-gradient(180deg, rgba(18, 31, 50, 0.9), rgba(5, 10, 18, 0.88));
+  border: 1px solid rgba(92, 235, 255, 0.28);
+  box-shadow:
+    0 18px 52px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.game-screen:not(.is-countdown) .start-countdown {
+  display: none;
+}
+
+.start-countdown__kicker,
+.start-countdown__hint {
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.start-countdown__kicker {
+  color: var(--accent-cyan);
+  font-size: clamp(0.58rem, 1.6vw, 0.78rem);
+  letter-spacing: 0.24em;
+}
+
+.start-countdown strong {
+  display: block;
+  min-width: 1.2em;
+  color: var(--accent-gold);
+  font-size: clamp(3.3rem, 10vw, 7.4rem);
+  font-weight: 1000;
+  line-height: 0.86;
+  letter-spacing: -0.08em;
+  text-shadow: 0 0 24px rgba(255, 194, 71, 0.26);
+}
+
+.start-countdown__hint {
+  color: var(--text-soft);
+  font-size: clamp(0.62rem, 1.65vw, 0.84rem);
+  letter-spacing: 0.14em;
+}
+
+.game-screen[data-countdown-label="Монтаж!"] .start-countdown {
+  border-color: rgba(255, 194, 71, 0.42);
+}
+
+.game-screen[data-countdown-label="Монтаж!"] .start-countdown strong {
+  min-width: 0;
+  color: var(--accent-cyan);
+  font-size: clamp(2.15rem, 7.2vw, 5rem);
+  letter-spacing: -0.05em;
+  text-shadow: 0 0 20px rgba(92, 235, 255, 0.22);
+}
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .start-countdown {
+    top: calc(var(--hud-h, 74px) + 46%);
+    width: min(420px, 58vw);
+    gap: 4px;
+    padding: 12px 18px;
+    border-radius: 20px;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .start-countdown__kicker {
+    font-size: clamp(0.5rem, 1.55vw, 0.64rem);
+    letter-spacing: 0.18em;
+  }
+
+  .start-countdown strong {
+    font-size: clamp(2.5rem, 8.5vw, 4.8rem);
+    text-shadow: none;
+  }
+
+  .start-countdown__hint {
+    font-size: clamp(0.52rem, 1.55vw, 0.66rem);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+  .start-countdown {
+    width: min(360px, 52vw);
+    padding: 9px 14px;
+    border-radius: 17px;
+  }
+
+  .start-countdown__kicker {
+    display: none;
+  }
+
+  .start-countdown strong {
+    font-size: clamp(2.1rem, 7.4vw, 3.8rem);
+  }
+
+  .start-countdown__hint {
+    font-size: 0.52rem;
+  }
+}
