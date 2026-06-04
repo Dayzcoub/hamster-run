@@ -16,6 +16,8 @@ export class GameScreen {
     this.previousMistakesLeft = 3;
     this.previousStylePoints = 0;
     this.previousStyleCombo = 0;
+    this.paused = false;
+    this.lastSnapshot = null;
     this.element = document.createElement('section');
     this.element.className = `screen game-screen game-screen--${level.theme}`;
     this.element.innerHTML = `
@@ -37,6 +39,18 @@ export class GameScreen {
       </header>
       <div class="canvas-wrap"><canvas class="game-canvas" aria-label="Игровое поле"></canvas></div>
       <footer class="event-bar"><span aria-hidden="true">☝</span><strong>Свайп:</strong> дорожка · вверх прыжок · вниз подкат · финты дают бонус</footer>
+      <aside class="pause-overlay" aria-hidden="true">
+        <div class="pause-card game-panel">
+          <div class="kicker">ПАУЗА</div>
+          <h2>Монтаж на стопе</h2>
+          <p>Завхоз пока не смотрит. Можно выдохнуть и продолжить забег.</p>
+          <div class="pause-actions">
+            <button class="btn-primary" data-action="resume" type="button"><span aria-hidden="true">▶</span>Продолжить</button>
+            <button class="btn-secondary" data-action="levels" type="button"><span aria-hidden="true">▱</span>К уровням</button>
+            <button class="btn-secondary" data-action="menu" type="button"><span aria-hidden="true">⌂</span>Главное меню</button>
+          </div>
+        </div>
+      </aside>
     `;
   }
 
@@ -44,6 +58,7 @@ export class GameScreen {
     this.canvas = this.element.querySelector('canvas');
     this.renderer = new CanvasRenderer(this.canvas, this.game.assets);
     this.detachTouch = this.game.input.attachTouchTarget(this.canvas);
+    this.element.addEventListener('click', this.onClick);
     this.last = performance.now();
     this.frame = requestAnimationFrame(this.tick);
   }
@@ -51,6 +66,14 @@ export class GameScreen {
   tick = (now) => {
     const deltaMs = Math.min(42, now - this.last);
     this.last = now;
+
+    if (this.paused) {
+      this.game.input.consume();
+      if (this.lastSnapshot) this.renderer.render(this.lastSnapshot);
+      this.frame = requestAnimationFrame(this.tick);
+      return;
+    }
+
     const actions = this.game.input.consume();
     const result = this.controller.update(deltaMs, actions);
     const snapshot = this.controller.snapshot();
@@ -58,6 +81,7 @@ export class GameScreen {
     this.updateScreenShake(deltaMs);
     snapshot.effects = this.localEffects;
     snapshot.screenShake = this.getScreenShake(now);
+    this.lastSnapshot = snapshot;
     this.renderer.render(snapshot);
     this.updateHud(snapshot);
 
@@ -68,6 +92,24 @@ export class GameScreen {
 
     this.frame = requestAnimationFrame(this.tick);
   };
+
+  onClick = (event) => {
+    const action = event.target?.closest('[data-action]')?.dataset?.action;
+    if (action === 'pause') this.setPaused(true);
+    if (action === 'resume') this.setPaused(false);
+    if (action === 'levels') this.game.showLevels();
+    if (action === 'menu') this.game.showMainMenu();
+  };
+
+  setPaused(paused) {
+    this.paused = paused;
+    this.element.classList.toggle('is-paused', paused);
+    const pauseButton = this.element.querySelector('[data-action="pause"]');
+    if (pauseButton) {
+      pauseButton.textContent = paused ? '▶' : 'Ⅱ';
+      pauseButton.setAttribute('aria-label', paused ? 'Продолжить' : 'Пауза');
+    }
+  }
 
   updateLocalEffects(snapshot, deltaMs) {
     const resources = Object.values(snapshot.stats.resources).reduce((sum, value) => sum + value, 0);
@@ -140,5 +182,6 @@ export class GameScreen {
   destroy() {
     cancelAnimationFrame(this.frame);
     this.detachTouch?.();
+    this.element.removeEventListener('click', this.onClick);
   }
 }
