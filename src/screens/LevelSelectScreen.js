@@ -3,34 +3,51 @@ export class LevelSelectScreen {
     this.game = game;
     this.levels = levels;
     this.element = document.createElement('section');
-    this.element.className = 'screen levels-screen';
+    this.element.className = 'screen levels-screen game-bg game-bg--levels';
     this.render();
   }
 
   render() {
     this.element.innerHTML = `
-      <header class="screen-header">
+      <header class="screen-header levels-header">
         <div>
-          <div class="kicker">Кампания</div>
+          <div class="kicker">КАМПАНИЯ</div>
           <h2>Выбор уровня</h2>
+          <div class="title-rule" aria-hidden="true"><span></span><i>⚡</i></div>
         </div>
-        <button data-action="back">Главное меню</button>
+        <button class="btn-secondary nav-home" data-action="back" type="button"><span aria-hidden="true">⌂</span> Главное меню</button>
       </header>
-      <div class="level-grid">
-        ${this.levels.map((level) => this.levelCard(level)).join('')}
+      <div class="level-grid" aria-label="Уровни кампании">
+        ${this.levels.map((level, index) => this.levelCard(level, index)).join('')}
       </div>
+      <button class="btn-secondary back-floating" data-action="back" type="button"><span aria-hidden="true">←</span> Назад</button>
     `;
   }
 
-  levelCard(level) {
+  levelCard(level, index) {
     const unlocked = this.game.isLevelUnlocked(level.id);
     const completed = this.game.state.completedLevels[level.id];
+    const isSecret = level.id === 'kids_room' && !unlocked;
+    const badge = unlocked ? (completed ? `Лучший: ${completed.bestGrade}` : 'Доступен') : 'Заблокировано';
+    const title = isSecret ? '???' : level.title;
+    const description = unlocked
+      ? level.short
+      : isSecret
+        ? 'ТЗ отсутствует. Открывается после концерта.'
+        : 'Пройдите предыдущий уровень.';
+    const stateClass = unlocked ? (index === 0 ? 'is-active' : 'is-available') : 'is-locked';
     return `
-      <article class="level-card ${unlocked ? '' : 'locked'}">
-        <span class="badge">${unlocked ? (completed ? `Лучший: ${completed.bestGrade}` : 'Доступен') : 'Заблокировано'}</span>
-        <h3>${unlocked ? level.title : level.id === 'kids_room' ? '???' : level.title}</h3>
-        <p>${unlocked ? level.short : level.id === 'kids_room' ? 'ТЗ отсутствует. Открывается после концерта.' : 'Пройдите предыдущий уровень.'}</p>
-        <button data-level="${level.id}" ${unlocked ? '' : 'disabled'}>${unlocked ? 'Старт' : 'Закрыто'}</button>
+      <article class="mission-card mission-card--${level.theme} ${stateClass}">
+        <div class="mission-card__art" aria-hidden="true"></div>
+        <div class="mission-card__shade" aria-hidden="true"></div>
+        <span class="badge ${unlocked ? '' : 'badge--locked'}">${unlocked ? '' : '<i>🔒</i>'}${badge}</span>
+        <h3>${title}</h3>
+        <div class="mission-rule" aria-hidden="true"><span></span><i>⚡</i><span></span></div>
+        <p>${description}</p>
+        <button class="${unlocked ? 'btn-primary' : 'btn-disabled'}" data-level="${level.id}" ${unlocked ? '' : 'disabled'} type="button">
+          <span aria-hidden="true">${unlocked ? '▶' : '🔒'}</span>
+          ${unlocked ? 'Старт' : 'Закрыто'}
+        </button>
       </article>
     `;
   }
@@ -38,8 +55,8 @@ export class LevelSelectScreen {
   mount() { this.element.addEventListener('click', this.onClick); }
 
   onClick = (event) => {
-    if (event.target?.dataset?.action === 'back') this.game.showMainMenu();
-    const levelId = event.target?.dataset?.level;
+    if (event.target?.closest('[data-action]')?.dataset?.action === 'back') this.game.showMainMenu();
+    const levelId = event.target?.closest('[data-level]')?.dataset?.level;
     if (levelId) this.game.startLevel(levelId);
   };
 
