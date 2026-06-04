@@ -1,0 +1,92 @@
+/* Package goal clarity layer.
+   Visual-only CSS: explains level completion without changing gameplay balance. */
+
+.hud-chip--package {
+  border-color: rgba(255, 194, 71, 0.34);
+}
+
+.hud-chip--package strong {
+  color: var(--accent-gold);
+}
+
+.result-package {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.18rem 0.65rem;
+  width: min(520px, 100%);
+  margin: clamp(8px, 1.2vw, 14px) 0 0;
+  padding: 0.62rem 0.74rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 194, 71, 0.11), rgba(9, 17, 30, 0.78));
+  border: 1px solid rgba(255, 194, 71, 0.3);
+  font-weight: 950;
+}
+
+.result-package span {
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.result-package strong {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--accent-gold);
+  font-size: clamp(1.02rem, 2vw, 1.42rem);
+  line-height: 1;
+}
+
+.result-package small {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-soft);
+  font-size: clamp(0.64rem, 1.1vw, 0.82rem);
+  line-height: 1.12;
+}
+
+.stat-card--package {
+  border-color: rgba(255, 194, 71, 0.26);
+}
+
+.stat-card--package i,
+.stat-card--package b {
+  color: var(--accent-gold);
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .result-package {
+    margin-top: 0.32rem;
+    padding: 0.42rem 0.56rem;
+    border-radius: 13px;
+    gap: 0.08rem 0.45rem;
+  }
+
+  .result-package span {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+  }
+
+  .result-package strong {
+    font-size: 1.02rem;
+  }
+
+  .result-package small {
+    font-size: 0.58rem;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 760px),
+       (orientation: landscape) and (max-height: 430px) {
+  .hud-chip--package b {
+    letter-spacing: -0.02em;
+  }
+
+  .result-package small {
+    display: none;
+  }
+}
