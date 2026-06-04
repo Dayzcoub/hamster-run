@@ -7,7 +7,21 @@ const originalDrawObjectMarker = CanvasRenderer.prototype.drawObjectMarker;
 const originalDrawSpriteContourGlow = CanvasRenderer.prototype.drawSpriteContourGlow;
 const originalDrawLaneSwitchTrail = CanvasRenderer.prototype.drawLaneSwitchTrail;
 
+function savedRenderQuality() {
+  try {
+    const raw = window.localStorage.getItem('packit_run_save_v1');
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed?.settings?.renderQuality || 'auto';
+  } catch {
+    return 'auto';
+  }
+}
+
 function shouldUseLowPerf(width, height) {
+  const quality = savedRenderQuality();
+  if (quality === 'performance') return true;
+  if (quality === 'quality') return false;
+
   const ua = navigator.userAgent || '';
   const android = /Android|MZ-|Meizu|Flyme/i.test(ua);
   return android || width < 900 || height < 540;
