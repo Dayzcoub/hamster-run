@@ -51,10 +51,67 @@
 }
 
 @media (orientation: landscape) and (max-height: 560px) {
+  .result-card {
+    max-height: calc(100svh - 14px);
+    height: calc(100svh - 14px);
+  }
+
+  .result-left {
+    gap: 0;
+  }
+
   .result-pass {
-    margin: 0.26rem 0 0.18rem;
-    padding: 0.32rem 0.52rem;
-    font-size: 0.58rem;
-    letter-spacing: 0.08em;
+    margin: 0.2rem 0 0.12rem;
+    padding: 0.28rem 0.48rem;
+    font-size: 0.56rem;
+    letter-spacing: 0.075em;
+  }
+
+  .result-phrase {
+    margin: 0.18rem 0 0;
+    font-size: 0.74rem;
+    line-height: 1.08;
+  }
+
+  .result-tip {
+    max-height: 1.25rem;
+    overflow: hidden;
+    margin-top: 0.24rem;
+    font-size: 0.64rem;
+    line-height: 1.12;
+  }
+
+  .result-retry {
+    margin-top: 0.24rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+  .result-card {
+    height: calc(100svh - 10px);
+    max-height: calc(100svh - 10px);
+    padding: 8px 12px;
+  }
+
+  .result-left h2 {
+    font-size: clamp(1.08rem, 2.8vw, 1.62rem);
+  }
+
+  .result-grade {
+    font-size: clamp(3.8rem, 10vw, 5.8rem);
+    margin: 0.18rem 0;
+  }
+
+  .result-pass {
+    padding: 0.24rem 0.42rem;
+    font-size: 0.5rem;
+  }
+
+  .result-phrase {
+    font-size: 0.66rem;
+  }
+
+  .result-tip {
+    display: none;
   }
 }
