@@ -1,0 +1,60 @@
+/* Pass status clarity layer.
+   Shows whether a level is truly passed without changing rendering/gameplay. */
+
+.result-pass {
+  justify-self: start;
+  margin: clamp(6px, 1vw, 10px) 0 clamp(4px, 0.8vw, 8px);
+  padding: 0.42rem 0.68rem;
+  border-radius: 999px;
+  font-size: clamp(0.68rem, 1.2vw, 0.86rem);
+  line-height: 1;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: rgba(9, 17, 30, 0.76);
+  border: 1px solid rgba(92, 235, 255, 0.24);
+}
+
+.result-pass.is-passed {
+  color: var(--accent-cyan);
+  border-color: rgba(92, 235, 255, 0.38);
+}
+
+.result-pass.is-failed {
+  color: var(--accent-warning);
+  border-color: rgba(255, 158, 42, 0.42);
+}
+
+.badge--passed {
+  color: var(--accent-cyan);
+  border: 1px solid rgba(92, 235, 255, 0.28);
+}
+
+.badge--revision {
+  color: var(--accent-warning);
+  border: 1px solid rgba(255, 158, 42, 0.28);
+}
+
+.mission-card.is-completed {
+  border-color: rgba(92, 235, 255, 0.38);
+}
+
+.mission-card.is-revision {
+  border-color: rgba(255, 158, 42, 0.34);
+}
+
+.mission-card.is-revision .mission-card__art {
+  background:
+    linear-gradient(135deg, rgba(255,158,42,0.12), rgba(92,235,255,0.06)),
+    radial-gradient(circle at 44% 48%, rgba(255,158,42,0.22), transparent 42%),
+    rgba(8, 15, 27, 0.86);
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .result-pass {
+    margin: 0.26rem 0 0.18rem;
+    padding: 0.32rem 0.52rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+  }
+}
