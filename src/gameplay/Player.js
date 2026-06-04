@@ -35,7 +35,11 @@ export class Player {
   update(deltaMs, actions) {
     for (const action of actions) this.apply(action);
 
-    this.renderLane += (this.lane - this.renderLane) * Math.min(1, deltaMs / 110);
+    const laneDiff = this.lane - this.renderLane;
+    const laneStep = Math.min(1, deltaMs / 78);
+    const easedStep = 1 - Math.pow(1 - laneStep, 2);
+    this.renderLane += laneDiff * easedStep;
+    if (Math.abs(this.lane - this.renderLane) < 0.015) this.renderLane = this.lane;
 
     if (this.jumpMs > 0) {
       this.jumpMs += deltaMs;
