@@ -1,5 +1,6 @@
 import { Storage } from './Storage.js';
 import { Input } from './Input.js';
+import { OrientationLock } from './OrientationLock.js';
 import { AssetLoader } from '../render/AssetLoader.js';
 import { MainMenuScreen } from '../screens/MainMenuScreen.js';
 import { LevelSelectScreen } from '../screens/LevelSelectScreen.js';
@@ -12,6 +13,7 @@ export class Game {
     this.root = root;
     this.storage = new Storage();
     this.input = new Input();
+    this.orientationLock = new OrientationLock(root);
     this.assets = new AssetLoader('assets/manifest.json');
     this.activeScreen = null;
     this.state = this.storage.load();
@@ -32,21 +34,25 @@ export class Game {
   }
 
   showMainMenu() {
+    this.orientationLock.stop();
     this.setScreen(new MainMenuScreen(this));
   }
 
   showLevels() {
+    this.orientationLock.start();
     this.setScreen(new LevelSelectScreen(this, levels));
   }
 
   startLevel(levelId) {
     const level = levels.find((item) => item.id === levelId);
     if (!level) throw new Error(`Unknown level: ${levelId}`);
+    this.orientationLock.requestLandscape();
     this.setScreen(new GameScreen(this, level));
   }
 
   showResult(result) {
     this.applyResult(result);
+    this.orientationLock.start();
     this.setScreen(new ResultScreen(this, result));
   }
 
