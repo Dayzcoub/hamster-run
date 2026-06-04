@@ -61,11 +61,11 @@ export class CanvasRenderer {
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.applyScreenShake(levelState.screenShake);
     this.drawBackground(levelState);
-    this.drawLanes();
+    this.drawLanes(levelState);
 
     const drawable = [...levelState.objects].sort((a, b) => a.lane - b.lane || a.x - b.x);
     for (const object of drawable) this.drawObject(object, levelState.elapsedMs);
-    this.drawPlayer(levelState.player, levelState.elapsedMs);
+    this.drawPlayer(playerWithLight(levelState.player), levelState.elapsedMs);
     this.drawEffects(levelState.effects || []);
   }
 
@@ -81,63 +81,232 @@ export class CanvasRenderer {
 
   drawBackground(levelState) {
     const ctx = this.ctx;
-    const gradient = ctx.createLinearGradient(0, 0, this.width, this.height);
-    gradient.addColorStop(0, '#151021');
-    gradient.addColorStop(0.45, '#1b1d2c');
-    gradient.addColorStop(1, '#0d1320');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(-16, -16, this.width + 32, this.height + 32);
+    const distance = levelState.distance || 0;
+    const w = this.width;
+    const h = this.height;
+
+    const sky = ctx.createLinearGradient(0, 0, w, h);
+    sky.addColorStop(0, '#071120');
+    sky.addColorStop(0.42, '#0c1627');
+    sky.addColorStop(0.72, '#0a101d');
+    sky.addColorStop(1, '#050913');
+    ctx.fillStyle = sky;
+    ctx.fillRect(-24, -24, w + 48, h + 48);
+
+    this.drawAtmosphere(distance);
+    this.drawBackstageSilhouettes(distance);
+    this.drawBackstageSigns(distance);
+    this.drawFloorReflection();
+  }
+
+  drawAtmosphere(distance) {
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
 
     ctx.save();
-    ctx.globalAlpha = this.isCompact ? 0.15 : 0.2;
-    ctx.fillStyle = '#7f1d1d';
-    ctx.fillRect(-16, -16, this.width + 32, this.height * 0.28 + 16);
-    ctx.fillStyle = '#f4b942';
-    const stripeStep = this.isCompact ? 240 : 300;
-    const stripeCount = Math.ceil(this.width / stripeStep) + 4;
-    for (let i = 0; i < stripeCount; i++) {
-      const x = ((i * stripeStep - (levelState.distance * 0.12) % stripeStep) % (this.width + stripeStep)) - 130;
+    ctx.globalCompositeOperation = 'screen';
+
+    let glow = ctx.createRadialGradient(w * 0.18, h * 0.12, 0, w * 0.18, h * 0.12, w * 0.42);
+    glow.addColorStop(0, 'rgba(92,235,255,0.18)');
+    glow.addColorStop(0.48, 'rgba(47,141,255,0.07)');
+    glow.addColorStop(1, 'rgba(47,141,255,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+
+    glow = ctx.createRadialGradient(w * 0.78, h * 0.18, 0, w * 0.78, h * 0.18, w * 0.38);
+    glow.addColorStop(0, 'rgba(255,194,71,0.18)');
+    glow.addColorStop(0.46, 'rgba(255,90,78,0.07)');
+    glow.addColorStop(1, 'rgba(255,90,78,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+
+    const stripeStep = this.isCompact ? 220 : 280;
+    const stripeOffset = (distance * 0.06) % stripeStep;
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = '#5cebff';
+    for (let i = -2; i < Math.ceil(w / stripeStep) + 3; i++) {
+      const x = i * stripeStep - stripeOffset;
       ctx.beginPath();
-      ctx.moveTo(x, -16);
-      ctx.lineTo(x + 84, -16);
-      ctx.lineTo(x - 90, this.height + 16);
-      ctx.lineTo(x - 146, this.height + 16);
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + 52, 0);
+      ctx.lineTo(x - 92, h);
+      ctx.lineTo(x - 132, h);
       ctx.closePath();
       ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  drawBackstageSilhouettes(distance) {
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+    const yBase = h * 0.42;
+    const scroll = (distance * 0.045) % 220;
+
+    ctx.save();
+    ctx.globalAlpha = this.isCompact ? 0.34 : 0.42;
+    ctx.strokeStyle = 'rgba(92,235,255,0.18)';
+    ctx.lineWidth = this.isCompact ? 1.2 : 1.6;
+
+    for (let x = -260 - scroll; x < w + 260; x += 220) {
+      this.drawTrussTower(x, yBase - 98, 92, 190);
+      this.drawTrussBeam(x - 20, yBase - 88, 230, 38);
+    }
+
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = 'rgba(5,10,18,0.88)';
+    for (let x = -180 - (distance * 0.08) % 180; x < w + 180; x += 180) {
+      const y = yBase + 22 + ((x / 180) % 2) * 18;
+      ctx.fillRect(x, y, 88, 42);
+      ctx.strokeStyle = 'rgba(255,194,71,0.15)';
+      ctx.strokeRect(x + 5, y + 5, 78, 32);
+      ctx.fillRect(x + 18, y + 42, 10, 8);
+      ctx.fillRect(x + 60, y + 42, 10, 8);
+    }
+
+    ctx.restore();
+  }
+
+  drawTrussTower(x, y, width, height) {
+    const ctx = this.ctx;
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.stroke();
+    const steps = 5;
+    for (let i = 0; i < steps; i++) {
+      const y0 = y + (height / steps) * i;
+      const y1 = y + (height / steps) * (i + 1);
+      ctx.beginPath();
+      ctx.moveTo(x, y0);
+      ctx.lineTo(x + width, y1);
+      ctx.moveTo(x + width, y0);
+      ctx.lineTo(x, y1);
+      ctx.stroke();
+    }
+  }
+
+  drawTrussBeam(x, y, width, height) {
+    const ctx = this.ctx;
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.stroke();
+    for (let i = 0; i < 6; i++) {
+      const x0 = x + (width / 6) * i;
+      const x1 = x + (width / 6) * (i + 1);
+      ctx.beginPath();
+      ctx.moveTo(x0, y + height);
+      ctx.lineTo(x1, y);
+      ctx.stroke();
+    }
+  }
+
+  drawBackstageSigns(distance) {
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+    const signs = [
+      { label: 'STAGE LEFT', x: 0.18, y: 0.27, color: '#5cebff' },
+      { label: 'LOAD IN', x: 0.68, y: 0.34, color: '#ffc247' },
+    ];
+
+    ctx.save();
+    for (const sign of signs) {
+      const x = w * sign.x - (distance * 0.025) % 34;
+      const y = h * sign.y;
+      ctx.globalAlpha = 0.72;
+      ctx.fillStyle = 'rgba(7,14,25,0.72)';
+      ctx.strokeStyle = sign.color === '#5cebff' ? 'rgba(92,235,255,0.42)' : 'rgba(255,194,71,0.42)';
+      ctx.lineWidth = 1;
+      this.roundRect(ctx, x, y, this.isCompact ? 84 : 112, this.isCompact ? 24 : 30, 8);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = `900 ${this.isCompact ? 8 : 10}px system-ui, -apple-system, Segoe UI, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = sign.color;
+      ctx.fillText(sign.label, x + (this.isCompact ? 42 : 56), y + (this.isCompact ? 12 : 15));
     }
     ctx.restore();
   }
 
-  drawLanes() {
+  drawFloorReflection() {
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+    const y = h * 0.42;
+    const grad = ctx.createLinearGradient(0, y, 0, h);
+    grad.addColorStop(0, 'rgba(92,235,255,0.025)');
+    grad.addColorStop(0.5, 'rgba(255,194,71,0.035)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.34)');
+    ctx.save();
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, y, w, h - y);
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#5cebff';
+    ctx.fillRect(0, h * 0.73, w, 2);
+    ctx.fillStyle = '#ffc247';
+    ctx.fillRect(0, h * 0.88, w, 2);
+    ctx.restore();
+  }
+
+  drawLanes(levelState = {}) {
     const ctx = this.ctx;
     const depthBase = this.isWideShort ? 66 : this.isCompact ? 52 : 58;
     const depthStep = this.isWideShort ? 14 : this.isCompact ? 10 : 12;
     const laneOffset = this.isWideShort ? 82 : this.isCompact ? 56 : 78;
+    const distance = levelState.distance || 0;
 
     for (let lane = 0; lane < 3; lane++) {
       const y = this.projector.laneY(lane, this.height);
       const depth = depthBase + lane * depthStep;
       const offset = (1 - lane) * laneOffset;
+      const leftTopX = -180 + offset;
+      const leftBotX = -220 + offset;
+      const rightBotX = this.width + 240 + offset;
+      const rightTopX = this.width + 280 + offset;
+
       ctx.save();
-      ctx.globalAlpha = 0.84;
-      ctx.fillStyle = lane === 2 ? '#2b1f18' : lane === 1 ? '#241c17' : '#211817';
-      ctx.strokeStyle = 'rgba(244,185,66,0.27)';
-      ctx.lineWidth = this.isCompact ? 1.7 : 2;
+      ctx.globalAlpha = 0.94;
+      const laneGradient = ctx.createLinearGradient(0, y - depth, this.width, y + depth);
+      laneGradient.addColorStop(0, lane === 1 ? '#111c2c' : '#0c1726');
+      laneGradient.addColorStop(0.5, lane === 2 ? '#1b1c23' : '#121b2b');
+      laneGradient.addColorStop(1, lane === 0 ? '#172235' : '#111827');
+      ctx.fillStyle = laneGradient;
+      ctx.strokeStyle = 'rgba(92,235,255,0.22)';
+      ctx.lineWidth = this.isCompact ? 1.5 : 2;
+
       ctx.beginPath();
-      ctx.moveTo(-220 + offset, y + depth);
-      ctx.lineTo(this.width + 240 + offset, y + depth - 28);
-      ctx.lineTo(this.width + 280 + offset, y - depth);
-      ctx.lineTo(-180 + offset, y - depth + 28);
+      ctx.moveTo(leftBotX, y + depth);
+      ctx.lineTo(rightBotX, y + depth - 28);
+      ctx.lineTo(rightTopX, y - depth);
+      ctx.lineTo(leftTopX, y - depth + 28);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      ctx.globalAlpha = 0.6;
-      ctx.strokeStyle = 'rgba(103,232,249,0.18)';
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = lane === 1 ? 0.25 : 0.18;
+      ctx.strokeStyle = lane === 1 ? 'rgba(255,194,71,0.72)' : 'rgba(92,235,255,0.55)';
+      ctx.lineWidth = this.isCompact ? 1 : 1.4;
       ctx.beginPath();
-      ctx.moveTo(-180 + offset, y);
-      ctx.lineTo(this.width + 240 + offset, y - 28);
+      ctx.moveTo(leftTopX + 22, y - depth + 34);
+      ctx.lineTo(rightTopX - 38, y - depth + 4);
       ctx.stroke();
+
+      ctx.globalAlpha = 0.14;
+      ctx.strokeStyle = 'rgba(255,255,255,0.42)';
+      const dashOffset = (distance * 0.18 + lane * 30) % 90;
+      for (let x = -180 - dashOffset; x < this.width + 220; x += 90) {
+        ctx.beginPath();
+        ctx.moveTo(x + offset, y + depth * 0.18);
+        ctx.lineTo(x + offset + 46, y + depth * 0.18 - 3);
+        ctx.stroke();
+      }
+
       ctx.restore();
     }
   }
@@ -241,18 +410,18 @@ export class CanvasRenderer {
     const label = collectible ? '+' : '!';
     const ctx = this.ctx;
     const markerSize = Math.max(16, Math.min(24, size * 0.34));
-    const bob = collectible ? Math.sin((elapsedMs || 0) / 180) * 2.2 : 0;
+    const bob = collectible ? Math.sin((elapsedMs || 0) / 180) * 2.2 : Math.sin((elapsedMs || 0) / 110) * 1.2;
     const markerY = y - size * 0.84 - markerSize * 0.38 + bob;
     const markerX = x + size * 0.18;
     const radius = markerSize * 0.52;
 
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = collectible ? 0.92 : 0.96;
-    ctx.shadowColor = collectible ? 'rgba(103,232,249,0.82)' : 'rgba(239,68,68,0.86)';
-    ctx.shadowBlur = collectible ? 10 : 12;
-    ctx.fillStyle = collectible ? 'rgba(13,34,43,0.86)' : 'rgba(54,20,20,0.9)';
-    ctx.strokeStyle = collectible ? 'rgba(244,185,66,0.92)' : 'rgba(255,107,53,0.95)';
+    ctx.globalAlpha = collectible ? 0.94 : 0.98;
+    ctx.shadowColor = collectible ? 'rgba(255,194,71,0.78)' : 'rgba(255,90,78,0.95)';
+    ctx.shadowBlur = collectible ? 12 : 16;
+    ctx.fillStyle = collectible ? 'rgba(11,26,35,0.9)' : 'rgba(54,20,20,0.92)';
+    ctx.strokeStyle = collectible ? 'rgba(92,235,255,0.94)' : 'rgba(255,158,42,0.98)';
     ctx.lineWidth = Math.max(1.5, 2 * scale);
     ctx.beginPath();
     ctx.arc(markerX, markerY, radius, 0, Math.PI * 2);
@@ -264,8 +433,8 @@ export class CanvasRenderer {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(13,19,32,0.92)';
-    ctx.fillStyle = collectible ? '#67e8f9' : '#fb7185';
+    ctx.strokeStyle = 'rgba(5,9,16,0.95)';
+    ctx.fillStyle = collectible ? '#ffc247' : '#ff5a4e';
     ctx.strokeText(label, markerX, markerY - markerSize * 0.04);
     ctx.fillText(label, markerX, markerY - markerSize * 0.04);
     ctx.restore();
@@ -283,8 +452,8 @@ export class CanvasRenderer {
     const height = size;
     const drawX = -width * anchor.x;
     const drawY = -height * anchor.y;
-    const outer = collectible ? 'rgba(103,232,249,0.95)' : 'rgba(255,107,53,0.98)';
-    const inner = collectible ? 'rgba(244,185,66,0.72)' : 'rgba(239,68,68,0.74)';
+    const outer = collectible ? 'rgba(255,194,71,0.95)' : 'rgba(255,90,78,0.98)';
+    const inner = collectible ? 'rgba(92,235,255,0.72)' : 'rgba(255,158,42,0.72)';
 
     ctx.save();
     ctx.translate(x, y);
@@ -295,18 +464,10 @@ export class CanvasRenderer {
     ctx.shadowBlur = collectible ? 18 : 16;
     ctx.drawImage(image, drawX, drawY, width, height);
 
-    ctx.globalAlpha = collectible ? 0.46 : 0.48;
+    ctx.globalAlpha = collectible ? 0.42 : 0.48;
     ctx.shadowColor = inner;
     ctx.shadowBlur = collectible ? 8 : 7;
     ctx.drawImage(image, drawX, drawY, width, height);
-
-    ctx.globalAlpha = collectible ? 0.18 : 0.22;
-    ctx.shadowColor = outer;
-    ctx.shadowBlur = 0;
-    ctx.drawImage(image, drawX - 1.5, drawY, width, height);
-    ctx.drawImage(image, drawX + 1.5, drawY, width, height);
-    ctx.drawImage(image, drawX, drawY - 1.5, width, height);
-    ctx.drawImage(image, drawX, drawY + 1.5, width, height);
 
     ctx.restore();
   }
@@ -322,7 +483,7 @@ export class CanvasRenderer {
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.globalCompositeOperation = 'screen';
-      ctx.fillStyle = pickup ? 'rgba(103,232,249,0.28)' : 'rgba(239,68,68,0.28)';
+      ctx.fillStyle = pickup ? 'rgba(255,194,71,0.26)' : 'rgba(255,90,78,0.3)';
       ctx.beginPath();
       ctx.arc(projected.x, projected.y - 42, 24 + t * 34, 0, Math.PI * 2);
       ctx.fill();
@@ -335,8 +496,8 @@ export class CanvasRenderer {
       ctx.font = '900 20px system-ui, -apple-system, Segoe UI, sans-serif';
       ctx.textAlign = 'center';
       ctx.lineWidth = 4;
-      ctx.strokeStyle = 'rgba(13,19,32,0.9)';
-      ctx.fillStyle = pickup ? '#67e8f9' : '#fb7185';
+      ctx.strokeStyle = 'rgba(5,9,16,0.92)';
+      ctx.fillStyle = pickup ? '#ffc247' : '#ff5a4e';
       ctx.strokeText(effect.label, projected.x, y);
       ctx.fillText(effect.label, projected.x, y);
       ctx.restore();
@@ -361,9 +522,9 @@ export class CanvasRenderer {
       const radius = particle.size * (1 - localT * 0.35);
 
       ctx.globalAlpha = particleAlpha;
-      ctx.shadowColor = index % 2 === 0 ? 'rgba(103,232,249,0.9)' : 'rgba(244,185,66,0.9)';
+      ctx.shadowColor = index % 2 === 0 ? 'rgba(92,235,255,0.9)' : 'rgba(255,194,71,0.9)';
       ctx.shadowBlur = 8;
-      ctx.fillStyle = index % 2 === 0 ? '#67e8f9' : '#f4b942';
+      ctx.fillStyle = index % 2 === 0 ? '#5cebff' : '#ffc247';
       ctx.beginPath();
       ctx.arc(px, py, radius, 0, Math.PI * 2);
       ctx.fill();
@@ -401,7 +562,7 @@ export class CanvasRenderer {
 
     ctx.save();
     ctx.globalAlpha = shadowAlpha;
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = 'rgba(0,0,0,0.92)';
     ctx.beginPath();
     ctx.ellipse(x, y + 8 * scale, width * 0.24 * shadowScale, height * 0.07 / Math.max(0.75, shadowScale), 0, 0, Math.PI * 2);
     ctx.fill();
@@ -418,9 +579,24 @@ export class CanvasRenderer {
 
   drawFallback(x, y, size, isPlayer) {
     const ctx = this.ctx;
-    ctx.fillStyle = isPlayer ? '#f4b942' : '#67e8f9';
+    ctx.fillStyle = isPlayer ? '#ffc247' : '#5cebff';
     ctx.beginPath();
     ctx.arc(x, y - size * 0.45, size * 0.25, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  roundRect(ctx, x, y, width, height, radius) {
+    const r = Math.min(radius, width / 2, height / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + width, y, x + width, y + height, r);
+    ctx.arcTo(x + width, y + height, x, y + height, r);
+    ctx.arcTo(x, y + height, x, y, r);
+    ctx.arcTo(x, y, x + width, y, r);
+    ctx.closePath();
+  }
+}
+
+function playerWithLight(player) {
+  return player;
 }
