@@ -4,6 +4,8 @@ import '../render/CanvasRendererCleanRoad.js';
 import { CanvasRenderer } from '../render/CanvasRenderer.js';
 import { LevelController } from '../gameplay/LevelController.js';
 
+const COUNTDOWN_TOTAL_MS = 3200;
+
 export class GameScreen {
   constructor(game, level) {
     this.game = game;
@@ -18,9 +20,11 @@ export class GameScreen {
     this.previousStylePoints = 0;
     this.previousStyleCombo = 0;
     this.paused = false;
+    this.countdownMs = COUNTDOWN_TOTAL_MS;
+    this.lastCountdownLabel = '';
     this.lastSnapshot = null;
     this.element = document.createElement('section');
-    this.element.className = `screen game-screen game-screen--${level.theme}`;
+    this.element.className = `screen game-screen game-screen--${level.theme} is-countdown`;
     this.element.innerHTML = `
       <header class="game-hud" aria-label="Игровой интерфейс">
         <button class="hud-pause" data-action="pause" type="button" aria-label="Пауза">Ⅱ</button>
@@ -40,6 +44,11 @@ export class GameScreen {
       </header>
       <div class="canvas-wrap"><canvas class="game-canvas" aria-label="Игровое поле"></canvas></div>
       <footer class="event-bar"><span aria-hidden="true">☝</span><strong>Свайп:</strong> дорожка · вверх прыжок · вниз подкат · финты дают бонус</footer>
+      <aside class="start-countdown" aria-live="polite" aria-label="Старт уровня">
+        <span class="start-countdown__kicker">ГОТОВНОСТЬ К МОНТАЖУ</span>
+        <strong data-countdown-label>3</strong>
+        <span class="start-countdown__hint">Приготовь свайпы</span>
+      </aside>
       <aside class="pause-overlay" aria-hidden="true">
         <div class="pause-card game-panel">
           <div class="kicker">ПАУЗА</div>
@@ -75,6 +84,21 @@ export class GameScreen {
       return;
     }
 
+    if (this.countdownMs > 0) {
+      this.game.input.consume();
+      this.countdownMs = Math.max(0, this.countdownMs - deltaMs);
+      const snapshot = this.controller.snapshot();
+      snapshot.effects = [];
+      snapshot.screenShake = null;
+      this.lastSnapshot = snapshot;
+      this.renderer.render(snapshot);
+      this.updateHud(snapshot);
+      this.updateCountdown();
+      this.frame = requestAnimationFrame(this.tick);
+      return;
+    }
+
+    this.element.classList.remove('is-countdown');
     const actions = this.game.input.consume();
     const result = this.controller.update(deltaMs, actions);
     const snapshot = this.controller.snapshot();
@@ -110,6 +134,23 @@ export class GameScreen {
       pauseButton.textContent = paused ? '▶' : 'Ⅱ';
       pauseButton.setAttribute('aria-label', paused ? 'Продолжить' : 'Пауза');
     }
+  }
+
+  updateCountdown() {
+    const label = this.countdownLabel();
+    if (label === this.lastCountdownLabel) return;
+    this.lastCountdownLabel = label;
+    const countdownNode = this.element.querySelector('[data-countdown-label]');
+    if (countdownNode) countdownNode.textContent = label;
+    this.element.dataset.countdownLabel = label;
+  }
+
+  countdownLabel() {
+    if (this.countdownMs > 2300) return '3';
+    if (this.countdownMs > 1400) return '2';
+    if (this.countdownMs > 520) return '1';
+    if (this.countdownMs > 0) return 'Монтаж!';
+    return '';
   }
 
   updateLocalEffects(snapshot, deltaMs) {
