@@ -8,6 +8,8 @@ import { GameScreen } from '../screens/GameScreen.js';
 import { ResultScreen } from '../screens/ResultScreen.js';
 import { levels } from '../data/levels.js';
 
+const PASSING_GRADES = new Set(['C', 'B', 'A', 'S']);
+
 export class Game {
   constructor(root) {
     this.root = root;
@@ -60,6 +62,8 @@ export class Game {
     const saved = this.state.completedLevels[result.level.id];
     const previousBestScore = saved?.bestScore || 0;
     const previousBestGrade = saved?.bestGrade || null;
+    const wasPassed = Boolean(saved?.passed);
+    const passed = PASSING_GRADES.has(result.grade);
     const bestScore = Math.max(previousBestScore, result.score);
     const bestGrade = this.pickBetterGrade(previousBestGrade, result.grade);
 
@@ -69,17 +73,23 @@ export class Game {
     result.bestGrade = bestGrade;
     result.isNewRecord = result.score > previousBestScore;
     result.isFirstClear = !saved;
+    result.passed = passed;
+    result.wasPassed = wasPassed;
+    result.firstPassed = passed && !wasPassed;
 
     this.state.bread += result.bread;
     this.state.completedLevels[result.level.id] = {
       bestGrade,
       bestScore,
+      passed: wasPassed || passed,
       completedAt: new Date().toISOString(),
     };
 
-    for (const unlock of result.level.unlocksAfterComplete || []) {
-      if (!this.state.unlockedLevels.includes(unlock)) {
-        this.state.unlockedLevels.push(unlock);
+    if (passed) {
+      for (const unlock of result.level.unlocksAfterComplete || []) {
+        if (!this.state.unlockedLevels.includes(unlock)) {
+          this.state.unlockedLevels.push(unlock);
+        }
       }
     }
 
