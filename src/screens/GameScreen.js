@@ -47,6 +47,7 @@ export class GameScreen {
     this.previousMistakesLeft = 3;
     this.previousStylePoints = 0;
     this.previousStyleCombo = 0;
+    this.previousPrecisionDodges = 0;
     this.paused = false;
     this.countdownMs = COUNTDOWN_TOTAL_MS;
     this.lastCountdownLabel = '';
@@ -192,14 +193,17 @@ export class GameScreen {
 
   updateLocalEffects(snapshot, deltaMs) {
     const packageCollected = this.packageCollected(snapshot);
+    const precisionDodges = snapshot.stats.precisionDodges || 0;
 
     if (snapshot.stats.bread > this.previousBread) this.spawnLocalEffect('pickup', `+${snapshot.stats.bread - this.previousBread}`);
     if (packageCollected > this.previousPackage) this.spawnLocalEffect('pickup', `ПАКЕТ +${packageCollected - this.previousPackage}`);
     if (snapshot.stats.stylePoints > this.previousStylePoints) {
       const gained = snapshot.stats.stylePoints - this.previousStylePoints;
       const combo = snapshot.stats.styleCombo || 1;
-      const label = combo > 1 ? `ФИНТ +${gained} ×${combo}` : `ФИНТ +${gained}`;
-      this.spawnLocalEffect('style', label);
+      const cleanGained = precisionDodges > this.previousPrecisionDodges;
+      const prefix = cleanGained ? 'ЧИСТО' : 'ФИНТ';
+      const label = combo > 1 ? `${prefix} +${gained} ×${combo}` : `${prefix} +${gained}`;
+      this.spawnLocalEffect(cleanGained ? 'clean' : 'style', label);
     }
     if (snapshot.player.mistakesLeft < this.previousMistakesLeft) {
       this.spawnLocalEffect('hit', '-1');
@@ -211,6 +215,7 @@ export class GameScreen {
     this.previousMistakesLeft = snapshot.player.mistakesLeft;
     this.previousStylePoints = snapshot.stats.stylePoints || 0;
     this.previousStyleCombo = snapshot.stats.styleCombo || 0;
+    this.previousPrecisionDodges = precisionDodges;
 
     for (const effect of this.localEffects) effect.ageMs += deltaMs;
     this.localEffects = this.localEffects.filter((effect) => effect.ageMs < effect.durationMs);
@@ -244,7 +249,7 @@ export class GameScreen {
       x: player.x + 34,
       lane: player.renderLane,
       ageMs: 0,
-      durationMs: type === 'pickup' ? 560 : type === 'style' ? 720 : 420,
+      durationMs: type === 'pickup' ? 560 : type === 'clean' ? 780 : type === 'style' ? 720 : 420,
     });
   }
 
