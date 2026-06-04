@@ -21,7 +21,7 @@ export class MainMenuScreen {
         <div class="player-badge__body">
           <strong>Монтажник</strong>
           <span>2 450 / 4 000 XP</span>
-          <div class="xp-bar"><i style="width:61%"></i></div>
+          <div class="xp-bar"><i></i></div>
         </div>
         <b>12</b>
       </div>
