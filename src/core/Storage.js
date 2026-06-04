@@ -9,6 +9,7 @@ const DEFAULT_SAVE = {
     sound: true,
     music: true,
     vibration: true,
+    renderQuality: 'auto',
   },
 };
 
@@ -17,7 +18,16 @@ export class Storage {
     try {
       const raw = window.localStorage.getItem(SAVE_KEY);
       if (!raw) return structuredClone(DEFAULT_SAVE);
-      return { ...structuredClone(DEFAULT_SAVE), ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      const defaults = structuredClone(DEFAULT_SAVE);
+      return {
+        ...defaults,
+        ...parsed,
+        settings: {
+          ...defaults.settings,
+          ...(parsed.settings || {}),
+        },
+      };
     } catch (error) {
       console.warn('Failed to load save, using default', error);
       return structuredClone(DEFAULT_SAVE);
