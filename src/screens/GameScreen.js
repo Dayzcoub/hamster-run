@@ -34,6 +34,15 @@ function packageSummary(level) {
     .join(' · ');
 }
 
+function formatRemainingTime(snapshot) {
+  const durationMs = (snapshot.level.duration || 0) * 1000;
+  const remainingMs = Math.max(0, durationMs - (snapshot.elapsedMs || 0));
+  const totalSeconds = Math.ceil(remainingMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
 export class GameScreen {
   constructor(game, level) {
     this.game = game;
@@ -63,7 +72,7 @@ export class GameScreen {
         <div class="hud-status">
           <span class="hud-status__icon" aria-hidden="true">◷</span>
           <span class="hud-status__text">${level.intro}</span>
-          <strong class="hud-timer" data-hud="timer">10:00</strong>
+          <strong class="hud-timer" data-hud="timer">${formatRemainingTime({ level, elapsedMs: 0 })}</strong>
         </div>
         <div class="hud-score" aria-label="Очки финтов"><span aria-hidden="true">⚡</span><strong data-hud-value="score">0</strong></div>
         <div class="hud-chips">
@@ -75,7 +84,7 @@ export class GameScreen {
         <div class="progress-track" aria-hidden="true"><div class="progress-fill" data-hud="progress"></div></div>
       </header>
       <div class="canvas-wrap"><canvas class="game-canvas" aria-label="Игровое поле"></canvas></div>
-      <footer class="event-bar"><span aria-hidden="true">📦</span><strong>Цель:</strong> собери пакет ресурсов · хлеб и финты дают рекорд</footer>
+      <footer class="event-bar" data-event-bar><span aria-hidden="true">📦</span><strong data-event-title>Цель:</strong> <span data-event-text>собери пакет ресурсов · хлеб и финты дают рекорд</span></footer>
       <aside class="start-countdown" aria-live="polite" aria-label="Старт уровня">
         <span class="start-countdown__kicker">ПАКЕТ НА УРОВЕНЬ</span>
         <strong data-countdown-label>3</strong>
@@ -273,11 +282,19 @@ export class GameScreen {
     const packageComplete = this.packageTargetTotal > 0 && packageCollected >= this.packageTargetTotal;
     const packageChip = this.element.querySelector('.hud-chip--package');
     if (packageChip) packageChip.classList.toggle('is-package-complete', packageComplete);
+    this.element.classList.toggle('is-package-complete', packageComplete);
+    const eventTitle = this.element.querySelector('[data-event-title]');
+    const eventText = this.element.querySelector('[data-event-text]');
+    if (eventTitle && eventText) {
+      eventTitle.textContent = packageComplete ? 'Пакет собран:' : 'Цель:';
+      eventText.textContent = packageComplete ? 'добирай хлеб и финты до конца таймера' : 'собери пакет ресурсов · хлеб и финты дают рекорд';
+    }
     this.element.querySelector('[data-hud-value="bread"]').textContent = snapshot.stats.bread;
     this.element.querySelector('[data-hud-value="package"]').textContent = `${packageCollected}/${this.packageTargetTotal || 0}`;
     this.element.querySelector('[data-hud-value="mistakes"]').textContent = snapshot.player.mistakesLeft;
     this.element.querySelector('[data-hud-value="style"]').textContent = snapshot.stats.stylePoints || 0;
     this.element.querySelector('[data-hud-value="score"]').textContent = snapshot.stats.stylePoints || 0;
+    this.element.querySelector('[data-hud="timer"]').textContent = formatRemainingTime(snapshot);
     this.element.querySelector('[data-hud="progress"]').style.width = `${Math.round(snapshot.progress * 100)}%`;
   }
 
