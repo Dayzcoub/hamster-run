@@ -27,26 +27,41 @@ export class LevelSelectScreen {
   levelCard(level, index) {
     const unlocked = this.game.isLevelUnlocked(level.id);
     const completed = this.game.state.completedLevels[level.id];
+    const passed = Boolean(completed?.passed);
     const isSecret = level.id === 'kids_room' && !unlocked;
-    const badge = unlocked ? (completed ? `Лучший: ${completed.bestGrade}` : 'Доступен') : 'Заблокировано';
+    const badge = unlocked
+      ? completed
+        ? passed
+          ? `Сдано: ${completed.bestGrade}`
+          : `Доработка: ${completed.bestGrade}`
+        : 'Доступен'
+      : 'Заблокировано';
     const title = isSecret ? '???' : level.title;
     const description = unlocked
       ? level.short
       : isSecret
         ? 'ТЗ отсутствует. Открывается после концерта.'
-        : 'Пройдите предыдущий уровень.';
-    const stateClass = unlocked ? (index === 0 ? 'is-active' : 'is-available') : 'is-locked';
+        : 'Сдайте предыдущий уровень минимум на C.';
+    const stateClass = unlocked
+      ? passed
+        ? 'is-completed'
+        : completed
+          ? 'is-revision'
+          : index === 0
+            ? 'is-active'
+            : 'is-available'
+      : 'is-locked';
     return `
       <article class="mission-card mission-card--${level.theme} ${stateClass}">
         <div class="mission-card__art" aria-hidden="true"></div>
         <div class="mission-card__shade" aria-hidden="true"></div>
-        <span class="badge ${unlocked ? '' : 'badge--locked'}">${unlocked ? '' : '<i>🔒</i>'}${badge}</span>
+        <span class="badge ${unlocked ? passed ? 'badge--passed' : completed ? 'badge--revision' : '' : 'badge--locked'}">${unlocked ? '' : '<i>🔒</i>'}${badge}</span>
         <h3>${title}</h3>
         <div class="mission-rule" aria-hidden="true"><span></span><i>⚡</i><span></span></div>
         <p>${description}</p>
         <button class="${unlocked ? 'btn-primary' : 'btn-disabled'}" data-level="${level.id}" ${unlocked ? '' : 'disabled'} type="button">
           <span aria-hidden="true">${unlocked ? '▶' : '🔒'}</span>
-          ${unlocked ? 'Старт' : 'Закрыто'}
+          ${unlocked ? completed && !passed ? 'Переделать' : 'Старт' : 'Закрыто'}
         </button>
       </article>
     `;
