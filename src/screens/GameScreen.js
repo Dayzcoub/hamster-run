@@ -49,6 +49,7 @@ export class GameScreen {
     this.previousStylePoints = 0;
     this.previousStyleCombo = 0;
     this.previousPrecisionDodges = 0;
+    this.packageCompleteAnnounced = false;
     this.paused = false;
     this.countdownMs = COUNTDOWN_TOTAL_MS;
     this.lastCountdownLabel = '';
@@ -203,6 +204,10 @@ export class GameScreen {
 
     if (snapshot.stats.bread > this.previousBread) this.spawnLocalEffect('pickup', `+${snapshot.stats.bread - this.previousBread}`);
     if (packageCollected > this.previousPackage) this.spawnLocalEffect('pickup', `ПАКЕТ +${packageCollected - this.previousPackage}`);
+    if (!this.packageCompleteAnnounced && this.packageTargetTotal > 0 && packageCollected >= this.packageTargetTotal) {
+      this.packageCompleteAnnounced = true;
+      this.spawnLocalEffect('complete', 'ПАКЕТ СОБРАН!');
+    }
     if (resourceTotal > this.previousResourceTotal && packageCollected === this.previousPackage) {
       this.spawnLocalEffect('pickup', `ЛИШНЕЕ +${resourceTotal - this.previousResourceTotal}`);
     }
@@ -259,12 +264,15 @@ export class GameScreen {
       x: player.x + 34,
       lane: player.renderLane,
       ageMs: 0,
-      durationMs: type === 'pickup' ? 560 : type === 'clean' ? 780 : type === 'style' ? 720 : 420,
+      durationMs: type === 'pickup' ? 560 : type === 'complete' ? 980 : type === 'clean' ? 780 : type === 'style' ? 720 : 420,
     });
   }
 
   updateHud(snapshot) {
     const packageCollected = this.packageCollected(snapshot);
+    const packageComplete = this.packageTargetTotal > 0 && packageCollected >= this.packageTargetTotal;
+    const packageChip = this.element.querySelector('.hud-chip--package');
+    if (packageChip) packageChip.classList.toggle('is-package-complete', packageComplete);
     this.element.querySelector('[data-hud-value="bread"]').textContent = snapshot.stats.bread;
     this.element.querySelector('[data-hud-value="package"]').textContent = `${packageCollected}/${this.packageTargetTotal || 0}`;
     this.element.querySelector('[data-hud-value="mistakes"]').textContent = snapshot.player.mistakesLeft;
