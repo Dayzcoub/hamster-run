@@ -34,6 +34,7 @@ function resultTip(result) {
   if (result.firstPassed) return 'Объект сдан: следующий уровень открыт. Теперь можно улучшать оценку и рекорд.';
   if (result.mistakes > 0) return 'Меньше косяков: каждый косяк режет выполнение примерно на 10%.';
   if (progress.collectedTotal < progress.targetTotal) return 'Добери пакет: оценка растёт от нужных ресурсов, хлеб отдельно даёт очки.';
+  if ((result.precisionDodges || 0) < 2) return 'Чистые финты дают доп. бонус: прыгай и подкатывайся ближе к препятствию.';
   if ((result.stylePoints || 0) < 220) return 'Больше финтов: прыгай и подкатывайся впритык к препятствиям ради бонусов.';
   if (result.bestStyleCombo < 3) return 'Собери серию финтов подряд: комбо быстрее поднимает итоговые очки.';
   return 'Отличный монтаж. Теперь можно выбивать S-рейтинг и рекорд очков.';
@@ -93,6 +94,7 @@ export class ResultScreen {
           <div class="stat-card"><i aria-hidden="true">🍞</i><strong>Хлеб</strong><b>${result.bread}</b></div>
           <div class="stat-card stat-card--danger"><i aria-hidden="true">⚠</i><strong>Косяки</strong><b>${result.mistakes}</b></div>
           <div class="stat-card"><i aria-hidden="true">☆</i><strong>Финты</strong><b>${result.stylePoints || 0}</b></div>
+          <div class="stat-card stat-card--precision"><i aria-hidden="true">✦</i><strong>Чистые финты</strong><b>${result.precisionDodges || 0}</b></div>
           <div class="stat-card stat-card--record"><i aria-hidden="true">🏆</i><strong>Рекорд</strong><b>${bestScore}</b></div>
         </div>
         <div class="result-actions">
