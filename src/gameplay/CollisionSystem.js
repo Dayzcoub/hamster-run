@@ -36,6 +36,7 @@ export class CollisionSystem {
         object.dodgePending = true;
         object.dodgeAction = object.dodge;
         object.dodgeLane = Math.round(player.lane);
+        object.dodgeDistance = Math.min(object.dodgeDistance ?? Number.POSITIVE_INFINITY, distance);
         continue;
       }
 
@@ -65,7 +66,7 @@ export class CollisionSystem {
     if (!object.dodgePending) return null;
 
     object.collected = true;
-    const style = stats.addStyleDodge?.(object.dodgeAction || object.dodge) || { points: 0, combo: 0 };
+    const style = stats.addStyleDodge?.(object.dodgeAction || object.dodge, object.dodgeDistance) || { points: 0, combo: 0 };
     return {
       type: 'style',
       action: object.dodgeAction || object.dodge,
@@ -74,6 +75,8 @@ export class CollisionSystem {
       visualKey: object.visualKey,
       points: style.points,
       combo: style.combo,
+      precisionBonus: style.precisionBonus || 0,
+      clean: Boolean(style.clean),
     };
   }
 
