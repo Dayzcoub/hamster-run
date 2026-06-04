@@ -67,10 +67,6 @@
   color: var(--accent-cyan);
 }
 
-.result-stats:has(.stat-card--precision) {
-  grid-auto-rows: minmax(0, 1fr);
-}
-
 @media (orientation: landscape) and (max-height: 560px) {
   .result-package {
     margin-top: 0.32rem;
@@ -92,34 +88,30 @@
     font-size: 0.58rem;
   }
 
-  .result-stats:has(.stat-card--precision) {
+  .result-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-auto-rows: minmax(48px, 1fr);
     align-content: start;
     gap: 0.32rem;
   }
 
-  .result-stats:has(.stat-card--precision) .stat-card {
+  .result-stats .stat-card {
     min-height: 0;
     padding: 0.46rem 0.54rem;
     border-radius: 13px;
     gap: 0.04rem 0.36rem;
   }
 
-  .result-stats:has(.stat-card--precision) .stat-card i {
+  .result-stats .stat-card i {
     font-size: 0.86rem;
   }
 
-  .result-stats:has(.stat-card--precision) .stat-card strong {
+  .result-stats .stat-card strong {
     font-size: clamp(0.56rem, 1vw, 0.68rem);
   }
 
-  .result-stats:has(.stat-card--precision) .stat-card b {
+  .result-stats .stat-card b {
     font-size: clamp(0.9rem, 1.55vw, 1.12rem);
-  }
-
-  .result-stats:has(.stat-card--precision) .stat-card--record {
-    display: none;
   }
 }
 
@@ -133,21 +125,21 @@
     display: none;
   }
 
-  .result-stats:has(.stat-card--precision) {
+  .result-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-auto-rows: minmax(40px, 1fr);
     gap: 0.26rem;
   }
 
-  .result-stats:has(.stat-card--precision) .stat-card {
+  .result-stats .stat-card {
     padding: 0.34rem 0.44rem;
   }
 
-  .result-stats:has(.stat-card--precision) .stat-card strong {
+  .result-stats .stat-card strong {
     font-size: 0.52rem;
   }
 
-  .result-stats:has(.stat-card--precision) .stat-card b {
+  .result-stats .stat-card b {
     font-size: 0.86rem;
   }
 }
