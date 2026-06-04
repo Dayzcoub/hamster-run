@@ -9,6 +9,15 @@
   color: var(--accent-gold);
 }
 
+.hud-chip--package.is-package-complete {
+  border-color: rgba(92, 235, 255, 0.48);
+  background: linear-gradient(180deg, rgba(92, 235, 255, 0.16), rgba(9, 17, 30, 0.84));
+}
+
+.hud-chip--package.is-package-complete strong {
+  color: var(--accent-cyan);
+}
+
 .result-package {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
