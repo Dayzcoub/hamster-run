@@ -1,0 +1,251 @@
+/* Responsive gameplay HUD pass.
+   Goal: give landscape phones more canvas height without touching sprites or canvas effects. */
+
+@media (orientation: landscape) and (max-width: 980px),
+       (orientation: landscape) and (max-height: 540px) {
+  :root {
+    --hud-h: clamp(60px, 14.8svh, 74px);
+    --footer-h: clamp(24px, 6.2svh, 32px);
+  }
+
+  .game-screen {
+    grid-template-rows: var(--hud-h) minmax(0, 1fr) var(--footer-h);
+  }
+
+  .game-hud {
+    height: var(--hud-h);
+    min-height: 0;
+    overflow: hidden;
+    grid-template-columns: clamp(32px, 7.2svh, 38px) minmax(0, 1fr) minmax(54px, 11vw, 76px);
+    grid-template-rows: minmax(24px, 0.92fr) minmax(26px, 1fr) 3px;
+    gap: clamp(3px, 0.8svh, 5px) clamp(5px, 1.2vw, 9px);
+    padding: max(4px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 3px max(8px, env(safe-area-inset-left));
+  }
+
+  .hud-pause {
+    width: clamp(31px, 7svh, 36px);
+    height: clamp(31px, 7svh, 36px);
+    min-width: 0;
+    border-radius: 11px;
+    font-size: clamp(0.82rem, 2.6svh, 0.98rem);
+  }
+
+  .hud-status {
+    min-width: 0;
+    height: 100%;
+    border-radius: 11px;
+    padding: 0 clamp(7px, 1.6vw, 12px);
+    gap: clamp(4px, 1vw, 8px);
+  }
+
+  .hud-status__icon {
+    font-size: clamp(0.72rem, 2.2svh, 0.86rem);
+  }
+
+  .hud-status__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(0.58rem, 1.9svh, 0.78rem);
+    letter-spacing: clamp(0.08em, 0.25vw, 0.15em);
+    line-height: 1;
+  }
+
+  .hud-timer {
+    flex: 0 0 auto;
+    font-size: clamp(0.78rem, 2.7svh, 0.98rem);
+    line-height: 1;
+  }
+
+  .hud-score {
+    height: 100%;
+    min-width: 0;
+    border-radius: 11px;
+    gap: 0.22rem;
+    padding: 0 clamp(6px, 1.2vw, 10px);
+    font-size: clamp(0.78rem, 2.6svh, 0.95rem);
+  }
+
+  .hud-score strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hud-chips {
+    min-width: 0;
+    gap: clamp(4px, 1vw, 8px);
+  }
+
+  .hud-chip {
+    height: 100%;
+    min-width: 0;
+    grid-template-columns: auto minmax(28px, 1fr) auto;
+    gap: clamp(3px, 0.8vw, 6px);
+    padding: 0 clamp(5px, 1.25vw, 10px);
+    border-radius: 11px;
+  }
+
+  .hud-chip i {
+    font-size: clamp(0.78rem, 2.5svh, 0.96rem);
+  }
+
+  .hud-chip b {
+    font-size: clamp(0.58rem, 1.75svh, 0.72rem);
+    line-height: 1;
+  }
+
+  .hud-chip strong {
+    font-size: clamp(0.74rem, 2.4svh, 0.92rem);
+    line-height: 1;
+  }
+
+  .progress-track {
+    height: 3px;
+  }
+
+  .event-bar {
+    min-height: 0;
+    height: var(--footer-h);
+    padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+    gap: 0.35rem;
+    font-size: clamp(0.58rem, 1.85svh, 0.72rem);
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .event-bar strong {
+    flex: 0 0 auto;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 760px),
+       (orientation: landscape) and (max-height: 430px) {
+  :root {
+    --hud-h: clamp(54px, 15svh, 64px);
+    --footer-h: clamp(22px, 6svh, 28px);
+  }
+
+  .game-hud {
+    grid-template-columns: clamp(30px, 7.4svh, 34px) minmax(0, 1fr) minmax(48px, 12vw, 64px);
+    grid-template-rows: minmax(22px, 1fr) minmax(23px, 1fr) 3px;
+    gap: 3px 5px;
+    padding-top: max(3px, env(safe-area-inset-top));
+    padding-bottom: 2px;
+  }
+
+  .hud-pause {
+    width: clamp(29px, 7.3svh, 33px);
+    height: clamp(29px, 7.3svh, 33px);
+  }
+
+  .hud-status {
+    padding-inline: 7px;
+  }
+
+  .hud-status__icon {
+    display: none;
+  }
+
+  .hud-status__text {
+    font-size: clamp(0.54rem, 1.95svh, 0.68rem);
+    letter-spacing: 0.08em;
+  }
+
+  .hud-timer {
+    font-size: clamp(0.72rem, 2.65svh, 0.88rem);
+  }
+
+  .hud-score {
+    padding-inline: 6px;
+    font-size: clamp(0.72rem, 2.55svh, 0.86rem);
+  }
+
+  .hud-chips {
+    gap: 4px;
+  }
+
+  .hud-chip {
+    grid-template-columns: auto minmax(22px, 1fr) auto;
+    padding-inline: 5px;
+    gap: 3px;
+  }
+
+  .hud-chip i {
+    font-size: clamp(0.72rem, 2.45svh, 0.88rem);
+  }
+
+  .hud-chip b {
+    font-size: clamp(0.52rem, 1.85svh, 0.64rem);
+    letter-spacing: -0.01em;
+  }
+
+  .hud-chip strong {
+    font-size: clamp(0.68rem, 2.42svh, 0.84rem);
+  }
+
+  .event-bar {
+    gap: 0.28rem;
+    font-size: clamp(0.54rem, 1.85svh, 0.66rem);
+  }
+}
+
+@media (orientation: landscape) and (max-width: 640px),
+       (orientation: landscape) and (max-height: 380px) {
+  :root {
+    --hud-h: 52px;
+    --footer-h: 22px;
+  }
+
+  .game-hud {
+    grid-template-columns: 29px minmax(0, 1fr) 48px;
+    grid-template-rows: 21px 23px 2px;
+    gap: 3px 4px;
+    padding-left: max(6px, env(safe-area-inset-left));
+    padding-right: max(6px, env(safe-area-inset-right));
+  }
+
+  .hud-pause {
+    width: 29px;
+    height: 29px;
+    border-radius: 10px;
+  }
+
+  .hud-status,
+  .hud-score,
+  .hud-chip {
+    border-radius: 10px;
+  }
+
+  .hud-status__text {
+    font-size: 0.54rem;
+  }
+
+  .hud-timer {
+    font-size: 0.72rem;
+  }
+
+  .hud-score span {
+    display: none;
+  }
+
+  .hud-chip {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding-inline: 4px;
+  }
+
+  .hud-chip b {
+    font-size: 0.5rem;
+  }
+
+  .hud-chip strong {
+    font-size: 0.68rem;
+  }
+
+  .event-bar span {
+    display: none;
+  }
+}
