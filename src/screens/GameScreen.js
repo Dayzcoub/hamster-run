@@ -1,4 +1,5 @@
 import '../render/CanvasRendererPolish.js';
+import '../render/CanvasRendererPerformance.js';
 import { CanvasRenderer } from '../render/CanvasRenderer.js';
 import { LevelController } from '../gameplay/LevelController.js';
 
