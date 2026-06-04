@@ -58,6 +58,19 @@
   color: var(--accent-gold);
 }
 
+.stat-card--precision {
+  border-color: rgba(92, 235, 255, 0.3);
+}
+
+.stat-card--precision i,
+.stat-card--precision b {
+  color: var(--accent-cyan);
+}
+
+.result-stats:has(.stat-card--precision) {
+  grid-auto-rows: minmax(0, 1fr);
+}
+
 @media (orientation: landscape) and (max-height: 560px) {
   .result-package {
     margin-top: 0.32rem;
@@ -78,6 +91,11 @@
   .result-package small {
     font-size: 0.58rem;
   }
+
+  .result-stats:has(.stat-card--precision) {
+    grid-auto-rows: minmax(38px, 1fr);
+    gap: 0.32rem;
+  }
 }
 
 @media (orientation: landscape) and (max-width: 760px),
@@ -88,5 +106,9 @@
 
   .result-package small {
     display: none;
+  }
+
+  .result-stats:has(.stat-card--precision) {
+    grid-auto-rows: minmax(34px, 1fr);
   }
 }
