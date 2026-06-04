@@ -15,23 +15,26 @@ export class GameScreen {
     this.previousStylePoints = 0;
     this.previousStyleCombo = 0;
     this.element = document.createElement('section');
-    this.element.className = 'screen game-screen';
+    this.element.className = `screen game-screen game-screen--${level.theme}`;
     this.element.innerHTML = `
-      <header class="hud">
-        <div class="hud-title">
-          <strong>${level.title}</strong>
-          <span class="kicker">${level.intro}</span>
+      <header class="game-hud" aria-label="Игровой интерфейс">
+        <button class="hud-pause" data-action="pause" type="button" aria-label="Пауза">Ⅱ</button>
+        <div class="hud-status">
+          <span class="hud-status__icon" aria-hidden="true">◷</span>
+          <span class="hud-status__text">${level.intro}</span>
+          <strong class="hud-timer" data-hud="timer">10:00</strong>
         </div>
-        <div class="hud-metrics">
-          <span class="metric" data-hud="bread">Хлеб: 0</span>
-          <span class="metric" data-hud="resources">Ресурсы: 0</span>
-          <span class="metric" data-hud="mistakes">Косяки: 3</span>
-          <span class="metric" data-hud="style">Финты: 0</span>
+        <div class="hud-score" aria-label="Очки финтов"><span aria-hidden="true">⚡</span><strong data-hud-value="score">0</strong></div>
+        <div class="hud-chips">
+          <span class="hud-chip hud-chip--bread"><i aria-hidden="true">🍞</i><b>Хлеб</b><strong data-hud-value="bread">0</strong></span>
+          <span class="hud-chip hud-chip--resources"><i aria-hidden="true">🧵</i><b>Ресурсы</b><strong data-hud-value="resources">0</strong></span>
+          <span class="hud-chip hud-chip--danger"><i aria-hidden="true">⚠</i><b>Косяки</b><strong data-hud-value="mistakes">3</strong></span>
+          <span class="hud-chip hud-chip--style"><i aria-hidden="true">★</i><b>Финты</b><strong data-hud-value="style">0</strong></span>
         </div>
-        <div class="progress-track"><div class="progress-fill" data-hud="progress"></div></div>
+        <div class="progress-track" aria-hidden="true"><div class="progress-fill" data-hud="progress"></div></div>
       </header>
       <div class="canvas-wrap"><canvas class="game-canvas" aria-label="Игровое поле"></canvas></div>
-      <footer class="event-bar">Свайп: дорожка · вверх прыжок · вниз подкат · финты дают бонус</footer>
+      <footer class="event-bar"><span aria-hidden="true">☝</span><strong>Свайп:</strong> дорожка · вверх прыжок · вниз подкат · финты дают бонус</footer>
     `;
   }
 
@@ -123,11 +126,12 @@ export class GameScreen {
   }
 
   updateHud(snapshot) {
-    this.element.querySelector('[data-hud="bread"]').textContent = `Хлеб: ${snapshot.stats.bread}`;
     const resources = Object.values(snapshot.stats.resources).reduce((sum, value) => sum + value, 0);
-    this.element.querySelector('[data-hud="resources"]').textContent = `Ресурсы: ${resources}`;
-    this.element.querySelector('[data-hud="mistakes"]').textContent = `Косяки: ${snapshot.player.mistakesLeft}`;
-    this.element.querySelector('[data-hud="style"]').textContent = `Финты: ${snapshot.stats.stylePoints || 0}`;
+    this.element.querySelector('[data-hud-value="bread"]').textContent = snapshot.stats.bread;
+    this.element.querySelector('[data-hud-value="resources"]').textContent = resources;
+    this.element.querySelector('[data-hud-value="mistakes"]').textContent = snapshot.player.mistakesLeft;
+    this.element.querySelector('[data-hud-value="style"]').textContent = snapshot.stats.stylePoints || 0;
+    this.element.querySelector('[data-hud-value="score"]').textContent = snapshot.stats.stylePoints || 0;
     this.element.querySelector('[data-hud="progress"]').style.width = `${Math.round(snapshot.progress * 100)}%`;
   }
 
