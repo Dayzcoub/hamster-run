@@ -44,6 +44,7 @@ export class GameScreen {
     this.screenShakeSeed = 0;
     this.previousBread = 0;
     this.previousPackage = 0;
+    this.previousResourceTotal = 0;
     this.previousMistakesLeft = 3;
     this.previousStylePoints = 0;
     this.previousStyleCombo = 0;
@@ -191,12 +192,20 @@ export class GameScreen {
     }, 0);
   }
 
+  resourceTotal(snapshot) {
+    return Object.values(snapshot.stats.resources || {}).reduce((sum, value) => sum + value, 0);
+  }
+
   updateLocalEffects(snapshot, deltaMs) {
     const packageCollected = this.packageCollected(snapshot);
+    const resourceTotal = this.resourceTotal(snapshot);
     const precisionDodges = snapshot.stats.precisionDodges || 0;
 
     if (snapshot.stats.bread > this.previousBread) this.spawnLocalEffect('pickup', `+${snapshot.stats.bread - this.previousBread}`);
     if (packageCollected > this.previousPackage) this.spawnLocalEffect('pickup', `ПАКЕТ +${packageCollected - this.previousPackage}`);
+    if (resourceTotal > this.previousResourceTotal && packageCollected === this.previousPackage) {
+      this.spawnLocalEffect('pickup', `ЛИШНЕЕ +${resourceTotal - this.previousResourceTotal}`);
+    }
     if (snapshot.stats.stylePoints > this.previousStylePoints) {
       const gained = snapshot.stats.stylePoints - this.previousStylePoints;
       const combo = snapshot.stats.styleCombo || 1;
@@ -212,6 +221,7 @@ export class GameScreen {
 
     this.previousBread = snapshot.stats.bread;
     this.previousPackage = packageCollected;
+    this.previousResourceTotal = resourceTotal;
     this.previousMistakesLeft = snapshot.player.mistakesLeft;
     this.previousStylePoints = snapshot.stats.stylePoints || 0;
     this.previousStyleCombo = snapshot.stats.styleCombo || 0;
