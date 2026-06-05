@@ -15,47 +15,51 @@
   }
 
   .event-bar [data-event-title] {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    max-width: min(620px, 86vw);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .event-bar [data-event-text] {
-    flex: 0 1 auto;
-    max-width: min(520px, 72vw);
+    display: none;
   }
 
-  .game-screen:not(.is-package-complete):not(.is-final-phase) .event-bar [data-event-text] {
+  .game-screen:not(.is-package-complete):not(.is-final-phase) .event-bar [data-event-title] {
     font-size: 0;
   }
 
-  .game-screen:not(.is-package-complete):not(.is-final-phase) .event-bar [data-event-text]::after {
-    content: "собери пакет · хлеб/финты = рекорд";
-    font-size: clamp(0.54rem, 1.85svh, 0.66rem);
+  .game-screen:not(.is-package-complete):not(.is-final-phase) .event-bar [data-event-title]::after {
+    content: "Цель: собери пакет";
+    font-size: clamp(0.58rem, 1.95svh, 0.72rem);
   }
 
-  .game-screen.is-package-complete:not(.is-final-phase) .event-bar [data-event-text] {
+  .game-screen.is-package-complete:not(.is-final-phase) .event-bar [data-event-title] {
     font-size: 0;
   }
 
-  .game-screen.is-package-complete:not(.is-final-phase) .event-bar [data-event-text]::after {
-    content: "добирай хлеб и финты";
-    font-size: clamp(0.54rem, 1.85svh, 0.66rem);
+  .game-screen.is-package-complete:not(.is-final-phase) .event-bar [data-event-title]::after {
+    content: "Пакет собран: хлеб и финты";
+    font-size: clamp(0.58rem, 1.95svh, 0.72rem);
   }
 
-  .game-screen.is-final-phase:not(.is-package-complete) .event-bar [data-event-text] {
+  .game-screen.is-final-phase:not(.is-package-complete) .event-bar [data-event-title] {
     font-size: 0;
   }
 
-  .game-screen.is-final-phase:not(.is-package-complete) .event-bar [data-event-text]::after {
-    content: "дожми пакет до сирены";
-    font-size: clamp(0.54rem, 1.85svh, 0.66rem);
+  .game-screen.is-final-phase:not(.is-package-complete) .event-bar [data-event-title]::after {
+    content: "Финал: дожми пакет";
+    font-size: clamp(0.58rem, 1.95svh, 0.72rem);
   }
 
-  .game-screen.is-final-phase.is-package-complete .event-bar [data-event-text] {
+  .game-screen.is-final-phase.is-package-complete .event-bar [data-event-title] {
     font-size: 0;
   }
 
-  .game-screen.is-final-phase.is-package-complete .event-bar [data-event-text]::after {
-    content: "хлеб и чистые финты";
-    font-size: clamp(0.54rem, 1.85svh, 0.66rem);
+  .game-screen.is-final-phase.is-package-complete .event-bar [data-event-title]::after {
+    content: "Финал: хлеб и чистые финты";
+    font-size: clamp(0.58rem, 1.95svh, 0.72rem);
   }
 }
