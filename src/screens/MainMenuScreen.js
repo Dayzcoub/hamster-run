@@ -14,6 +14,14 @@ const qualityLabels = {
   quality: 'Качество: красиво',
 };
 
+function crewStatus(state) {
+  const hasSpaniel = state.unlockedCompanions?.includes('spaniel');
+  if (hasSpaniel) {
+    return '<div class="crew-status is-unlocked" aria-label="Команда"><span>Команда</span><strong>🐹 Хомяк + 🐶 Боевой спаниель</strong></div>';
+  }
+  return '<div class="crew-status" aria-label="Команда"><span>Команда</span><strong>🐹 Хомяк</strong></div>';
+}
+
 export class MainMenuScreen {
   constructor(game) {
     this.game = game;
@@ -45,6 +53,7 @@ export class MainMenuScreen {
         <h1 class="title"><span>HAMSTER</span><span class="title-gold">CREW</span></h1>
         <div class="title-rule" aria-hidden="true"><span></span><i>⚡</i><span></span></div>
         <p class="subtitle">Хомяк на монтаже спасает мероприятия от кабелей, кофров, дедлайнов и бытового хаоса.</p>
+        ${crewStatus(this.game.state)}
         ${hero ? `<img class="menu-hamster" src="${hero.meta.webp}" alt="Хомяк-техник бежит на монтаж" />` : ''}
         <p class="phrase">${phrase}</p>
       </div>
