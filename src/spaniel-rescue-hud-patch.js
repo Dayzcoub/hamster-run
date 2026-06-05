@@ -9,8 +9,15 @@ function ensureStyle() {
   style.id = 'spaniel-rescue-hud-style';
   style.textContent = `
     .hud-chip--spaniel-rescue {
+      min-width: 72px;
+      max-width: 92px;
+      flex: 0 0 auto;
       border-color: rgba(255,194,71,0.46);
       background: linear-gradient(180deg, rgba(255,194,71,0.12), rgba(8,16,28,0.84));
+    }
+
+    .hud-chip--spaniel-rescue b {
+      display: none;
     }
 
     .hud-chip--spaniel-rescue strong {
@@ -28,11 +35,14 @@ function ensureStyle() {
     }
 
     @media (orientation: landscape) and (max-height: 560px) {
-      .hud-chip--spaniel-rescue b {
-        max-width: 76px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+      .hud-chip--spaniel-rescue {
+        min-width: 54px;
+        max-width: 64px;
+        padding-inline: 0.36rem;
+      }
+
+      .hud-chip--spaniel-rescue i {
+        margin-right: 0.14rem;
       }
     }
   `;
@@ -50,7 +60,8 @@ if (!GameScreen.prototype.__spanielRescueHudPatch) {
       if (chips && !chips.querySelector('.hud-chip--spaniel-rescue')) {
         const chip = document.createElement('span');
         chip.className = 'hud-chip hud-chip--spaniel-rescue';
-        chip.innerHTML = '<i aria-hidden="true">🐶</i><b>Спасение</b><strong data-hud-value="spaniel-rescue">1/1</strong>';
+        chip.title = 'Заряд спасения спаниеля';
+        chip.innerHTML = '<i aria-hidden="true">🐶</i><b>Спасение</b><strong data-hud-value="spaniel-rescue">1</strong>';
         chips.appendChild(chip);
       }
     }
@@ -64,7 +75,7 @@ if (!GameScreen.prototype.__spanielRescueHudPatch) {
 
     const available = snapshot.stats.companionRescueAvailable && !snapshot.stats.companionRescueUsed;
     const value = rescueChip.querySelector('[data-hud-value="spaniel-rescue"]');
-    if (value) value.textContent = available ? '1/1' : '0/1';
+    if (value) value.textContent = available ? '1' : '0';
     rescueChip.classList.toggle('is-used', !available);
   };
 }
