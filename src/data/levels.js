@@ -67,7 +67,7 @@ export const levels = [
       maxDelayProgressDrop: 420,
     },
     targetResources: { truss: 8, c2: 12, led: 8, cable: 10 },
-    collectibles: ['bread', 'cable', 'c2', 'bolts', 'deck'],
+    collectibles: ['bread', 'truss', 'c2', 'led', 'cable', 'bolts'],
     obstacles: ['case', 'cable_loop', 'mystery_box', 'cart'],
     unlocksAfterComplete: ['kids_room'],
     intro: 'До открытия дверей 03:00. Паника разрешена.',
