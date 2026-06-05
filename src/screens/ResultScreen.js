@@ -56,10 +56,14 @@ export class ResultScreen {
   constructor(game, result) {
     this.game = game;
     this.result = result;
+    this.nextLevelId = (result.level.unlocksAfterComplete || []).find((levelId) => game.isLevelUnlocked(levelId)) || null;
     const bestScore = result.bestScore ?? result.score;
     const previousBestScore = result.previousBestScore || 0;
     const deltaScore = result.score - previousBestScore;
     const packageInfo = packageProgress(result);
+    const nextLevelAction = result.passed && this.nextLevelId
+      ? '<button class="btn-primary" data-action="next" type="button"><span aria-hidden="true">▶</span>Следующий уровень</button>'
+      : '';
     this.element = document.createElement('section');
     this.element.className = `screen result-screen game-bg game-bg--result result-screen--grade-${String(result.grade || 'd').toLowerCase()} ${result.isNewRecord ? 'result-screen--record' : ''} ${result.passed ? 'result-screen--passed' : 'result-screen--failed'}`;
     this.element.innerHTML = `
@@ -97,6 +101,7 @@ export class ResultScreen {
           <div class="stat-card stat-card--precision"><i aria-hidden="true">✦</i><strong>Чистые финты</strong><b>${result.precisionDodges || 0}</b></div>
         </div>
         <div class="result-actions">
+          ${nextLevelAction}
           <button class="btn-secondary" data-action="levels" type="button"><span aria-hidden="true">▱</span>К уровням</button>
           <button class="btn-secondary" data-action="menu" type="button"><span aria-hidden="true">⌂</span>Главное меню</button>
         </div>
@@ -112,6 +117,7 @@ export class ResultScreen {
   onClick = (event) => {
     const action = event.target?.closest('[data-action]')?.dataset?.action;
     if (action === 'retry') this.game.startLevel(this.result.level.id);
+    if (action === 'next' && this.nextLevelId) this.game.startLevel(this.nextLevelId);
     if (action === 'levels') this.game.showLevels();
     if (action === 'menu') this.game.showMainMenu();
   };
