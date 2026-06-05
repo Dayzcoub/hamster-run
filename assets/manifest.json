@@ -6,7 +6,8 @@
   "notes": [
     "Runtime should prefer WebP and use PNG as fallback/source.",
     "Anchors are preliminary and must be tuned after first in-game render.",
-    "This archive is meant to be extracted into the repository root."
+    "This archive is meant to be extracted into the repository root.",
+    "Spaniel companion assets are temporarily stored under assets/sprites/IMG_*. They should be renamed and moved to assets/sprites/characters/spaniel after desktop cleanup."
   ],
   "sprites": {
     "hamster_run_01": {
@@ -83,6 +84,91 @@
         "y": 0.88
       },
       "status": "clean-pass"
+    },
+    "spaniel_idle": {
+      "type": "companion",
+      "visualKey": "spaniel_idle",
+      "role": "companion / idle",
+      "png": "assets/sprites/IMG_2924.png",
+      "webp": "assets/sprites/IMG_2920.webp",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "scaleHint": 0.62,
+      "status": "draft_uploaded_temp_path"
+    },
+    "spaniel_run": {
+      "type": "companion",
+      "visualKey": "spaniel_run",
+      "role": "companion / run",
+      "png": "assets/sprites/IMG_2925.png",
+      "webp": "assets/sprites/IMG_2921.webp",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.82
+      },
+      "scaleHint": 0.6,
+      "status": "draft_uploaded_temp_path"
+    },
+    "spaniel_rescue": {
+      "type": "companion",
+      "visualKey": "spaniel_rescue",
+      "role": "companion / rescue",
+      "png": "assets/sprites/IMG_2926.png",
+      "webp": "assets/sprites/IMG_2922.webp",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.84
+      },
+      "scaleHint": 0.62,
+      "status": "draft_uploaded_temp_path"
+    },
+    "spaniel_pickup_toast": {
+      "type": "companion",
+      "visualKey": "spaniel_pickup_toast",
+      "role": "companion / pickup toast",
+      "png": "assets/sprites/IMG_2927.png",
+      "webp": "assets/sprites/IMG_2923.webp",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.82
+      },
+      "scaleHint": 0.6,
+      "status": "draft_uploaded_temp_path"
+    },
+    "spaniel_portrait": {
+      "type": "companion",
+      "visualKey": "spaniel_portrait",
+      "role": "companion / portrait",
+      "png": "assets/sprites/IMG_2928.png",
+      "webp": "assets/sprites/IMG_2930.webp",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.7
+      },
+      "scaleHint": 0.72,
+      "status": "draft_uploaded_temp_path"
     },
     "bread": {
       "type": "collectible",
