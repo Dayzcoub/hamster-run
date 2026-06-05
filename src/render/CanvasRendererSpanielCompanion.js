@@ -70,15 +70,21 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     if (companion.mode === 'rescue_smash') {
       const total = companion.rescueTotalMs || 760;
       const t = 1 - Math.max(0, Math.min(1, (companion.rescueMs || 0) / total));
-      const attackProgress = Math.min(1, t / 0.52);
-      const returnProgress = Math.max(0, (t - 0.52) / 0.48);
+      const attackProgress = Math.min(1, t / 0.46);
+      const returnProgress = Math.max(0, (t - 0.46) / 0.54);
       const attackEase = 1 - Math.pow(1 - attackProgress, 3);
       const returnEase = returnProgress * returnProgress * (3 - 2 * returnProgress);
-      const travel = attackEase * (1 - returnEase * 0.78);
       const punch = Math.sin(Math.min(1, attackProgress) * Math.PI);
       const impactProjected = this.projector.project(companion.impactX || companion.x + 70, companion.renderLane, this.width, this.height);
-      x = projected.x + (impactProjected.x - projected.x) * travel - 8;
-      y = projected.y + (impactProjected.y - projected.y) * travel - punch * 12;
+      const rawDx = impactProjected.x - projected.x;
+      const rawDy = impactProjected.y - projected.y;
+      const maxDash = this.isWideShort ? 84 : this.isCompact ? 74 : 92;
+      const dashDistance = Math.min(maxDash, Math.hypot(rawDx, rawDy) || maxDash);
+      const dashX = rawDx >= 0 ? dashDistance : -dashDistance;
+      const dashY = rawDy * Math.min(1, dashDistance / Math.max(1, Math.abs(rawDx)));
+      const travel = attackEase * (1 - returnEase * 0.82);
+      x = projected.x + dashX * travel - 8;
+      y = projected.y + dashY * travel - punch * 12;
       size *= 1.18 + punch * 0.26 - returnEase * 0.12;
       animation.rotation = -0.08 + punch * 0.2 - returnEase * 0.07;
       animation.scaleX = 1.05 + punch * 0.1;
