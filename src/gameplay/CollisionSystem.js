@@ -40,7 +40,7 @@ export class CollisionSystem {
         continue;
       }
 
-      if (stats.useCompanionRescue?.()) {
+      if (stats.useCompanionRescue?.(object, player)) {
         object.collected = true;
         events.push({
           type: 'companion_rescue',
