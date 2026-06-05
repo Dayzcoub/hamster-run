@@ -20,10 +20,14 @@ function remainingSeconds(level, elapsedMs) {
   return Math.ceil(Math.max(0, durationMs - elapsedMs) / 1000);
 }
 
+function resourceCollected(stats, resource) {
+  return resource === 'bread' ? stats?.bread || 0 : stats?.resources?.[resource] || 0;
+}
+
 function packageCollected(level, stats) {
   const targets = level.targetResources || {};
   return Object.entries(targets).reduce((sum, [resource, target]) => {
-    const collected = resource === 'bread' ? stats?.bread || 0 : stats?.resources?.[resource] || 0;
+    const collected = resourceCollected(stats, resource);
     return sum + Math.min(target, collected);
   }, 0);
 }
@@ -99,10 +103,10 @@ export class ObjectSpawner {
     const missingIds = this.level.collectibles.filter((id) => {
       const item = objectCatalog[id];
       const resource = item?.resource;
-      if (!resource || resource === 'bread') return false;
+      if (!resource) return false;
       const target = this.level.targetResources?.[resource] || 0;
       if (target <= 0) return false;
-      return (stats.resources?.[resource] || 0) < target;
+      return resourceCollected(stats, resource) < target;
     });
 
     if (!missingIds.length) return this.level.collectibles;
