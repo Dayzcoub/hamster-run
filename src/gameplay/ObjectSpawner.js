@@ -9,6 +9,34 @@ const DEFAULT_SPAWN_TUNING = {
   maxDelayProgressDrop: 420,
 };
 
+const FINAL_PHASE_SECONDS = 20;
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function remainingSeconds(level, elapsedMs) {
+  const durationMs = (level.duration || 0) * 1000;
+  return Math.ceil(Math.max(0, durationMs - elapsedMs) / 1000);
+}
+
+function packageCollected(level, stats) {
+  const targets = level.targetResources || {};
+  return Object.entries(targets).reduce((sum, [resource, target]) => {
+    const collected = resource === 'bread' ? stats?.bread || 0 : stats?.resources?.[resource] || 0;
+    return sum + Math.min(target, collected);
+  }, 0);
+}
+
+function packageTargetTotal(level) {
+  return Object.values(level.targetResources || {}).reduce((sum, value) => sum + value, 0);
+}
+
+function isPackageComplete(level, stats) {
+  const targetTotal = packageTargetTotal(level);
+  return targetTotal > 0 && packageCollected(level, stats) >= targetTotal;
+}
+
 export class ObjectSpawner {
   constructor(level) {
     this.level = level;
@@ -22,13 +50,22 @@ export class ObjectSpawner {
     if (this.timerMs > 0) return null;
 
     const progress = elapsedMs / (this.level.duration * 1000);
+    const finalPhase = remainingSeconds(this.level, elapsedMs) <= FINAL_PHASE_SECONDS;
+    const packageComplete = isPackageComplete(this.level, stats);
     const minDelay = this.tuning.minDelayStart - progress * this.tuning.minDelayProgressDrop;
     const maxDelay = this.tuning.maxDelayStart - progress * this.tuning.maxDelayProgressDrop;
-    this.timerMs = minDelay + Math.random() * Math.max(220, maxDelay - minDelay);
+    const finalPhaseDelayFactor = finalPhase ? 0.88 : 1;
+    const nextDelay = minDelay + Math.random() * Math.max(220, maxDelay - minDelay);
+    this.timerMs = Math.max(520, nextDelay * finalPhaseDelayFactor);
 
-    const obstacleChance = this.tuning.obstacleBaseChance + progress * this.tuning.obstacleProgressChance;
+    let obstacleChance = this.tuning.obstacleBaseChance + progress * this.tuning.obstacleProgressChance;
+    if (finalPhase) {
+      obstacleChance += packageComplete ? 0.04 : -0.03;
+      obstacleChance = clamp(obstacleChance, 0.22, 0.54);
+    }
+
     const isObstacle = Math.random() < obstacleChance;
-    const source = isObstacle ? this.level.obstacles : this.pickCollectibleSource(progress, stats);
+    const source = isObstacle ? this.level.obstacles : this.pickCollectibleSource(progress, stats, finalPhase, packageComplete);
     const id = source[Math.floor(Math.random() * source.length)];
     const catalogItem = objectCatalog[id];
     const lane = this.pickLane(isObstacle, catalogItem);
@@ -51,7 +88,12 @@ export class ObjectSpawner {
     };
   }
 
-  pickCollectibleSource(progress, stats) {
+  pickCollectibleSource(progress, stats, finalPhase = false, packageComplete = false) {
+    const breadIds = this.level.collectibles.filter((id) => objectCatalog[id]?.resource === 'bread');
+    if (finalPhase && packageComplete && breadIds.length) {
+      return Math.random() < 0.72 ? breadIds : this.level.collectibles;
+    }
+
     if (!stats || progress < 0.48) return this.level.collectibles;
 
     const missingIds = this.level.collectibles.filter((id) => {
@@ -64,7 +106,7 @@ export class ObjectSpawner {
     });
 
     if (!missingIds.length) return this.level.collectibles;
-    const biasChance = progress > 0.78 ? 0.82 : progress > 0.62 ? 0.66 : 0.48;
+    const biasChance = finalPhase ? 0.9 : progress > 0.78 ? 0.82 : progress > 0.62 ? 0.66 : 0.48;
     return Math.random() < biasChance ? missingIds : this.level.collectibles;
   }
 
