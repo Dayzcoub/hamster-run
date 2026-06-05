@@ -61,7 +61,9 @@ export class ResultScreen {
     const previousBestScore = result.previousBestScore || 0;
     const deltaScore = result.score - previousBestScore;
     const packageInfo = packageProgress(result);
-    const nextLevelAction = result.passed && this.nextLevelId
+    const hasNextLevelAction = result.passed && this.nextLevelId;
+    const retryClass = hasNextLevelAction ? 'btn-secondary result-retry' : 'btn-primary result-retry';
+    const nextLevelAction = hasNextLevelAction
       ? '<button class="btn-primary" data-action="next" type="button"><span aria-hidden="true">▶</span>Следующий уровень</button>'
       : '';
     this.element = document.createElement('section');
@@ -85,7 +87,7 @@ export class ResultScreen {
             ${result.isNewRecord && previousBestScore > 0 ? `<b>+${deltaScore}</b>` : ''}
           </div>
           <p class="result-tip"><span aria-hidden="true">▸</span>${resultTip(result)}</p>
-          <button class="btn-primary result-retry" data-action="retry" type="button"><span aria-hidden="true">▶</span>Повторить</button>
+          <button class="${retryClass}" data-action="retry" type="button"><span aria-hidden="true">▶</span>Повторить</button>
         </div>
         <div class="result-stats" aria-label="Статистика уровня">
           <div class="stat-card stat-card--progress">
