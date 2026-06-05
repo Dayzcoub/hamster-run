@@ -60,7 +60,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       size,
       projected.scale,
       false,
-      true,
+      false,
       animation,
     );
   };
