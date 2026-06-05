@@ -1,0 +1,61 @@
+/* Keep the bottom gameplay hint readable on compact landscape phones. */
+
+.event-bar [data-event-text] {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (orientation: landscape) and (max-width: 760px),
+       (orientation: landscape) and (max-height: 430px) {
+  .event-bar {
+    justify-content: center;
+  }
+
+  .event-bar [data-event-title] {
+    flex: 0 0 auto;
+  }
+
+  .event-bar [data-event-text] {
+    flex: 0 1 auto;
+    max-width: min(520px, 72vw);
+  }
+
+  .game-screen:not(.is-package-complete):not(.is-final-phase) .event-bar [data-event-text] {
+    font-size: 0;
+  }
+
+  .game-screen:not(.is-package-complete):not(.is-final-phase) .event-bar [data-event-text]::after {
+    content: "собери пакет · хлеб/финты = рекорд";
+    font-size: clamp(0.54rem, 1.85svh, 0.66rem);
+  }
+
+  .game-screen.is-package-complete:not(.is-final-phase) .event-bar [data-event-text] {
+    font-size: 0;
+  }
+
+  .game-screen.is-package-complete:not(.is-final-phase) .event-bar [data-event-text]::after {
+    content: "добирай хлеб и финты";
+    font-size: clamp(0.54rem, 1.85svh, 0.66rem);
+  }
+
+  .game-screen.is-final-phase:not(.is-package-complete) .event-bar [data-event-text] {
+    font-size: 0;
+  }
+
+  .game-screen.is-final-phase:not(.is-package-complete) .event-bar [data-event-text]::after {
+    content: "дожми пакет до сирены";
+    font-size: clamp(0.54rem, 1.85svh, 0.66rem);
+  }
+
+  .game-screen.is-final-phase.is-package-complete .event-bar [data-event-text] {
+    font-size: 0;
+  }
+
+  .game-screen.is-final-phase.is-package-complete .event-bar [data-event-text]::after {
+    content: "хлеб и чистые финты";
+    font-size: clamp(0.54rem, 1.85svh, 0.66rem);
+  }
+}
