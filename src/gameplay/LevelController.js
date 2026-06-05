@@ -70,6 +70,7 @@ class LevelStats {
     this.companionRescueAvailable = false;
     this.companionRescueUsed = false;
     this.companionRescues = 0;
+    this.lastCompanionRescue = null;
   }
 
   collect(resource, value = 1) {
@@ -77,10 +78,16 @@ class LevelStats {
     else this.resources[resource] = (this.resources[resource] || 0) + value;
   }
 
-  useCompanionRescue() {
+  useCompanionRescue(object = null, player = null) {
     if (!this.companionRescueAvailable || this.companionRescueUsed) return false;
     this.companionRescueUsed = true;
     this.companionRescues += 1;
+    this.lastCompanionRescue = {
+      id: `rescue_${this.companionRescues}`,
+      objectX: object?.x ?? player?.x ?? 0,
+      lane: Math.round(player?.lane ?? object?.lane ?? 1),
+      visualKey: object?.visualKey || 'flight_case',
+    };
     this.resetStyleCombo();
     return true;
   }
