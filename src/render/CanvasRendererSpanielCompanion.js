@@ -2,6 +2,7 @@ import { CanvasRenderer } from './CanvasRenderer.js';
 
 const originalRender = CanvasRenderer.prototype.render;
 const originalSpriteScale = CanvasRenderer.prototype.spriteScale;
+const originalDrawEffects = CanvasRenderer.prototype.drawEffects;
 
 const SPANIEL_SPRITE_SCALE = {
   spaniel_idle: 0.53,
@@ -31,8 +32,17 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     for (const object of drawable) this.drawObject(object, levelState.elapsedMs);
 
     this.drawSpanielCompanion(levelState.companion, levelState.elapsedMs, levelState.stats);
-    this.drawPlayer(levelState.player, levelState.elapsedMs);
+    if (!levelState.playerHidden) this.drawPlayer(levelState.player, levelState.elapsedMs);
     this.drawEffects(levelState.effects || []);
+  };
+
+  CanvasRenderer.prototype.drawEffects = function patchedDrawEffects(effects) {
+    const normalEffects = [];
+    for (const effect of effects || []) {
+      if (effect.type === 'smash_particle') this.drawSpanielSmashParticle(effect);
+      else normalEffects.push(effect);
+    }
+    originalDrawEffects.call(this, normalEffects);
   };
 
   CanvasRenderer.prototype.drawSpanielCompanion = function drawSpanielCompanion(companion, elapsedMs = 0, stats = null) {
@@ -40,7 +50,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
 
     const projected = this.projector.project(companion.x, companion.renderLane, this.width, this.height);
     const baseSize = this.isWideShort ? 88 : this.isCompact ? 82 : 98;
-    const size = baseSize * projected.scale * this.spriteScale(companion.visualKey);
+    let size = baseSize * projected.scale * this.spriteScale(companion.visualKey);
     const phase = elapsedMs / 110;
     const step = Math.abs(Math.sin(phase));
     const animation = {
@@ -52,8 +62,23 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       shadowScale: 0.9 + step * 0.06,
       shadowAlpha: 0.18,
     };
-    const x = projected.x - 10 + animation.x;
-    const y = projected.y + animation.y;
+
+    let x = projected.x - 10 + animation.x;
+    let y = projected.y + animation.y;
+
+    if (companion.mode === 'rescue_smash') {
+      const t = 1 - Math.max(0, Math.min(1, (companion.rescueMs || 0) / 620));
+      const attack = Math.sin(Math.min(1, t / 0.68) * Math.PI);
+      const impactProjected = this.projector.project(companion.impactX || companion.x + 70, companion.renderLane, this.width, this.height);
+      x = projected.x + (impactProjected.x - projected.x) * Math.min(1, t * 1.7) - 8;
+      y = projected.y + (impactProjected.y - projected.y) * Math.min(1, t * 1.7) - attack * 10;
+      size *= 1.28 + attack * 0.18;
+      animation.rotation = -0.1 + attack * 0.22;
+      animation.scaleX = 1.08 + attack * 0.08;
+      animation.scaleY = 0.96 + attack * 0.05;
+      animation.shadowScale = 1.08;
+      animation.shadowAlpha = 0.28;
+    }
 
     this.drawSprite(
       companion.visualKey,
@@ -66,7 +91,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       animation,
     );
 
-    this.drawSpanielRescueBadge(x, y, size, stats);
+    if (companion.mode !== 'rescue_smash') this.drawSpanielRescueBadge(x, y, size, stats);
   };
 
   CanvasRenderer.prototype.drawSpanielRescueBadge = function drawSpanielRescueBadge(x, y, size, stats) {
@@ -98,6 +123,27 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffc247';
     ctx.fillText('🐶 1', badgeX + badgeW / 2, badgeY + badgeH / 2 + 0.5);
+    ctx.restore();
+  };
+
+  CanvasRenderer.prototype.drawSpanielSmashParticle = function drawSpanielSmashParticle(effect) {
+    const t = Math.min(1, effect.ageMs / effect.durationMs);
+    const projected = this.projector.project(effect.x, effect.lane, this.width, this.height);
+    const x = projected.x + (effect.vx || 0) * t;
+    const y = projected.y + (effect.vy || 0) * t + 68 * t * t;
+    const alpha = 1 - t;
+    const size = (effect.size || 5) * (1 - t * 0.28);
+
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = effect.color || '#ffc247';
+    ctx.shadowColor = effect.color || '#ffc247';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   };
 }
