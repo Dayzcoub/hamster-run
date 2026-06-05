@@ -30,12 +30,12 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     const drawable = [...levelState.objects].sort((a, b) => a.lane - b.lane || a.x - b.x);
     for (const object of drawable) this.drawObject(object, levelState.elapsedMs);
 
-    this.drawSpanielCompanion(levelState.companion, levelState.elapsedMs);
+    this.drawSpanielCompanion(levelState.companion, levelState.elapsedMs, levelState.stats);
     this.drawPlayer(levelState.player, levelState.elapsedMs);
     this.drawEffects(levelState.effects || []);
   };
 
-  CanvasRenderer.prototype.drawSpanielCompanion = function drawSpanielCompanion(companion, elapsedMs = 0) {
+  CanvasRenderer.prototype.drawSpanielCompanion = function drawSpanielCompanion(companion, elapsedMs = 0, stats = null) {
     if (!companion?.visualKey || !this.assets.get(companion.visualKey)) return;
 
     const projected = this.projector.project(companion.x, companion.renderLane, this.width, this.height);
@@ -52,16 +52,52 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       shadowScale: 0.9 + step * 0.06,
       shadowAlpha: 0.18,
     };
+    const x = projected.x - 10 + animation.x;
+    const y = projected.y + animation.y;
 
     this.drawSprite(
       companion.visualKey,
-      projected.x - 10 + animation.x,
-      projected.y + animation.y,
+      x,
+      y,
       size,
       projected.scale,
       false,
       false,
       animation,
     );
+
+    this.drawSpanielRescueBadge(x, y, size, stats);
+  };
+
+  CanvasRenderer.prototype.drawSpanielRescueBadge = function drawSpanielRescueBadge(x, y, size, stats) {
+    const available = stats?.companionRescueAvailable && !stats?.companionRescueUsed;
+    if (!available) return;
+
+    const ctx = this.ctx;
+    const badgeW = this.isCompact ? 42 : 48;
+    const badgeH = this.isCompact ? 22 : 24;
+    const badgeX = x - badgeW * 0.52;
+    const badgeY = y - size * 0.72;
+    const radius = badgeH / 2;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 0.96;
+    ctx.shadowColor = 'rgba(255,194,71,0.44)';
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = 'rgba(8,16,28,0.88)';
+    ctx.strokeStyle = 'rgba(255,194,71,0.72)';
+    ctx.lineWidth = 1.5;
+    this.roundRect(ctx, badgeX, badgeY, badgeW, badgeH, radius);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.font = `900 ${this.isCompact ? 13 : 14}px system-ui, -apple-system, Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffc247';
+    ctx.fillText('🐶 1', badgeX + badgeW / 2, badgeY + badgeH / 2 + 0.5);
+    ctx.restore();
   };
 }
