@@ -8,41 +8,28 @@ function ensureStyle() {
   const style = document.createElement('style');
   style.id = 'spaniel-rescue-hud-style';
   style.textContent = `
-    .hud-chip--spaniel-rescue {
-      min-width: 72px;
-      max-width: 92px;
-      flex: 0 0 auto;
-      border-color: rgba(255,194,71,0.46);
-      background: linear-gradient(180deg, rgba(255,194,71,0.12), rgba(8,16,28,0.84));
-    }
-
-    .hud-chip--spaniel-rescue b {
-      display: none;
-    }
-
-    .hud-chip--spaniel-rescue strong {
+    .hud-chip__spaniel-rescue {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.12rem;
+      margin-left: 0.34rem;
+      padding-left: 0.34rem;
+      border-left: 1px solid rgba(255,194,71,0.34);
       color: var(--accent-gold);
+      font-weight: 950;
+      white-space: nowrap;
     }
 
-    .hud-chip--spaniel-rescue.is-used {
-      opacity: 0.62;
-      border-color: rgba(160,176,196,0.26);
-      background: rgba(8,16,28,0.62);
-    }
-
-    .hud-chip--spaniel-rescue.is-used strong {
+    .hud-chip__spaniel-rescue.is-used {
+      opacity: 0.58;
       color: var(--text-muted);
     }
 
     @media (orientation: landscape) and (max-height: 560px) {
-      .hud-chip--spaniel-rescue {
-        min-width: 54px;
-        max-width: 64px;
-        padding-inline: 0.36rem;
-      }
-
-      .hud-chip--spaniel-rescue i {
-        margin-right: 0.14rem;
+      .hud-chip__spaniel-rescue {
+        margin-left: 0.22rem;
+        padding-left: 0.22rem;
+        gap: 0.04rem;
       }
     }
   `;
@@ -56,13 +43,16 @@ if (!GameScreen.prototype.__spanielRescueHudPatch) {
     const result = originalMount.call(this);
     ensureStyle();
     if (this.hasSpanielCompanion) {
-      const chips = this.element.querySelector('.hud-chips');
-      if (chips && !chips.querySelector('.hud-chip--spaniel-rescue')) {
-        const chip = document.createElement('span');
-        chip.className = 'hud-chip hud-chip--spaniel-rescue';
-        chip.title = 'Заряд спасения спаниеля';
-        chip.innerHTML = '<i aria-hidden="true">🐶</i><b>Спасение</b><strong data-hud-value="spaniel-rescue">1</strong>';
-        chips.appendChild(chip);
+      const oldChip = this.element.querySelector('.hud-chip--spaniel-rescue');
+      oldChip?.remove();
+
+      const mistakesChip = this.element.querySelector('.hud-chip--danger');
+      if (mistakesChip && !mistakesChip.querySelector('.hud-chip__spaniel-rescue')) {
+        const rescue = document.createElement('span');
+        rescue.className = 'hud-chip__spaniel-rescue';
+        rescue.title = 'Заряд спасения спаниеля';
+        rescue.innerHTML = '<i aria-hidden="true">🐶</i><strong data-hud-value="spaniel-rescue">1</strong>';
+        mistakesChip.appendChild(rescue);
       }
     }
     return result;
@@ -70,12 +60,12 @@ if (!GameScreen.prototype.__spanielRescueHudPatch) {
 
   GameScreen.prototype.updateHud = function patchedUpdateHud(snapshot) {
     originalUpdateHud.call(this, snapshot);
-    const rescueChip = this.element.querySelector('.hud-chip--spaniel-rescue');
-    if (!rescueChip) return;
+    const rescue = this.element.querySelector('.hud-chip__spaniel-rescue');
+    if (!rescue) return;
 
     const available = snapshot.stats.companionRescueAvailable && !snapshot.stats.companionRescueUsed;
-    const value = rescueChip.querySelector('[data-hud-value="spaniel-rescue"]');
+    const value = rescue.querySelector('[data-hud-value="spaniel-rescue"]');
     if (value) value.textContent = available ? '1' : '0';
-    rescueChip.classList.toggle('is-used', !available);
+    rescue.classList.toggle('is-used', !available);
   };
 }
