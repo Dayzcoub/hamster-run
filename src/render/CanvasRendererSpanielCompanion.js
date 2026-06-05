@@ -40,6 +40,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     const normalEffects = [];
     for (const effect of effects || []) {
       if (effect.type === 'smash_particle') this.drawSpanielSmashParticle(effect);
+      else if (effect.type === 'spaniel_rescue_text') this.drawSpanielRescueText(effect);
       else normalEffects.push(effect);
     }
     originalDrawEffects.call(this, normalEffects);
@@ -67,17 +68,23 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     let y = projected.y + animation.y;
 
     if (companion.mode === 'rescue_smash') {
-      const t = 1 - Math.max(0, Math.min(1, (companion.rescueMs || 0) / 620));
-      const attack = Math.sin(Math.min(1, t / 0.68) * Math.PI);
+      const total = companion.rescueTotalMs || 760;
+      const t = 1 - Math.max(0, Math.min(1, (companion.rescueMs || 0) / total));
+      const attackProgress = Math.min(1, t / 0.52);
+      const returnProgress = Math.max(0, (t - 0.52) / 0.48);
+      const attackEase = 1 - Math.pow(1 - attackProgress, 3);
+      const returnEase = returnProgress * returnProgress * (3 - 2 * returnProgress);
+      const travel = attackEase * (1 - returnEase * 0.78);
+      const punch = Math.sin(Math.min(1, attackProgress) * Math.PI);
       const impactProjected = this.projector.project(companion.impactX || companion.x + 70, companion.renderLane, this.width, this.height);
-      x = projected.x + (impactProjected.x - projected.x) * Math.min(1, t * 1.7) - 8;
-      y = projected.y + (impactProjected.y - projected.y) * Math.min(1, t * 1.7) - attack * 10;
-      size *= 1.28 + attack * 0.18;
-      animation.rotation = -0.1 + attack * 0.22;
-      animation.scaleX = 1.08 + attack * 0.08;
-      animation.scaleY = 0.96 + attack * 0.05;
-      animation.shadowScale = 1.08;
-      animation.shadowAlpha = 0.28;
+      x = projected.x + (impactProjected.x - projected.x) * travel - 8;
+      y = projected.y + (impactProjected.y - projected.y) * travel - punch * 12;
+      size *= 1.18 + punch * 0.26 - returnEase * 0.12;
+      animation.rotation = -0.08 + punch * 0.2 - returnEase * 0.07;
+      animation.scaleX = 1.05 + punch * 0.1;
+      animation.scaleY = 0.97 + punch * 0.04;
+      animation.shadowScale = 1.04 + punch * 0.12;
+      animation.shadowAlpha = 0.24 + punch * 0.05;
     }
 
     this.drawSprite(
@@ -130,20 +137,48 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     const t = Math.min(1, effect.ageMs / effect.durationMs);
     const projected = this.projector.project(effect.x, effect.lane, this.width, this.height);
     const x = projected.x + (effect.vx || 0) * t;
-    const y = projected.y + (effect.vy || 0) * t + 68 * t * t;
+    const y = projected.y + (effect.vy || 0) * t + 72 * t * t;
     const alpha = 1 - t;
-    const size = (effect.size || 5) * (1 - t * 0.28);
+    const size = (effect.size || 5) * (1 - t * 0.24);
 
     const ctx = this.ctx;
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.globalCompositeOperation = 'screen';
+    ctx.globalCompositeOperation = effect.shape === 'piece' ? 'source-over' : 'screen';
     ctx.fillStyle = effect.color || '#ffc247';
-    ctx.shadowColor = effect.color || '#ffc247';
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.strokeStyle = 'rgba(5,9,16,0.42)';
+    ctx.lineWidth = 1;
+    ctx.shadowColor = effect.shape === 'piece' ? 'rgba(0,0,0,0.35)' : effect.color || '#ffc247';
+    ctx.shadowBlur = effect.shape === 'piece' ? 2 : 8;
+    ctx.translate(x, y);
+    ctx.rotate((effect.rotation || 0) + t * 2.8);
+    if (effect.shape === 'piece') {
+      ctx.fillRect(-size * 0.7, -size * 0.48, size * 1.4, size * 0.96);
+      ctx.strokeRect(-size * 0.7, -size * 0.48, size * 1.4, size * 0.96);
+    } else {
+      ctx.beginPath();
+      ctx.arc(0, 0, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  };
+
+  CanvasRenderer.prototype.drawSpanielRescueText = function drawSpanielRescueText(effect) {
+    const t = Math.min(1, effect.ageMs / effect.durationMs);
+    const projected = this.projector.project(effect.x, effect.lane, this.width, this.height);
+    const y = projected.y - 84 - t * 18;
+    const alpha = 1 - Math.max(0, (t - 0.72) / 0.28);
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = `950 ${this.isCompact ? 17 : 20}px system-ui, -apple-system, Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(5,9,16,0.92)';
+    ctx.fillStyle = '#ff5a4e';
+    ctx.strokeText(effect.label, projected.x + 34, y);
+    ctx.fillText(effect.label, projected.x + 34, y);
     ctx.restore();
   };
 }
