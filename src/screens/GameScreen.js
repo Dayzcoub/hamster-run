@@ -85,6 +85,7 @@ export class GameScreen {
     this.lastCountdownLabel = '';
     this.packageTargetTotal = targetTotal(level);
     this.lastSnapshot = null;
+    this.hasSpanielCompanion = game.state.unlockedCompanions?.includes('spaniel');
     this.element = document.createElement('section');
     this.element.className = `screen game-screen game-screen--${level.theme} is-countdown`;
     this.element.innerHTML = `
@@ -152,6 +153,7 @@ export class GameScreen {
       const snapshot = this.controller.snapshot();
       snapshot.effects = [];
       snapshot.screenShake = null;
+      this.attachCompanion(snapshot);
       this.lastSnapshot = snapshot;
       this.renderer.render(snapshot);
       this.updateHud(snapshot);
@@ -168,6 +170,7 @@ export class GameScreen {
     this.updateScreenShake(deltaMs);
     snapshot.effects = this.localEffects;
     snapshot.screenShake = this.getScreenShake(now);
+    this.attachCompanion(snapshot);
     this.lastSnapshot = snapshot;
     this.renderer.render(snapshot);
     this.updateHud(snapshot);
@@ -179,6 +182,17 @@ export class GameScreen {
 
     this.frame = requestAnimationFrame(this.tick);
   };
+
+  attachCompanion(snapshot) {
+    if (!this.hasSpanielCompanion || !this.game.assets.get('spaniel_run')) return;
+    const player = snapshot.player;
+    snapshot.companion = {
+      visualKey: 'spaniel_run',
+      x: player.x - 58,
+      renderLane: player.renderLane,
+      state: player.state,
+    };
+  }
 
   onClick = (event) => {
     const action = event.target?.closest('[data-action]')?.dataset?.action;
