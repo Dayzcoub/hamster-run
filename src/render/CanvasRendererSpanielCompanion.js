@@ -4,10 +4,10 @@ const originalRender = CanvasRenderer.prototype.render;
 const originalSpriteScale = CanvasRenderer.prototype.spriteScale;
 
 const SPANIEL_SPRITE_SCALE = {
-  spaniel_idle: 0.42,
-  spaniel_run: 0.42,
-  spaniel_rescue: 0.44,
-  spaniel_pickup_toast: 0.42,
+  spaniel_idle: 0.53,
+  spaniel_run: 0.53,
+  spaniel_rescue: 0.55,
+  spaniel_pickup_toast: 0.53,
   spaniel_portrait: 0.5,
 };
 
@@ -45,7 +45,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     const step = Math.abs(Math.sin(phase));
     const animation = {
       x: Math.sin(phase * 0.5) * 1.8,
-      y: 6 - step * (this.isCompact ? 2.2 : 3.2),
+      y: 2 - step * (this.isCompact ? 2.2 : 3.2),
       rotation: Math.sin(phase) * 0.025,
       scaleX: 1,
       scaleY: 1,
@@ -55,7 +55,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
 
     this.drawSprite(
       companion.visualKey,
-      projected.x - 22 + animation.x,
+      projected.x - 10 + animation.x,
       projected.y + animation.y,
       size,
       projected.scale,
