@@ -19,7 +19,7 @@ function crewStatus(state, spanielPortrait) {
   const hasHomeTechdir = Boolean(state.rewards?.skin_home_techdir);
   const skinLabel = hasHomeTechdir ? '<em>Скин: Домашний техдир</em>' : '';
   const spanielAvatar = hasSpaniel && spanielPortrait
-    ? `<img class="crew-status__avatar" src="${spanielPortrait.meta.webp || spanielPortrait.meta.png}" alt="Боевой спаниель" />`
+    ? `<img class="crew-status__avatar" src="${spanielPortrait.meta.png || spanielPortrait.meta.webp}" alt="Боевой спаниель" />`
     : '';
 
   if (hasSpaniel) {
