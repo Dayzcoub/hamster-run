@@ -76,6 +76,7 @@ export class Game {
     result.passed = passed;
     result.wasPassed = wasPassed;
     result.firstPassed = passed && !wasPassed;
+    result.unlockedRewards = [];
 
     this.state.bread += result.bread;
     this.state.completedLevels[result.level.id] = {
@@ -91,9 +92,31 @@ export class Game {
           this.state.unlockedLevels.push(unlock);
         }
       }
+      this.applyLevelRewards(result);
     }
 
     this.storage.save(this.state);
+  }
+
+  applyLevelRewards(result) {
+    if (result.level.id === 'dk_almost_ready') {
+      this.unlockCompanion('spaniel', result, 'Открыт помощник: боевой спаниель');
+    }
+    if (result.level.id === 'kids_room') {
+      this.unlockReward('skin_home_techdir', result, 'Открыт скин: Домашний техдир');
+    }
+  }
+
+  unlockCompanion(id, result, label) {
+    if (this.state.unlockedCompanions.includes(id)) return;
+    this.state.unlockedCompanions.push(id);
+    result.unlockedRewards.push({ type: 'companion', id, label });
+  }
+
+  unlockReward(id, result, label) {
+    if (this.state.rewards[id]) return;
+    this.state.rewards[id] = true;
+    result.unlockedRewards.push({ type: 'reward', id, label });
   }
 
   pickBetterGrade(current, next) {
