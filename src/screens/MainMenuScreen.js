@@ -16,10 +16,12 @@ const qualityLabels = {
 
 function crewStatus(state) {
   const hasSpaniel = state.unlockedCompanions?.includes('spaniel');
+  const hasHomeTechdir = Boolean(state.rewards?.skin_home_techdir);
+  const skinLabel = hasHomeTechdir ? '<em>Скин: Домашний техдир</em>' : '';
   if (hasSpaniel) {
-    return '<div class="crew-status is-unlocked" aria-label="Команда"><span>Команда</span><strong>🐹 Хомяк + 🐶 Боевой спаниель</strong></div>';
+    return `<div class="crew-status is-unlocked ${hasHomeTechdir ? 'has-skin' : ''}" aria-label="Команда"><span>Команда</span><strong>🐹 Хомяк + 🐶 Боевой спаниель</strong>${skinLabel}</div>`;
   }
-  return '<div class="crew-status" aria-label="Команда"><span>Команда</span><strong>🐹 Хомяк</strong></div>';
+  return `<div class="crew-status ${hasHomeTechdir ? 'has-skin' : ''}" aria-label="Команда"><span>Команда</span><strong>🐹 Хомяк</strong>${skinLabel}</div>`;
 }
 
 export class MainMenuScreen {
