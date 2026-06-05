@@ -1,5 +1,6 @@
 import './hit-feedback-patch.js';
 import './final-countdown-patch.js';
+import './render/CanvasRendererSpanielCompanion.js';
 import { Game } from './core/Game.js';
 
 const app = document.querySelector('#app');
