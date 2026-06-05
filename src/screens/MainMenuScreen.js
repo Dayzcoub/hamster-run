@@ -14,12 +14,16 @@ const qualityLabels = {
   quality: 'Качество: красиво',
 };
 
-function crewStatus(state) {
+function crewStatus(state, spanielPortrait) {
   const hasSpaniel = state.unlockedCompanions?.includes('spaniel');
   const hasHomeTechdir = Boolean(state.rewards?.skin_home_techdir);
   const skinLabel = hasHomeTechdir ? '<em>Скин: Домашний техдир</em>' : '';
+  const spanielAvatar = hasSpaniel && spanielPortrait
+    ? `<img class="crew-status__avatar" src="${spanielPortrait.meta.webp || spanielPortrait.meta.png}" alt="Боевой спаниель" />`
+    : '';
+
   if (hasSpaniel) {
-    return `<div class="crew-status is-unlocked ${hasHomeTechdir ? 'has-skin' : ''}" aria-label="Команда"><span>Команда</span><strong>🐹 Хомяк + 🐶 Боевой спаниель</strong>${skinLabel}</div>`;
+    return `<div class="crew-status is-unlocked ${hasHomeTechdir ? 'has-skin' : ''}" aria-label="Команда">${spanielAvatar}<span>Команда</span><strong>🐹 Хомяк + Боевой спаниель</strong>${skinLabel}</div>`;
   }
   return `<div class="crew-status ${hasHomeTechdir ? 'has-skin' : ''}" aria-label="Команда"><span>Команда</span><strong>🐹 Хомяк</strong>${skinLabel}</div>`;
 }
@@ -31,6 +35,7 @@ export class MainMenuScreen {
     this.element.className = 'screen menu-screen game-bg game-bg--menu';
     const phrase = menuPhrases[Math.floor(Math.random() * menuPhrases.length)];
     const hero = game.assets.get('hamster_run_01');
+    const spanielPortrait = game.assets.get('spaniel_portrait');
     const renderQuality = game.state.settings.renderQuality || 'auto';
     this.element.innerHTML = `
       <div class="player-badge" aria-label="Профиль игрока">
@@ -55,7 +60,7 @@ export class MainMenuScreen {
         <h1 class="title"><span>HAMSTER</span><span class="title-gold">CREW</span></h1>
         <div class="title-rule" aria-hidden="true"><span></span><i>⚡</i><span></span></div>
         <p class="subtitle">Хомяк на монтаже спасает мероприятия от кабелей, кофров, дедлайнов и бытового хаоса.</p>
-        ${crewStatus(this.game.state)}
+        ${crewStatus(this.game.state, spanielPortrait)}
         ${hero ? `<img class="menu-hamster" src="${hero.meta.webp}" alt="Хомяк-техник бежит на монтаж" />` : ''}
         <p class="phrase">${phrase}</p>
       </div>
