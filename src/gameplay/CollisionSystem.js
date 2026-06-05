@@ -40,6 +40,17 @@ export class CollisionSystem {
         continue;
       }
 
+      if (stats.useCompanionRescue?.()) {
+        object.collected = true;
+        events.push({
+          type: 'companion_rescue',
+          x: object.x,
+          lane: Math.round(player.lane),
+          visualKey: object.visualKey,
+        });
+        continue;
+      }
+
       if (player.hit()) {
         object.collected = true;
         stats.mistakes += 1;
