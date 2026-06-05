@@ -1,0 +1,42 @@
+.result-rewards {
+  display: grid;
+  gap: 0.32rem;
+  width: min(420px, 100%);
+  margin: clamp(8px, 1.2vw, 14px) 0 0;
+  padding: 0.58rem 0.72rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 194, 71, 0.16), rgba(9, 17, 30, 0.78));
+  border: 1px solid rgba(255, 194, 71, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 18px rgba(255,194,71,0.1);
+}
+
+.result-rewards span {
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.result-rewards strong {
+  color: var(--text-main);
+  font-size: clamp(0.92rem, 1.6vw, 1.1rem);
+  line-height: 1.12;
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .result-rewards {
+    margin-top: 0.34rem;
+    padding: 0.42rem 0.56rem;
+    border-radius: 13px;
+    gap: 0.2rem;
+  }
+
+  .result-rewards span {
+    font-size: 0.58rem;
+  }
+
+  .result-rewards strong {
+    font-size: 0.72rem;
+  }
+}
