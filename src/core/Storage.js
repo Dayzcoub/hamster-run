@@ -5,6 +5,8 @@ const DEFAULT_SAVE = {
   bread: 0,
   unlockedLevels: ['dk_almost_ready'],
   completedLevels: {},
+  unlockedCompanions: [],
+  rewards: {},
   settings: {
     sound: true,
     music: true,
@@ -23,6 +25,10 @@ export class Storage {
       return {
         ...defaults,
         ...parsed,
+        unlockedLevels: Array.isArray(parsed.unlockedLevels) ? parsed.unlockedLevels : defaults.unlockedLevels,
+        unlockedCompanions: Array.isArray(parsed.unlockedCompanions) ? parsed.unlockedCompanions : defaults.unlockedCompanions,
+        completedLevels: parsed.completedLevels || defaults.completedLevels,
+        rewards: parsed.rewards || defaults.rewards,
         settings: {
           ...defaults.settings,
           ...(parsed.settings || {}),
