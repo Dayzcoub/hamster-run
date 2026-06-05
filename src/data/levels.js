@@ -41,7 +41,7 @@ export const levels = [
       maxDelayProgressDrop: 380,
     },
     targetResources: { cable: 10, powercon: 4, tape: 5, led: 4 },
-    collectibles: ['bread', 'cable', 'c2', 'bolts'],
+    collectibles: ['bread', 'cable', 'powercon', 'tape', 'led', 'c2', 'bolts'],
     obstacles: ['cable_loop', 'mystery_box', 'cart'],
     unlocksAfterComplete: ['big_concert'],
     intro: 'Праздник красивый. Технику уже страшно.',
