@@ -1,8 +1,15 @@
 .crew-status {
   width: fit-content;
-  max-width: min(520px, 72%);
+  max-width: min(560px, 78%);
   display: grid;
-  gap: 0.16rem;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "avatar label"
+    "avatar title"
+    "avatar skin";
+  column-gap: 0.62rem;
+  row-gap: 0.16rem;
+  align-items: center;
   margin: clamp(12px, 2vw, 22px) 0 0;
   padding: 0.52rem 0.72rem;
   border-radius: 16px;
@@ -12,6 +19,7 @@
 }
 
 .crew-status span {
+  grid-area: label;
   color: var(--accent-cyan);
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -20,17 +28,36 @@
 }
 
 .crew-status strong {
+  grid-area: title;
   color: var(--text-main);
   font-size: clamp(0.86rem, 1.45vw, 1.05rem);
   line-height: 1.12;
 }
 
 .crew-status em {
+  grid-area: skin;
   color: var(--accent-gold);
   font-style: normal;
   font-size: clamp(0.74rem, 1.2vw, 0.9rem);
   font-weight: 900;
   line-height: 1.1;
+}
+
+.crew-status__avatar {
+  grid-area: avatar;
+  width: clamp(40px, 5.4vw, 58px);
+  height: clamp(40px, 5.4vw, 58px);
+  object-fit: contain;
+  border-radius: 14px;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.28));
+}
+
+.crew-status:not(:has(.crew-status__avatar)) {
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "label"
+    "title"
+    "skin";
 }
 
 .crew-status.is-unlocked,
@@ -47,11 +74,12 @@
 
 @media (orientation: landscape) and (max-height: 560px) {
   .crew-status {
-    max-width: min(440px, 70%);
+    max-width: min(470px, 74%);
     margin-top: 0.52rem;
-    padding: 0.4rem 0.56rem;
+    padding: 0.36rem 0.52rem;
     border-radius: 13px;
-    gap: 0.08rem;
+    column-gap: 0.46rem;
+    row-gap: 0.06rem;
   }
 
   .crew-status span {
@@ -64,5 +92,11 @@
 
   .crew-status em {
     font-size: 0.62rem;
+  }
+
+  .crew-status__avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
   }
 }
