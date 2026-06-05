@@ -67,11 +67,22 @@ class LevelStats {
     this.bestStyleCombo = 0;
     this.precisionDodges = 0;
     this.styleDodges = { jump: 0, slide: 0 };
+    this.companionRescueAvailable = false;
+    this.companionRescueUsed = false;
+    this.companionRescues = 0;
   }
 
   collect(resource, value = 1) {
     if (resource === 'bread') this.bread += value;
     else this.resources[resource] = (this.resources[resource] || 0) + value;
+  }
+
+  useCompanionRescue() {
+    if (!this.companionRescueAvailable || this.companionRescueUsed) return false;
+    this.companionRescueUsed = true;
+    this.companionRescues += 1;
+    this.resetStyleCombo();
+    return true;
   }
 
   addStyleDodge(action, dodgeDistance = 72) {
@@ -121,6 +132,7 @@ class LevelStats {
       resources: this.resources,
       mistakes: this.mistakes,
       mistakesLeft: player.mistakesLeft,
+      companionRescues: this.companionRescues,
       stylePoints: this.stylePoints,
       styleDodges: this.styleDodges,
       bestStyleCombo: this.bestStyleCombo,
