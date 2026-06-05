@@ -235,7 +235,6 @@ export class GameScreen {
 
     if (finalPhase && !this.finalPhaseAnnounced) {
       this.finalPhaseAnnounced = true;
-      this.spawnLocalEffect('complete', 'ФИНАЛЬНАЯ ФАЗА!');
     }
     if (snapshot.stats.bread > this.previousBread) this.spawnLocalEffect('pickup', `+${snapshot.stats.bread - this.previousBread}`);
     if (packageCollected > this.previousPackage) this.spawnLocalEffect('pickup', `ПАКЕТ +${packageCollected - this.previousPackage}`);
