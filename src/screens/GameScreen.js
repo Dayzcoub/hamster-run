@@ -53,6 +53,16 @@ function isFinalPhase(snapshot) {
   return remainingSeconds(snapshot) <= FINAL_PHASE_SECONDS;
 }
 
+function vibrateCollision() {
+  try {
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate([45, 35, 55]);
+    }
+  } catch {
+    // Some browsers expose the API but reject vibration silently.
+  }
+}
+
 export class GameScreen {
   constructor(game, level) {
     this.game = game;
@@ -247,6 +257,7 @@ export class GameScreen {
     if (snapshot.player.mistakesLeft < this.previousMistakesLeft) {
       this.spawnLocalEffect('hit', '-1');
       this.triggerScreenShake();
+      vibrateCollision();
     }
 
     this.previousBread = snapshot.stats.bread;
