@@ -30,6 +30,7 @@ function packageProgress(result) {
 
 function resultTip(result) {
   const progress = packageProgress(result);
+  if (result.unlockedRewards?.length) return 'Новая награда открыта. Загляни позже в склад/магазин, когда добавим экран прогрессии.';
   if (!result.passed) return 'Объект на доработку: для сдачи нужен минимум C. Добери пакет и избегай косяков.';
   if (result.firstPassed) return 'Объект сдан: следующий уровень открыт. Теперь можно улучшать оценку и рекорд.';
   if (result.mistakes > 0) return 'Меньше косяков: каждый косяк режет выполнение примерно на 10%.';
@@ -50,6 +51,17 @@ function passLabel(result) {
   if (result.passed && result.firstPassed) return 'Объект сдан · открыт следующий';
   if (result.passed) return 'Объект сдан';
   return 'На доработку · нужен минимум C';
+}
+
+function rewardList(result) {
+  const rewards = result.unlockedRewards || [];
+  if (!rewards.length) return '';
+  return `
+    <div class="result-rewards" aria-label="Открытые награды">
+      <span>Награда</span>
+      ${rewards.map((reward) => `<strong>${reward.label}</strong>`).join('')}
+    </div>
+  `;
 }
 
 export class ResultScreen {
@@ -81,6 +93,7 @@ export class ResultScreen {
             <strong>${packageInfo.collectedTotal}/${packageInfo.targetTotal}</strong>
             <small>${packageInfo.summary}</small>
           </div>
+          ${rewardList(result)}
           <div class="result-record ${result.isNewRecord ? 'is-new-record' : ''}" aria-label="Рекорд уровня">
             <span>${recordLabel(result)}</span>
             <strong>${bestScore}</strong>
