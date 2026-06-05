@@ -99,11 +99,15 @@ class LevelStats {
     this.styleCombo = 0;
   }
 
+  collectedForResource(resource) {
+    return resource === 'bread' ? this.bread : this.resources[resource] || 0;
+  }
+
   result(player, elapsedMs) {
     const targets = this.level.targetResources || {};
     const targetTotal = Object.values(targets).reduce((sum, value) => sum + value, 0) || 1;
     const collectedTotal = Object.entries(targets).reduce((sum, [key, value]) => {
-      return sum + Math.min(value, this.resources[key] || 0);
+      return sum + Math.min(value, this.collectedForResource(key));
     }, 0);
 
     const resourcePercent = collectedTotal / targetTotal;
