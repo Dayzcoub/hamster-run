@@ -1,3 +1,5 @@
+import { previewForLevel } from '../data/levelPreviews.js';
+
 export class LevelSelectScreen {
   constructor(game, levels) {
     this.game = game;
@@ -29,6 +31,8 @@ export class LevelSelectScreen {
     const completed = this.game.state.completedLevels[level.id];
     const passed = Boolean(completed?.passed);
     const isSecret = level.id === 'kids_room' && !unlocked;
+    const preview = previewForLevel(level);
+    const previewStyle = preview?.png ? ` style="--level-preview-image: url('${preview.png}')"` : '';
     const badge = unlocked
       ? completed
         ? passed
@@ -53,7 +57,7 @@ export class LevelSelectScreen {
       : 'is-locked';
     return `
       <article class="mission-card mission-card--${level.theme} ${stateClass}">
-        <div class="mission-card__art" aria-hidden="true"></div>
+        <div class="mission-card__art"${previewStyle} aria-hidden="true"></div>
         <div class="mission-card__shade" aria-hidden="true"></div>
         <span class="badge ${unlocked ? passed ? 'badge--passed' : completed ? 'badge--revision' : '' : 'badge--locked'}">${unlocked ? '' : '<i>🔒</i>'}${badge}</span>
         <h3>${title}</h3>
