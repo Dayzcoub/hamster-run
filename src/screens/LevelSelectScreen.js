@@ -32,7 +32,9 @@ export class LevelSelectScreen {
     const passed = Boolean(completed?.passed);
     const isSecret = level.id === 'kids_room' && !unlocked;
     const preview = previewForLevel(level);
-    const previewStyle = preview?.png ? ` style="--level-preview-image: url('${preview.png}')"` : '';
+    const previewImage = preview?.png
+      ? `<img class="mission-card__preview" src="${preview.png}" alt="" loading="lazy" decoding="async" />`
+      : '';
     const badge = unlocked
       ? completed
         ? passed
@@ -57,7 +59,7 @@ export class LevelSelectScreen {
       : 'is-locked';
     return `
       <article class="mission-card mission-card--${level.theme} ${stateClass}">
-        <div class="mission-card__art"${previewStyle} aria-hidden="true"></div>
+        <div class="mission-card__art" aria-hidden="true">${previewImage}</div>
         <div class="mission-card__shade" aria-hidden="true"></div>
         <span class="badge ${unlocked ? passed ? 'badge--passed' : completed ? 'badge--revision' : '' : 'badge--locked'}">${unlocked ? '' : '<i>🔒</i>'}${badge}</span>
         <h3>${title}</h3>
