@@ -3,6 +3,9 @@ import { CanvasRenderer } from './CanvasRenderer.js';
 const baseSpriteScale = CanvasRenderer.prototype.spriteScale;
 const baseDrawEffects = CanvasRenderer.prototype.drawEffects;
 
+const PLAYER_FLOOR_DROP = 10;
+const OBJECT_FLOOR_DROP = 5;
+
 const LANE_PROFILES = [
   { yOffset: -1, shadowScale: 0.82 },
   { yOffset: 6, shadowScale: 1.0 },
@@ -71,7 +74,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const size = baseSize * projected.scale * this.spriteScale(visualKey);
     const animation = this.playerAnimation(player, elapsedMs);
     const x = projected.x + animation.x;
-    const y = baseY + profile.yOffset - yJump + animation.y;
+    const y = baseY + profile.yOffset + PLAYER_FLOOR_DROP - yJump + animation.y;
     this.drawSprite(visualKey, x, y, size, projected.scale, true, true, animation);
   };
 
@@ -84,7 +87,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
       : (this.isWideShort ? 66 : this.isCompact ? 62 : 82);
     const pulse = collectible ? 1 + Math.sin((elapsedMs || 0) / 140) * 0.04 : 1;
     const size = baseSize * projected.scale * this.spriteScale(object.visualKey) * pulse;
-    const groundY = this.remapProjectedYToPlayfield(projected.y) + profile.yOffset + (collectible ? 7 : 11) * projected.scale;
+    const groundY = this.remapProjectedYToPlayfield(projected.y) + profile.yOffset + OBJECT_FLOOR_DROP + (collectible ? 7 : 11) * projected.scale;
     const x = projected.x;
     const y = Math.min(groundY, this.getPlayfieldBottomY() - 8 * projected.scale);
 
@@ -145,9 +148,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const top = laneYs[0] - 24;
     const bottom = this.getPlayfieldBottomY();
     const base = ctx.createLinearGradient(0, top, 0, bottom);
-    base.addColorStop(0, 'rgba(8,17,30,0.035)');
-    base.addColorStop(0.54, 'rgba(8,16,27,0.08)');
-    base.addColorStop(1, 'rgba(4,9,16,0.2)');
+    base.addColorStop(0, 'rgba(8,17,30,0.025)');
+    base.addColorStop(0.54, 'rgba(8,16,27,0.055)');
+    base.addColorStop(1, 'rgba(4,9,16,0.16)');
     ctx.globalAlpha = 1;
     ctx.fillStyle = base;
     ctx.beginPath();
@@ -158,9 +161,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     ctx.closePath();
     ctx.fill();
 
-    ctx.globalAlpha = low ? 0.25 : 0.34;
-    ctx.strokeStyle = 'rgba(92,235,255,0.28)';
-    ctx.lineWidth = 1.05;
+    ctx.globalAlpha = low ? 0.16 : 0.22;
+    ctx.strokeStyle = 'rgba(92,235,255,0.2)';
+    ctx.lineWidth = 0.95;
     ctx.beginPath();
     ctx.moveTo(0, bottom - 3);
     ctx.lineTo(width, bottom - 20);
@@ -172,9 +175,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const top = centerY - height * 0.5;
     const bottom = centerY + height * 0.5;
     const grad = ctx.createLinearGradient(0, top, width, bottom);
-    grad.addColorStop(0, active ? 'rgba(20,34,52,0.055)' : 'rgba(13,25,40,0.02)');
-    grad.addColorStop(0.52, active ? 'rgba(16,29,45,0.09)' : 'rgba(10,20,34,0.04)');
-    grad.addColorStop(1, active ? 'rgba(11,20,32,0.16)' : 'rgba(6,13,23,0.075)');
+    grad.addColorStop(0, active ? 'rgba(20,34,52,0.035)' : 'rgba(13,25,40,0.012)');
+    grad.addColorStop(0.52, active ? 'rgba(16,29,45,0.06)' : 'rgba(10,20,34,0.024)');
+    grad.addColorStop(1, active ? 'rgba(11,20,32,0.1)' : 'rgba(6,13,23,0.048)');
 
     ctx.globalAlpha = 1;
     ctx.fillStyle = grad;
@@ -186,9 +189,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     ctx.closePath();
     ctx.fill();
 
-    ctx.globalAlpha = active ? 0.5 : 0.22;
-    ctx.strokeStyle = active ? 'rgba(255,194,71,0.44)' : 'rgba(92,235,255,0.18)';
-    ctx.lineWidth = active ? 1.2 : 0.9;
+    ctx.globalAlpha = active ? 0.28 : 0.12;
+    ctx.strokeStyle = active ? 'rgba(255,194,71,0.28)' : 'rgba(92,235,255,0.1)';
+    ctx.lineWidth = active ? 1 : 0.8;
     ctx.beginPath();
     ctx.moveTo(0, centerY + height * 0.42);
     ctx.lineTo(width, centerY + height * 0.42 - 15);
@@ -196,9 +199,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   };
 
   CanvasRenderer.prototype.drawLaneMotionMarksV1 = function drawLaneMotionMarksPlayfieldV1(ctx, width, laneYs, distance, low) {
-    ctx.globalAlpha = low ? 0.055 : 0.08;
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 0.9;
+    ctx.globalAlpha = low ? 0.035 : 0.05;
+    ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+    ctx.lineWidth = 0.8;
     const offset = (distance * 0.16) % 180;
     for (const y of laneYs) {
       for (let x = -offset - 180; x < width + 220; x += 180) {
@@ -214,9 +217,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     if (low) return;
     const bottom = this.getPlayfieldBottomY();
     const gloss = ctx.createLinearGradient(0, this.getPlayfieldTopY(), 0, bottom);
-    gloss.addColorStop(0, 'rgba(255,255,255,0.002)');
-    gloss.addColorStop(0.5, 'rgba(92,235,255,0.006)');
-    gloss.addColorStop(1, 'rgba(255,194,71,0.014)');
+    gloss.addColorStop(0, 'rgba(255,255,255,0.001)');
+    gloss.addColorStop(0.5, 'rgba(92,235,255,0.004)');
+    gloss.addColorStop(1, 'rgba(255,194,71,0.01)');
     ctx.fillStyle = gloss;
     ctx.fillRect(0, this.getPlayfieldTopY(), width, bottom - this.getPlayfieldTopY());
   };
