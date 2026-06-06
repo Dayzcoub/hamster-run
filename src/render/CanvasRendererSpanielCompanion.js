@@ -12,6 +12,13 @@ const SPANIEL_SPRITE_SCALE = {
   spaniel_portrait: 0.5,
 };
 
+function playfieldY(renderer, projectedY) {
+  if (typeof renderer.remapProjectedYToPlayfield === 'function') {
+    return renderer.remapProjectedYToPlayfield(projectedY);
+  }
+  return projectedY;
+}
+
 if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
   CanvasRenderer.prototype.__spanielCompanionPatch = true;
 
@@ -50,13 +57,14 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     if (!companion?.visualKey || !this.assets.get(companion.visualKey)) return;
 
     const projected = this.projector.project(companion.x, companion.renderLane, this.width, this.height);
+    const baseY = playfieldY(this, projected.y);
     const baseSize = this.isWideShort ? 88 : this.isCompact ? 82 : 98;
     let size = baseSize * projected.scale * this.spriteScale(companion.visualKey);
     const phase = elapsedMs / 110;
     const step = Math.abs(Math.sin(phase));
     const animation = {
       x: Math.sin(phase * 0.5) * 1.8,
-      y: 2 - step * (this.isCompact ? 2.2 : 3.2),
+      y: 1.2 - step * (this.isCompact ? 1.5 : 2.2),
       rotation: Math.sin(phase) * 0.025,
       scaleX: 1,
       scaleY: 1,
@@ -65,7 +73,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     };
 
     let x = projected.x - 10 + animation.x;
-    let y = projected.y + animation.y;
+    let y = baseY + animation.y;
 
     if (companion.mode === 'rescue_smash') {
       const total = companion.rescueTotalMs || 760;
@@ -76,15 +84,16 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       const returnEase = returnProgress * returnProgress * (3 - 2 * returnProgress);
       const punch = Math.sin(Math.min(1, attackProgress) * Math.PI);
       const impactProjected = this.projector.project(companion.impactX || companion.x + 70, companion.renderLane, this.width, this.height);
+      const impactBaseY = playfieldY(this, impactProjected.y);
       const rawDx = impactProjected.x - projected.x;
-      const rawDy = impactProjected.y - projected.y;
+      const rawDy = impactBaseY - baseY;
       const maxDash = this.isWideShort ? 84 : this.isCompact ? 74 : 92;
       const dashDistance = Math.min(maxDash, Math.hypot(rawDx, rawDy) || maxDash);
       const dashX = rawDx >= 0 ? dashDistance : -dashDistance;
       const dashY = rawDy * Math.min(1, dashDistance / Math.max(1, Math.abs(rawDx)));
       const travel = attackEase * (1 - returnEase * 0.82);
       x = projected.x + dashX * travel - 8;
-      y = projected.y + dashY * travel - punch * 12;
+      y = baseY + dashY * travel - punch * 9;
       size *= 1.18 + punch * 0.26 - returnEase * 0.12;
       animation.rotation = -0.08 + punch * 0.2 - returnEase * 0.07;
       animation.scaleX = 1.05 + punch * 0.1;
@@ -143,8 +152,9 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
   CanvasRenderer.prototype.drawSpanielSmashParticle = function drawSpanielSmashParticle(effect) {
     const t = Math.min(1, effect.ageMs / effect.durationMs);
     const projected = this.projector.project(effect.x, effect.lane, this.width, this.height);
+    const baseY = playfieldY(this, projected.y);
     const x = projected.x + (effect.vx || 0) * t;
-    const y = projected.y + (effect.vy || 0) * t + 72 * t * t;
+    const y = baseY + (effect.vy || 0) * t + 52 * t * t;
     const alpha = 1 - t;
     const size = (effect.size || 5) * (1 - t * 0.24);
 
@@ -173,7 +183,8 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
   CanvasRenderer.prototype.drawSpanielRescueText = function drawSpanielRescueText(effect) {
     const t = Math.min(1, effect.ageMs / effect.durationMs);
     const projected = this.projector.project(effect.x, effect.lane, this.width, this.height);
-    const y = projected.y - 84 - t * 18;
+    const baseY = playfieldY(this, projected.y);
+    const y = baseY - 74 - t * 14;
     const alpha = 1 - Math.max(0, (t - 0.72) / 0.28);
     const ctx = this.ctx;
     ctx.save();
