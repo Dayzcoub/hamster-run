@@ -45,8 +45,17 @@ function saveTuning(tuning) {
   }));
 }
 
+function setDebugMode(active) {
+  window.__HAMSTER_DEBUG_MODE = Boolean(active);
+  document.documentElement.classList.toggle('hamster-debug-mode-on', window.__HAMSTER_DEBUG_MODE);
+  window.dispatchEvent(new CustomEvent('hamster-debug-mode-change', {
+    detail: { active: window.__HAMSTER_DEBUG_MODE },
+  }));
+}
+
 const tuning = loadTuning();
 window.__HAMSTER_DEBUG_TUNING = { ...tuning };
+window.__HAMSTER_DEBUG_MODE = false;
 
 function createPanel() {
   if (document.querySelector('[data-hamster-debug-panel]')) return;
@@ -55,32 +64,36 @@ function createPanel() {
   style.textContent = `
     .hamster-debug-toggle {
       position: fixed;
-      right: max(10px, env(safe-area-inset-right));
-      top: max(10px, env(safe-area-inset-top));
+      right: max(8px, env(safe-area-inset-right));
+      top: max(8px, env(safe-area-inset-top));
       z-index: 99999;
-      border: 1px solid rgba(255,194,71,.55);
+      border: 1px solid rgba(255,194,71,.62);
       border-radius: 999px;
-      background: rgba(7,14,24,.82);
+      background: rgba(7,14,24,.88);
       color: #ffc247;
-      font: 900 12px/1 system-ui, -apple-system, Segoe UI, sans-serif;
+      font: 950 12px/1 system-ui, -apple-system, Segoe UI, sans-serif;
       padding: 9px 11px;
       box-shadow: 0 8px 22px rgba(0,0,0,.35);
       touch-action: manipulation;
     }
+    .hamster-debug-mode-on .hamster-debug-toggle {
+      background: rgba(255,194,71,.18);
+      color: #fff2c9;
+    }
     .hamster-debug-panel {
       position: fixed;
-      right: max(8px, env(safe-area-inset-right));
-      top: max(46px, calc(env(safe-area-inset-top) + 42px));
+      left: max(8px, env(safe-area-inset-left));
+      bottom: max(8px, env(safe-area-inset-bottom));
       z-index: 99998;
-      width: min(420px, calc(100vw - 16px));
-      max-height: min(78vh, 420px);
+      width: min(540px, calc(100vw - 16px));
+      max-height: min(38vh, 230px);
       overflow: auto;
-      border: 1px solid rgba(92,235,255,.32);
-      border-radius: 16px;
-      background: rgba(5,10,18,.93);
+      border: 1px solid rgba(92,235,255,.34);
+      border-radius: 14px;
+      background: rgba(5,10,18,.88);
       color: #f5fbff;
-      box-shadow: 0 18px 50px rgba(0,0,0,.48);
-      padding: 10px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.44);
+      padding: 8px;
       font-family: system-ui, -apple-system, Segoe UI, sans-serif;
       backdrop-filter: blur(8px);
     }
@@ -90,18 +103,23 @@ function createPanel() {
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
       font-weight: 950;
       color: #ffc247;
-      font-size: 13px;
+      font-size: 11px;
+    }
+    .hamster-debug-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr));
+      gap: 4px 8px;
     }
     .hamster-debug-row {
       display: grid;
-      grid-template-columns: 92px 1fr 52px;
+      grid-template-columns: 72px 1fr 42px;
       align-items: center;
-      gap: 8px;
-      margin: 6px 0;
-      font-size: 11px;
+      gap: 6px;
+      min-width: 0;
+      font-size: 10px;
     }
     .hamster-debug-row input[type='range'] { width: 100%; accent-color: #ffc247; }
     .hamster-debug-value {
@@ -112,23 +130,33 @@ function createPanel() {
     .hamster-debug-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 10px;
+      gap: 6px;
+      margin-top: 6px;
     }
     .hamster-debug-actions button {
       border: 1px solid rgba(255,255,255,.16);
-      border-radius: 12px;
+      border-radius: 10px;
       background: rgba(255,255,255,.07);
       color: #f5fbff;
-      font: 850 12px/1 system-ui, -apple-system, Segoe UI, sans-serif;
-      padding: 10px 8px;
+      font: 850 11px/1 system-ui, -apple-system, Segoe UI, sans-serif;
+      padding: 8px 7px;
       touch-action: manipulation;
     }
     .hamster-debug-note {
-      margin-top: 8px;
+      margin-top: 5px;
       color: rgba(245,251,255,.68);
-      font-size: 10px;
-      line-height: 1.3;
+      font-size: 9px;
+      line-height: 1.25;
+    }
+    @media (max-width: 820px) and (orientation: landscape) {
+      .hamster-debug-panel {
+        width: min(620px, calc(100vw - 86px));
+        max-height: min(34vh, 180px);
+      }
+      .hamster-debug-grid { grid-template-columns: repeat(3, minmax(140px, 1fr)); }
+      .hamster-debug-row { grid-template-columns: 68px 1fr 38px; gap: 5px; font-size: 9px; }
+      .hamster-debug-actions button { padding: 7px 6px; }
+      .hamster-debug-note { display: none; }
     }
   `;
 
@@ -145,8 +173,12 @@ function createPanel() {
 
   const head = document.createElement('div');
   head.className = 'hamster-debug-head';
-  head.innerHTML = '<span>Настройка игрового поля</span><span>врем.</span>';
+  head.innerHTML = '<span>Debug: статичный стенд объектов</span><span>DBG ON</span>';
   panel.appendChild(head);
+
+  const grid = document.createElement('div');
+  grid.className = 'hamster-debug-grid';
+  panel.appendChild(grid);
 
   const valueNodes = new Map();
 
@@ -187,7 +219,7 @@ function createPanel() {
     input.addEventListener('input', () => applyField(key, input.value));
 
     row.append(name, input, value);
-    panel.appendChild(row);
+    grid.appendChild(row);
   }
 
   const actions = document.createElement('div');
@@ -195,13 +227,13 @@ function createPanel() {
 
   const copy = document.createElement('button');
   copy.type = 'button';
-  copy.textContent = 'Скопировать';
+  copy.textContent = 'Скопировать JSON';
   copy.addEventListener('click', async () => {
     const text = JSON.stringify(window.__HAMSTER_DEBUG_TUNING, null, 2);
     try {
       await navigator.clipboard.writeText(text);
       copy.textContent = 'Скопировано';
-      setTimeout(() => { copy.textContent = 'Скопировать'; }, 900);
+      setTimeout(() => { copy.textContent = 'Скопировать JSON'; }, 900);
     } catch {
       window.prompt('Скопируй настройки:', text);
     }
@@ -212,11 +244,7 @@ function createPanel() {
   reset.textContent = 'Сброс';
   reset.addEventListener('click', () => {
     Object.assign(tuning, DEFAULT_TUNING);
-    for (const [key] of FIELDS) {
-      const input = panel.querySelector(`input[type="range"]:nth-of-type(1)`);
-      void input;
-    }
-    panel.querySelectorAll('.hamster-debug-row').forEach((row, index) => {
+    grid.querySelectorAll('.hamster-debug-row').forEach((row, index) => {
       const [key] = FIELDS[index];
       const input = row.querySelector('input');
       if (input) input.value = String(tuning[key]);
@@ -231,7 +259,7 @@ function createPanel() {
 
   const note = document.createElement('div');
   note.className = 'hamster-debug-note';
-  note.textContent = 'Чем больше Lane — тем ниже линия. Y: минус поднимает, плюс опускает. Scale меняет размер.';
+  note.textContent = 'При открытом DBG игра рисует статичный стенд. Lane: больше = ниже. Y: минус = выше, плюс = ниже.';
   panel.appendChild(note);
 
   const stop = (event) => event.stopPropagation();
@@ -239,7 +267,17 @@ function createPanel() {
     panel.addEventListener(eventName, stop, { passive: false });
     toggle.addEventListener(eventName, stop, { passive: false });
   }
-  toggle.addEventListener('click', () => { panel.hidden = !panel.hidden; });
+  toggle.addEventListener('click', () => {
+    panel.hidden = !panel.hidden;
+    setDebugMode(!panel.hidden);
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !panel.hidden) {
+      panel.hidden = true;
+      setDebugMode(false);
+    }
+  });
 
   document.body.append(style, toggle, panel);
 }
