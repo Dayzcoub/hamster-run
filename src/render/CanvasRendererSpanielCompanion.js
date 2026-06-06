@@ -12,8 +12,26 @@ const SPANIEL_SPRITE_SCALE = {
   spaniel_portrait: 0.5,
 };
 
+const SPANIEL_LANE_PROFILES = [
+  { yOffset: -1 },
+  { yOffset: 6 },
+  { yOffset: 12 },
+];
+
 function debugTuning() {
   return window.__HAMSTER_DEBUG_TUNING || {};
+}
+
+function laneProfile(lane = 1) {
+  const clamped = Math.max(0, Math.min(2, Number.isFinite(lane) ? lane : 1));
+  const lo = Math.floor(clamped);
+  const hi = Math.ceil(clamped);
+  const t = clamped - lo;
+  const a = SPANIEL_LANE_PROFILES[lo] || SPANIEL_LANE_PROFILES[1];
+  const b = SPANIEL_LANE_PROFILES[hi] || a;
+  return {
+    yOffset: a.yOffset + (b.yOffset - a.yOffset) * t,
+  };
 }
 
 function playfieldY(renderer, projectedY) {
@@ -21,6 +39,11 @@ function playfieldY(renderer, projectedY) {
     return renderer.remapProjectedYToPlayfield(projectedY);
   }
   return projectedY;
+}
+
+function companionGroundY(baseY, lane, tuning) {
+  const profile = laneProfile(lane);
+  return baseY + profile.yOffset + (Number(tuning.playerY) || 0) + (Number(tuning.spanielY) || 0);
 }
 
 if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
@@ -66,6 +89,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     const tuning = debugTuning();
     const projected = this.projector.project(companion.x, companion.renderLane, this.width, this.height);
     const baseY = playfieldY(this, projected.y);
+    const groundedY = companionGroundY(baseY, companion.renderLane, tuning);
     const baseSize = this.isWideShort ? 88 : this.isCompact ? 82 : 98;
     let size = baseSize * projected.scale * this.spriteScale(companion.visualKey);
     const phase = elapsedMs / 110;
@@ -81,7 +105,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     };
 
     let x = projected.x - 10 + animation.x;
-    let y = baseY + (Number(tuning.spanielY) || 0) + animation.y;
+    let y = groundedY + animation.y;
 
     if (companion.mode === 'rescue_smash') {
       const total = companion.rescueTotalMs || 760;
@@ -93,15 +117,16 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       const punch = Math.sin(Math.min(1, attackProgress) * Math.PI);
       const impactProjected = this.projector.project(companion.impactX || companion.x + 70, companion.renderLane, this.width, this.height);
       const impactBaseY = playfieldY(this, impactProjected.y);
+      const impactGroundedY = companionGroundY(impactBaseY, companion.renderLane, tuning);
       const rawDx = impactProjected.x - projected.x;
-      const rawDy = impactBaseY - baseY;
+      const rawDy = impactGroundedY - groundedY;
       const maxDash = this.isWideShort ? 84 : this.isCompact ? 74 : 92;
       const dashDistance = Math.min(maxDash, Math.hypot(rawDx, rawDy) || maxDash);
       const dashX = rawDx >= 0 ? dashDistance : -dashDistance;
       const dashY = rawDy * Math.min(1, dashDistance / Math.max(1, Math.abs(rawDx)));
       const travel = attackEase * (1 - returnEase * 0.82);
       x = projected.x + dashX * travel - 8;
-      y = baseY + (Number(tuning.spanielY) || 0) + dashY * travel - punch * 9;
+      y = groundedY + dashY * travel - punch * 9;
       size *= 1.18 + punch * 0.26 - returnEase * 0.12;
       animation.rotation = -0.08 + punch * 0.2 - returnEase * 0.07;
       animation.scaleX = 1.05 + punch * 0.1;
