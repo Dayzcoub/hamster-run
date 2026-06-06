@@ -1,7 +1,6 @@
 import './hit-feedback-patch.js';
 import './final-countdown-patch.js';
-import './debug-tuning-panel.js';
-import './debug-panel-drag-patch.js';
+import './gameplay-perspective-tuning.js';
 import './render/CanvasRendererSpanielCompanion.js';
 import './spaniel-rescue-patch.js';
 import { Game } from './core/Game.js';
