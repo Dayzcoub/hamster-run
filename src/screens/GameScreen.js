@@ -2,6 +2,7 @@ import '../render/CanvasRendererPolish.js';
 import '../render/CanvasRendererPerformance.js';
 import '../render/CanvasRendererCleanRoad.js';
 import '../render/CanvasRendererVisualRebuildV1.js';
+import '../render/CanvasRendererLevelBackdrops.js';
 import { CanvasRenderer } from '../render/CanvasRenderer.js';
 import { LevelController } from '../gameplay/LevelController.js';
 
