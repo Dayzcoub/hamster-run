@@ -53,7 +53,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const originalBottom = this.projector.laneY(2, this.height);
     const t = Math.max(0, Math.min(1, (projectedY - originalTop) / Math.max(1, originalBottom - originalTop)));
     const eased = Math.pow(t, 1.08);
-    return this.getPlayfieldTopY() + eased * (this.getPlayfieldBottomY() - this.getPlayfieldTopY());
+    const topLaneLift = this.height * (this.isWideShort ? 0.035 : this.isCompact ? 0.032 : 0.028);
+    const lift = topLaneLift * Math.pow(1 - eased, 2.2);
+    return this.getPlayfieldTopY() + eased * (this.getPlayfieldBottomY() - this.getPlayfieldTopY()) - lift;
   };
 
   CanvasRenderer.prototype.spriteScale = function perspectiveSpriteScale(visualKey) {
