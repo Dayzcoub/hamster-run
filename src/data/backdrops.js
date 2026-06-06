@@ -4,10 +4,10 @@ export const backdrops = {
     levelId: 'dk_almost_ready',
     theme: 'dk',
     title: 'ДК “Почти готово”',
-    webp: 'assets/sprites/IMG_2957.webp',
+    webp: 'assets/backgrounds/backdrop_dk_almost_ready.webp',
     scrollRatio: 0.18,
     fit: 'cover',
-    status: 'uploaded-temp-path',
+    status: 'uploaded-renamed-webp',
   },
   wedding_tent: {
     visualKey: 'backdrop_wedding_tent',
