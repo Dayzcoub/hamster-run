@@ -20,6 +20,20 @@ const LANE_Y_FACTORS = {
   default: [0.66, 0.76, 0.86],
 };
 
+const DEFAULT_DEBUG_TUNING = {
+  laneTop: 0.64,
+  laneMid: 0.75,
+  laneBottom: 0.88,
+  playerY: PLAYER_FLOOR_DROP,
+  playerScale: 1,
+  objectY: 0,
+  objectScale: 1,
+};
+
+function debugTuning() {
+  return { ...DEFAULT_DEBUG_TUNING, ...(window.__HAMSTER_DEBUG_TUNING || {}) };
+}
+
 function laneProfile(lane = 1) {
   const clamped = Math.max(0, Math.min(2, Number.isFinite(lane) ? lane : 1));
   const lo = Math.floor(clamped);
@@ -48,6 +62,10 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   CanvasRenderer.prototype.__perspectiveAlignmentV1Patch = true;
 
   CanvasRenderer.prototype.getLaneYFactors = function getLaneYFactors() {
+    const tuning = debugTuning();
+    if (Number.isFinite(tuning.laneTop) && Number.isFinite(tuning.laneMid) && Number.isFinite(tuning.laneBottom)) {
+      return [tuning.laneTop, tuning.laneMid, tuning.laneBottom];
+    }
     if (this.isWideShort) return LANE_Y_FACTORS.wideShort;
     if (this.isCompact) return LANE_Y_FACTORS.compact;
     return LANE_Y_FACTORS.default;
@@ -82,15 +100,17 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   };
 
   CanvasRenderer.prototype.spriteScale = function perspectiveSpriteScale(visualKey) {
+    const tuning = debugTuning();
     const scale = baseSpriteScale.call(this, visualKey);
-    if (visualKey?.startsWith('hamster_')) return scale * 0.9;
+    if (visualKey?.startsWith('hamster_')) return scale * 0.9 * (Number(tuning.playerScale) || 1);
     if (visualKey?.startsWith('spaniel_')) return scale * 0.92;
-    if (['bread', 'cable_coil', 'c2_connector', 'bolt', 'stage_deck'].includes(visualKey)) return scale * 0.92;
-    if (['flight_case', 'cable_loop', 'mic_stand', 'mystery_box', 'cart'].includes(visualKey)) return scale * 0.94;
+    if (['bread', 'cable_coil', 'c2_connector', 'bolt', 'stage_deck'].includes(visualKey)) return scale * 0.92 * (Number(tuning.objectScale) || 1);
+    if (['flight_case', 'cable_loop', 'mic_stand', 'mystery_box', 'cart'].includes(visualKey)) return scale * 0.94 * (Number(tuning.objectScale) || 1);
     return scale;
   };
 
   CanvasRenderer.prototype.drawPlayer = function drawPlayerPerspectiveV1(player, elapsedMs = 0) {
+    const tuning = debugTuning();
     const visualKey = player.visualKey;
     const projected = this.projector.project(player.x, player.renderLane, this.width, this.height);
     const profile = laneProfile(player.renderLane);
@@ -100,11 +120,12 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const size = baseSize * projected.scale * this.spriteScale(visualKey);
     const animation = this.playerAnimation(player, elapsedMs);
     const x = projected.x + animation.x;
-    const y = baseY + profile.yOffset + PLAYER_FLOOR_DROP - yJump + animation.y;
+    const y = baseY + profile.yOffset + (Number(tuning.playerY) || 0) - yJump + animation.y;
     this.drawSprite(visualKey, x, y, size, projected.scale, true, true, animation);
   };
 
   CanvasRenderer.prototype.drawObject = function drawObjectPerspectiveV1(object, elapsedMs = 0) {
+    const tuning = debugTuning();
     const projected = this.projector.project(object.x, object.lane, this.width, this.height);
     const profile = laneProfile(object.lane);
     const collectible = object.kind === 'collectible';
@@ -113,7 +134,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
       : (this.isWideShort ? 66 : this.isCompact ? 62 : 82);
     const pulse = collectible ? 1 + Math.sin((elapsedMs || 0) / 140) * 0.04 : 1;
     const size = baseSize * projected.scale * this.spriteScale(object.visualKey) * pulse;
-    const groundY = this.remapProjectedYToPlayfield(projected.y) + profile.yOffset + OBJECT_FLOOR_DROP + (collectible ? 7 : 11) * projected.scale;
+    const groundY = this.remapProjectedYToPlayfield(projected.y) + profile.yOffset + OBJECT_FLOOR_DROP + (Number(tuning.objectY) || 0) + (collectible ? 7 : 11) * projected.scale;
     const x = projected.x;
     const y = Math.min(groundY, this.getPlayfieldBottomY() - 8 * projected.scale);
 
