@@ -4,9 +4,9 @@ const baseSpriteScale = CanvasRenderer.prototype.spriteScale;
 const baseDrawEffects = CanvasRenderer.prototype.drawEffects;
 
 const LANE_PROFILES = [
-  { yOffset: -3, shadowScale: 0.82 },
-  { yOffset: 7, shadowScale: 1.0 },
-  { yOffset: 15, shadowScale: 1.16 },
+  { yOffset: -1, shadowScale: 0.82 },
+  { yOffset: 6, shadowScale: 1.0 },
+  { yOffset: 12, shadowScale: 1.16 },
 ];
 
 function laneProfile(lane = 1) {
@@ -37,12 +37,12 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   CanvasRenderer.prototype.__perspectiveAlignmentV1Patch = true;
 
   CanvasRenderer.prototype.getPlayfieldBottomY = function getPlayfieldBottomY() {
-    return this.height * (this.isWideShort ? 0.735 : this.isCompact ? 0.745 : 0.76);
+    return this.height * (this.isWideShort ? 0.725 : this.isCompact ? 0.735 : 0.75);
   };
 
   CanvasRenderer.prototype.getPlayfieldTopY = function getPlayfieldTopY() {
     const bottom = this.getPlayfieldBottomY();
-    return bottom - this.height * (this.isWideShort ? 0.34 : this.isCompact ? 0.32 : 0.33);
+    return bottom - this.height * (this.isWideShort ? 0.2 : this.isCompact ? 0.22 : 0.24);
   };
 
   CanvasRenderer.prototype.remapProjectedYToPlayfield = function remapProjectedYToPlayfield(projectedY) {
@@ -66,7 +66,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const projected = this.projector.project(player.x, player.renderLane, this.width, this.height);
     const profile = laneProfile(player.renderLane);
     const baseY = this.remapProjectedYToPlayfield(projected.y);
-    const yJump = player.jumpOffset * (this.isCompact ? 0.82 : 1);
+    const yJump = player.jumpOffset * (this.isCompact ? 0.72 : 0.82);
     const baseSize = this.isWideShort ? 98 : this.isCompact ? 92 : 112;
     const size = baseSize * projected.scale * this.spriteScale(visualKey);
     const animation = this.playerAnimation(player, elapsedMs);
@@ -82,9 +82,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const baseSize = collectible
       ? (this.isWideShort ? 40 : this.isCompact ? 38 : 48)
       : (this.isWideShort ? 66 : this.isCompact ? 62 : 82);
-    const pulse = collectible ? 1 + Math.sin((elapsedMs || 0) / 140) * 0.045 : 1;
+    const pulse = collectible ? 1 + Math.sin((elapsedMs || 0) / 140) * 0.04 : 1;
     const size = baseSize * projected.scale * this.spriteScale(object.visualKey) * pulse;
-    const groundY = this.remapProjectedYToPlayfield(projected.y) + profile.yOffset + (collectible ? 9 : 13) * projected.scale;
+    const groundY = this.remapProjectedYToPlayfield(projected.y) + profile.yOffset + (collectible ? 7 : 11) * projected.scale;
     const x = projected.x;
     const y = Math.min(groundY, this.getPlayfieldBottomY() - 8 * projected.scale);
 
@@ -100,7 +100,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const profile = object.__shadowProfile || laneProfile(object.lane);
     const scale = object.__groundScale || projected.scale;
     const x = object.__groundX ?? projected.x;
-    const y = Math.min((object.__groundY ?? this.remapProjectedYToPlayfield(projected.y)) + (collectible ? 9 : 12) * scale, this.getPlayfieldBottomY() - 2);
+    const y = Math.min((object.__groundY ?? this.remapProjectedYToPlayfield(projected.y)) + (collectible ? 8 : 11) * scale, this.getPlayfieldBottomY() - 2);
     const width = (collectible ? 26 : 38) * scale * profile.shadowScale;
     const height = (collectible ? 5 : 7) * scale * profile.shadowScale;
 
@@ -109,9 +109,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const ctx = this.ctx;
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
-    ctx.globalAlpha = collectible ? 0.18 : 0.14;
-    ctx.strokeStyle = collectible ? 'rgba(255,194,71,0.48)' : 'rgba(255,90,78,0.42)';
-    ctx.lineWidth = this.lowPerf ? 1 : 1.15;
+    ctx.globalAlpha = collectible ? 0.16 : 0.12;
+    ctx.strokeStyle = collectible ? 'rgba(255,194,71,0.42)' : 'rgba(255,90,78,0.36)';
+    ctx.lineWidth = this.lowPerf ? 1 : 1.05;
     ctx.beginPath();
     ctx.moveTo(x - width * 0.82, y - height * 0.15);
     ctx.lineTo(x + width * 0.82, y - height * 0.72);
@@ -142,73 +142,81 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   };
 
   CanvasRenderer.prototype.drawLaneDeckBaseV1 = function drawLaneDeckBasePerspectiveV1(ctx, width, laneYs, low) {
-    const top = laneYs[0] - 34;
+    const top = laneYs[0] - 24;
     const bottom = this.getPlayfieldBottomY();
     const base = ctx.createLinearGradient(0, top, 0, bottom);
-    base.addColorStop(0, 'rgba(8,17,30,0.06)');
-    base.addColorStop(0.54, 'rgba(8,16,27,0.12)');
-    base.addColorStop(1, 'rgba(4,9,16,0.24)');
+    base.addColorStop(0, 'rgba(8,17,30,0.035)');
+    base.addColorStop(0.54, 'rgba(8,16,27,0.08)');
+    base.addColorStop(1, 'rgba(4,9,16,0.2)');
     ctx.globalAlpha = 1;
     ctx.fillStyle = base;
     ctx.beginPath();
-    ctx.moveTo(-90, top + 18);
+    ctx.moveTo(-90, top + 14);
     ctx.lineTo(width + 96, top);
-    ctx.lineTo(width + 86, bottom - 14);
+    ctx.lineTo(width + 86, bottom - 13);
     ctx.lineTo(-110, bottom + 4);
     ctx.closePath();
     ctx.fill();
 
-    ctx.globalAlpha = low ? 0.28 : 0.4;
-    ctx.strokeStyle = 'rgba(92,235,255,0.36)';
-    ctx.lineWidth = 1.15;
+    ctx.globalAlpha = low ? 0.25 : 0.34;
+    ctx.strokeStyle = 'rgba(92,235,255,0.28)';
+    ctx.lineWidth = 1.05;
     ctx.beginPath();
     ctx.moveTo(0, bottom - 3);
-    ctx.lineTo(width, bottom - 22);
+    ctx.lineTo(width, bottom - 20);
     ctx.stroke();
   };
 
   CanvasRenderer.prototype.drawLaneTrackV1 = function drawLaneTrackPerspectiveV1(ctx, width, centerY, lane, active, low) {
-    const height = this.isWideShort ? [14, 20, 28][lane] : [18, 26, 36][lane];
+    const height = this.isWideShort ? [10, 16, 24][lane] : [14, 22, 32][lane];
     const top = centerY - height * 0.5;
     const bottom = centerY + height * 0.5;
     const grad = ctx.createLinearGradient(0, top, width, bottom);
-    grad.addColorStop(0, active ? 'rgba(20,34,52,0.1)' : 'rgba(13,25,40,0.045)');
-    grad.addColorStop(0.52, active ? 'rgba(16,29,45,0.16)' : 'rgba(10,20,34,0.075)');
-    grad.addColorStop(1, active ? 'rgba(11,20,32,0.24)' : 'rgba(6,13,23,0.13)');
+    grad.addColorStop(0, active ? 'rgba(20,34,52,0.055)' : 'rgba(13,25,40,0.02)');
+    grad.addColorStop(0.52, active ? 'rgba(16,29,45,0.09)' : 'rgba(10,20,34,0.04)');
+    grad.addColorStop(1, active ? 'rgba(11,20,32,0.16)' : 'rgba(6,13,23,0.075)');
 
     ctx.globalAlpha = 1;
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.moveTo(-72, top + 10);
+    ctx.moveTo(-72, top + 8);
     ctx.lineTo(width + 78, top);
-    ctx.lineTo(width + 70, bottom - 8);
-    ctx.lineTo(-90, bottom + 6);
+    ctx.lineTo(width + 70, bottom - 7);
+    ctx.lineTo(-90, bottom + 5);
     ctx.closePath();
     ctx.fill();
 
-    ctx.globalAlpha = active ? 0.62 : 0.34;
-    ctx.strokeStyle = active ? 'rgba(255,194,71,0.58)' : 'rgba(92,235,255,0.3)';
-    ctx.lineWidth = active ? 1.4 : 1;
+    ctx.globalAlpha = active ? 0.5 : 0.22;
+    ctx.strokeStyle = active ? 'rgba(255,194,71,0.44)' : 'rgba(92,235,255,0.18)';
+    ctx.lineWidth = active ? 1.2 : 0.9;
     ctx.beginPath();
-    ctx.moveTo(0, centerY + height * 0.38);
-    ctx.lineTo(width, centerY + height * 0.38 - 17);
+    ctx.moveTo(0, centerY + height * 0.42);
+    ctx.lineTo(width, centerY + height * 0.42 - 15);
     ctx.stroke();
+  };
 
-    ctx.globalAlpha = active ? 0.3 : 0.16;
-    ctx.strokeStyle = active ? 'rgba(255,194,71,0.35)' : 'rgba(92,235,255,0.18)';
-    ctx.beginPath();
-    ctx.moveTo(0, centerY - height * 0.38);
-    ctx.lineTo(width, centerY - height * 0.38 - 17);
-    ctx.stroke();
+  CanvasRenderer.prototype.drawLaneMotionMarksV1 = function drawLaneMotionMarksPlayfieldV1(ctx, width, laneYs, distance, low) {
+    ctx.globalAlpha = low ? 0.055 : 0.08;
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 0.9;
+    const offset = (distance * 0.16) % 180;
+    for (const y of laneYs) {
+      for (let x = -offset - 180; x < width + 220; x += 180) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + 18);
+        ctx.lineTo(x + 58, y + 12);
+        ctx.stroke();
+      }
+    }
   };
 
   CanvasRenderer.prototype.drawLaneGlossV1 = function drawLaneGlossPerspectiveV1(ctx, width, height, low) {
     if (low) return;
     const bottom = this.getPlayfieldBottomY();
     const gloss = ctx.createLinearGradient(0, this.getPlayfieldTopY(), 0, bottom);
-    gloss.addColorStop(0, 'rgba(255,255,255,0.004)');
-    gloss.addColorStop(0.5, 'rgba(92,235,255,0.008)');
-    gloss.addColorStop(1, 'rgba(255,194,71,0.018)');
+    gloss.addColorStop(0, 'rgba(255,255,255,0.002)');
+    gloss.addColorStop(0.5, 'rgba(92,235,255,0.006)');
+    gloss.addColorStop(1, 'rgba(255,194,71,0.014)');
     ctx.fillStyle = gloss;
     ctx.fillRect(0, this.getPlayfieldTopY(), width, bottom - this.getPlayfieldTopY());
   };
@@ -221,26 +229,26 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
 
     ctx.save();
     const grad = ctx.createLinearGradient(0, y - 4, 0, h);
-    grad.addColorStop(0, 'rgba(7,18,30,0.04)');
-    grad.addColorStop(0.18, 'rgba(4,12,22,0.42)');
-    grad.addColorStop(1, 'rgba(3,8,16,0.92)');
+    grad.addColorStop(0, 'rgba(7,18,30,0.02)');
+    grad.addColorStop(0.18, 'rgba(4,12,22,0.36)');
+    grad.addColorStop(1, 'rgba(3,8,16,0.9)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, y - 4, w, h - y + 4);
 
     ctx.globalCompositeOperation = 'screen';
-    ctx.globalAlpha = 0.44;
-    ctx.strokeStyle = 'rgba(92,235,255,0.26)';
-    ctx.lineWidth = 1.2;
+    ctx.globalAlpha = 0.38;
+    ctx.strokeStyle = 'rgba(92,235,255,0.22)';
+    ctx.lineWidth = 1.1;
     ctx.beginPath();
     ctx.moveTo(0, y);
-    ctx.lineTo(w, y - 18);
+    ctx.lineTo(w, y - 16);
     ctx.stroke();
 
-    ctx.globalAlpha = 0.28;
-    ctx.strokeStyle = 'rgba(255,194,71,0.18)';
+    ctx.globalAlpha = 0.2;
+    ctx.strokeStyle = 'rgba(255,194,71,0.14)';
     ctx.beginPath();
     ctx.moveTo(0, y + 3);
-    ctx.lineTo(w, y - 15);
+    ctx.lineTo(w, y - 13);
     ctx.stroke();
     ctx.restore();
   };
