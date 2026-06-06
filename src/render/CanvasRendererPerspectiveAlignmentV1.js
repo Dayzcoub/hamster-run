@@ -1,5 +1,6 @@
 import { CanvasRenderer } from './CanvasRenderer.js';
 
+const baseRender = CanvasRenderer.prototype.render;
 const baseSpriteScale = CanvasRenderer.prototype.spriteScale;
 const baseDrawEffects = CanvasRenderer.prototype.drawEffects;
 
@@ -29,6 +30,19 @@ const DEFAULT_DEBUG_TUNING = {
   objectY: 0,
   objectScale: 1,
 };
+
+const DEBUG_OBJECT_KEYS = [
+  'bread',
+  'stage_deck',
+  'cable_coil',
+  'c2_connector',
+  'flight_case',
+  'cart',
+  'mic_stand',
+  'mystery_box',
+  'bolt',
+  'cable_loop',
+];
 
 function debugTuning() {
   return { ...DEFAULT_DEBUG_TUNING, ...(window.__HAMSTER_DEBUG_TUNING || {}) };
@@ -60,6 +74,14 @@ function drawGroundShadow(ctx, x, y, width, height, alpha, color = 'rgba(0,0,0,0
 
 if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   CanvasRenderer.prototype.__perspectiveAlignmentV1Patch = true;
+
+  CanvasRenderer.prototype.render = function renderWithDebugTuningStand(levelState = {}) {
+    if (window.__HAMSTER_DEBUG_MODE) {
+      this.renderDebugTuningStand(levelState);
+      return;
+    }
+    baseRender.call(this, levelState);
+  };
 
   CanvasRenderer.prototype.getLaneYFactors = function getLaneYFactors() {
     const tuning = debugTuning();
@@ -257,6 +279,85 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
         ctx.stroke();
       }
     }
+  };
+
+  CanvasRenderer.prototype.renderDebugTuningStand = function renderDebugTuningStand(levelState = {}) {
+    this.resize();
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    const standState = {
+      ...levelState,
+      distance: 0,
+      screenShake: null,
+      player: { ...(levelState.player || {}), renderLane: 1 },
+      objects: [],
+      effects: [],
+    };
+
+    this.drawBackground(standState);
+    this.drawLanes(standState);
+
+    const w = this.width;
+    const elapsedMs = 0;
+    const hamsterKey = levelState.player?.visualKey || 'hamster_run_01';
+    const spanielTemplate = levelState.companion || { visualKey: 'spaniel_run' };
+
+    for (let lane = 0; lane < 3; lane += 1) {
+      if (typeof this.drawSpanielCompanion === 'function') {
+        this.drawSpanielCompanion({
+          ...spanielTemplate,
+          visualKey: spanielTemplate.visualKey || 'spaniel_run',
+          x: w * 0.1,
+          renderLane: lane,
+          mode: 'debug_idle',
+        }, elapsedMs, { companionRescueAvailable: false });
+      }
+
+      this.drawPlayer({
+        visualKey: hamsterKey,
+        x: w * 0.2,
+        renderLane: lane,
+        jumpOffset: 0,
+      }, elapsedMs);
+
+      DEBUG_OBJECT_KEYS.forEach((visualKey, index) => {
+        const objectKind = index < 4 ? 'collectible' : 'obstacle';
+        this.drawObject({
+          visualKey,
+          kind: objectKind,
+          x: w * (0.32 + index * 0.06),
+          lane,
+        }, elapsedMs);
+      });
+    }
+
+    this.drawDebugTuningLabels();
+    this.drawBottomFieldMask();
+  };
+
+  CanvasRenderer.prototype.drawDebugTuningLabels = function drawDebugTuningLabels() {
+    const ctx = this.ctx;
+    const w = this.width;
+    ctx.save();
+    ctx.font = `900 ${this.isCompact ? 11 : 13}px system-ui, -apple-system, Segoe UI, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    for (let lane = 0; lane < 3; lane += 1) {
+      const y = this.remapLaneToPlayfieldY(lane);
+      ctx.globalAlpha = 0.84;
+      ctx.fillStyle = 'rgba(7,14,24,0.7)';
+      this.roundRect(ctx, 12, y - 13, 72, 24, 12);
+      ctx.fill();
+      ctx.fillStyle = '#92ebff';
+      ctx.fillText(`LANE ${lane}`, 24, y);
+      ctx.globalAlpha = 0.28;
+      ctx.strokeStyle = lane === 1 ? 'rgba(255,194,71,0.72)' : 'rgba(92,235,255,0.5)';
+      ctx.lineWidth = lane === 1 ? 1.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(92, y);
+      ctx.lineTo(w - 16, y - 14);
+      ctx.stroke();
+    }
+    ctx.restore();
   };
 
   CanvasRenderer.prototype.drawLaneGlossV1 = function drawLaneGlossPerspectiveV1(ctx, width, height, low) {
