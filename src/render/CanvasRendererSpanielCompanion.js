@@ -12,6 +12,10 @@ const SPANIEL_SPRITE_SCALE = {
   spaniel_portrait: 0.5,
 };
 
+function debugTuning() {
+  return window.__HAMSTER_DEBUG_TUNING || {};
+}
+
 function playfieldY(renderer, projectedY) {
   if (typeof renderer.remapProjectedYToPlayfield === 'function') {
     return renderer.remapProjectedYToPlayfield(projectedY);
@@ -23,7 +27,10 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
   CanvasRenderer.prototype.__spanielCompanionPatch = true;
 
   CanvasRenderer.prototype.spriteScale = function patchedSpriteScale(visualKey) {
-    return SPANIEL_SPRITE_SCALE[visualKey] || originalSpriteScale.call(this, visualKey);
+    const tuning = debugTuning();
+    const spanielScale = Number(tuning.spanielScale) || 1;
+    const base = SPANIEL_SPRITE_SCALE[visualKey] || originalSpriteScale.call(this, visualKey);
+    return visualKey?.startsWith('spaniel_') ? base * spanielScale : base;
   };
 
   CanvasRenderer.prototype.render = function patchedRender(levelState) {
@@ -56,6 +63,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
   CanvasRenderer.prototype.drawSpanielCompanion = function drawSpanielCompanion(companion, elapsedMs = 0, stats = null) {
     if (!companion?.visualKey || !this.assets.get(companion.visualKey)) return;
 
+    const tuning = debugTuning();
     const projected = this.projector.project(companion.x, companion.renderLane, this.width, this.height);
     const baseY = playfieldY(this, projected.y);
     const baseSize = this.isWideShort ? 88 : this.isCompact ? 82 : 98;
@@ -73,7 +81,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     };
 
     let x = projected.x - 10 + animation.x;
-    let y = baseY + animation.y;
+    let y = baseY + (Number(tuning.spanielY) || 0) + animation.y;
 
     if (companion.mode === 'rescue_smash') {
       const total = companion.rescueTotalMs || 760;
@@ -93,7 +101,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       const dashY = rawDy * Math.min(1, dashDistance / Math.max(1, Math.abs(rawDx)));
       const travel = attackEase * (1 - returnEase * 0.82);
       x = projected.x + dashX * travel - 8;
-      y = baseY + dashY * travel - punch * 9;
+      y = baseY + (Number(tuning.spanielY) || 0) + dashY * travel - punch * 9;
       size *= 1.18 + punch * 0.26 - returnEase * 0.12;
       animation.rotation = -0.08 + punch * 0.2 - returnEase * 0.07;
       animation.scaleX = 1.05 + punch * 0.1;
