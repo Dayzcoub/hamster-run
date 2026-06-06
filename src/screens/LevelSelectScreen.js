@@ -33,7 +33,7 @@ export class LevelSelectScreen {
     const isSecret = level.id === 'kids_room' && !unlocked;
     const preview = previewForLevel(level);
     const previewImage = preview?.png
-      ? `<img class="mission-card__preview" src="${preview.png}" alt="" loading="lazy" decoding="async" />`
+      ? `<picture class="mission-card__picture"><source srcset="${preview.webp || preview.png}" type="image/webp" /><img class="mission-card__preview" src="${preview.png}" alt="" loading="lazy" decoding="async" /></picture>`
       : '';
     const badge = unlocked
       ? completed
