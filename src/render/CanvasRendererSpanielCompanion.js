@@ -104,18 +104,19 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       animation,
     );
 
-    if (companion.mode !== 'rescue_smash') this.drawSpanielRescueBadge(x, y, size, stats);
+    if (companion.mode !== 'rescue_smash') this.drawSpanielRescueBadge(x, y, size, stats, elapsedMs);
   };
 
-  CanvasRenderer.prototype.drawSpanielRescueBadge = function drawSpanielRescueBadge(x, y, size, stats) {
+  CanvasRenderer.prototype.drawSpanielRescueBadge = function drawSpanielRescueBadge(x, y, size, stats, elapsedMs = 0) {
     const available = stats?.companionRescueAvailable && !stats?.companionRescueUsed;
     if (!available) return;
 
     const ctx = this.ctx;
     const badgeW = this.isCompact ? 42 : 48;
     const badgeH = this.isCompact ? 22 : 24;
-    const badgeX = x - badgeW * 0.52;
-    const badgeY = y - size * 0.72;
+    const floatY = Math.sin(elapsedMs / 280) * 1.8;
+    const badgeX = x + size * 0.08 - badgeW / 2;
+    const badgeY = y - size * 1.08 + floatY;
     const radius = badgeH / 2;
 
     ctx.save();
