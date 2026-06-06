@@ -40,12 +40,12 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   CanvasRenderer.prototype.__perspectiveAlignmentV1Patch = true;
 
   CanvasRenderer.prototype.getPlayfieldBottomY = function getPlayfieldBottomY() {
-    return this.height * (this.isWideShort ? 0.91 : this.isCompact ? 0.895 : 0.87);
+    return this.height * (this.isWideShort ? 0.965 : this.isCompact ? 0.94 : 0.9);
   };
 
   CanvasRenderer.prototype.getPlayfieldTopY = function getPlayfieldTopY() {
     const bottom = this.getPlayfieldBottomY();
-    return bottom - this.height * (this.isWideShort ? 0.285 : this.isCompact ? 0.275 : 0.265);
+    return bottom - this.height * (this.isWideShort ? 0.315 : this.isCompact ? 0.3 : 0.28);
   };
 
   CanvasRenderer.prototype.remapProjectedYToPlayfield = function remapProjectedYToPlayfield(projectedY) {
