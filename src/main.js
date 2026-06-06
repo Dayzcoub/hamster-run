@@ -3,6 +3,7 @@ import './final-countdown-patch.js';
 import './render/CanvasRendererSpanielCompanion.js';
 import './spaniel-rescue-patch.js';
 import { Game } from './core/Game.js';
+import './render/CanvasRendererPerspectiveAlignmentV1.js';
 
 const app = document.querySelector('#app');
 const game = new Game(app);
