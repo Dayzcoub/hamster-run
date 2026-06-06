@@ -3,7 +3,7 @@ import { CanvasRenderer } from './CanvasRenderer.js';
 const baseSpriteScale = CanvasRenderer.prototype.spriteScale;
 const baseDrawEffects = CanvasRenderer.prototype.drawEffects;
 
-const PLAYER_FLOOR_DROP = 10;
+const PLAYER_FLOOR_DROP = -8;
 const OBJECT_FLOOR_DROP = 5;
 
 const LANE_PROFILES = [
