@@ -12,6 +12,14 @@ const LANE_PROFILES = [
   { yOffset: 12, shadowScale: 1.16 },
 ];
 
+// Manual lane heights: [top lane, middle lane, bottom lane].
+// Larger value means lower on screen, smaller value means higher on screen.
+const LANE_Y_FACTORS = {
+  wideShort: [0.64, 0.75, 0.88],
+  compact: [0.65, 0.76, 0.88],
+  default: [0.66, 0.76, 0.86],
+};
+
 function laneProfile(lane = 1) {
   const clamped = Math.max(0, Math.min(2, Number.isFinite(lane) ? lane : 1));
   const lo = Math.floor(clamped);
@@ -39,23 +47,38 @@ function drawGroundShadow(ctx, x, y, width, height, alpha, color = 'rgba(0,0,0,0
 if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   CanvasRenderer.prototype.__perspectiveAlignmentV1Patch = true;
 
+  CanvasRenderer.prototype.getLaneYFactors = function getLaneYFactors() {
+    if (this.isWideShort) return LANE_Y_FACTORS.wideShort;
+    if (this.isCompact) return LANE_Y_FACTORS.compact;
+    return LANE_Y_FACTORS.default;
+  };
+
+  CanvasRenderer.prototype.getLaneYFactor = function getLaneYFactor(lane = 1) {
+    const factors = this.getLaneYFactors();
+    const clamped = Math.max(0, Math.min(2, Number.isFinite(lane) ? lane : 1));
+    const lo = Math.floor(clamped);
+    const hi = Math.ceil(clamped);
+    const t = clamped - lo;
+    return factors[lo] + (factors[hi] - factors[lo]) * t;
+  };
+
+  CanvasRenderer.prototype.remapLaneToPlayfieldY = function remapLaneToPlayfieldY(lane = 1) {
+    return this.height * this.getLaneYFactor(lane);
+  };
+
   CanvasRenderer.prototype.getPlayfieldBottomY = function getPlayfieldBottomY() {
-    return this.height * (this.isWideShort ? 0.925 : this.isCompact ? 0.91 : 0.88);
+    return this.remapLaneToPlayfieldY(2);
   };
 
   CanvasRenderer.prototype.getPlayfieldTopY = function getPlayfieldTopY() {
-    const bottom = this.getPlayfieldBottomY();
-    return bottom - this.height * (this.isWideShort ? 0.245 : this.isCompact ? 0.235 : 0.22);
+    return this.remapLaneToPlayfieldY(0);
   };
 
   CanvasRenderer.prototype.remapProjectedYToPlayfield = function remapProjectedYToPlayfield(projectedY) {
     const originalTop = this.projector.laneY(0, this.height);
     const originalBottom = this.projector.laneY(2, this.height);
     const t = Math.max(0, Math.min(1, (projectedY - originalTop) / Math.max(1, originalBottom - originalTop)));
-    const eased = Math.pow(t, 1.08);
-    const topLaneLift = this.height * (this.isWideShort ? 0.035 : this.isCompact ? 0.032 : 0.028);
-    const lift = topLaneLift * Math.pow(1 - eased, 2.2);
-    return this.getPlayfieldTopY() + eased * (this.getPlayfieldBottomY() - this.getPlayfieldTopY()) - lift;
+    return this.remapLaneToPlayfieldY(t * 2);
   };
 
   CanvasRenderer.prototype.spriteScale = function perspectiveSpriteScale(visualKey) {
@@ -128,10 +151,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   CanvasRenderer.prototype.drawLanes = function drawLanesPerspectivePlayfieldV1(levelState = {}) {
     const ctx = this.ctx;
     const w = this.width;
-    const h = this.height;
     const distance = levelState.distance || 0;
     const activeLane = levelState.player?.renderLane ?? 1;
-    const laneYs = [0, 1, 2].map((lane) => this.remapProjectedYToPlayfield(this.projector.laneY(lane, h)));
+    const laneYs = [0, 1, 2].map((lane) => this.remapLaneToPlayfieldY(lane));
     const low = Boolean(this.lowPerf);
 
     ctx.save();
@@ -143,7 +165,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     }
 
     this.drawLaneMotionMarksV1(ctx, w, laneYs, distance, low);
-    this.drawLaneGlossV1(ctx, w, h, low);
+    this.drawLaneGlossV1(ctx, w, this.height, low);
     ctx.restore();
   };
 
