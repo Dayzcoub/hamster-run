@@ -83,10 +83,10 @@ function createPanel() {
     .hamster-debug-panel {
       position: fixed;
       left: max(8px, env(safe-area-inset-left));
-      bottom: max(8px, env(safe-area-inset-bottom));
+      top: max(96px, calc(env(safe-area-inset-top) + 86px));
       z-index: 99998;
-      width: min(540px, calc(100vw - 16px));
-      max-height: min(38vh, 230px);
+      width: min(680px, calc(100vw - 98px));
+      max-height: min(31vh, 172px);
       overflow: auto;
       border: 1px solid rgba(92,235,255,.34);
       border-radius: 14px;
@@ -150,8 +150,9 @@ function createPanel() {
     }
     @media (max-width: 820px) and (orientation: landscape) {
       .hamster-debug-panel {
-        width: min(620px, calc(100vw - 86px));
-        max-height: min(34vh, 180px);
+        top: max(78px, calc(env(safe-area-inset-top) + 70px));
+        width: min(660px, calc(100vw - 92px));
+        max-height: min(29vh, 150px);
       }
       .hamster-debug-grid { grid-template-columns: repeat(3, minmax(140px, 1fr)); }
       .hamster-debug-row { grid-template-columns: 68px 1fr 38px; gap: 5px; font-size: 9px; }
