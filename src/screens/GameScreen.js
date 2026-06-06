@@ -83,6 +83,8 @@ export class GameScreen {
     this.packageCompleteAnnounced = false;
     this.finalPhaseAnnounced = false;
     this.paused = false;
+    this.debugWasPaused = false;
+    this.debugModeActive = false;
     this.countdownMs = COUNTDOWN_TOTAL_MS;
     this.lastCountdownLabel = '';
     this.packageTargetTotal = targetTotal(level);
@@ -134,11 +136,26 @@ export class GameScreen {
     this.renderer = new CanvasRenderer(this.canvas, this.game.assets);
     this.detachTouch = this.game.input.attachTouchTarget(this.canvas);
     this.element.addEventListener('click', this.onClick);
+    window.addEventListener('hamster-debug-mode-change', this.onDebugModeChange);
     this.last = performance.now();
     this.frame = requestAnimationFrame(this.tick);
   }
 
   tick = (now) => {
+    const debugActive = Boolean(window.__HAMSTER_DEBUG_MODE);
+    if (debugActive) {
+      this.game.input.consume();
+      const snapshot = this.lastSnapshot || this.controller.snapshot();
+      snapshot.effects = [];
+      snapshot.screenShake = null;
+      this.attachCompanion(snapshot);
+      this.lastSnapshot = snapshot;
+      this.renderer.render(snapshot);
+      this.last = now;
+      this.frame = requestAnimationFrame(this.tick);
+      return;
+    }
+
     const deltaMs = Math.min(42, now - this.last);
     this.last = now;
 
@@ -183,6 +200,21 @@ export class GameScreen {
     }
 
     this.frame = requestAnimationFrame(this.tick);
+  };
+
+  onDebugModeChange = (event) => {
+    const active = Boolean(event.detail?.active);
+    if (active === this.debugModeActive) return;
+    this.debugModeActive = active;
+    if (active) {
+      this.debugWasPaused = this.paused;
+      this.element.classList.add('is-debug-tuning');
+      this.setPaused(true);
+    } else {
+      this.element.classList.remove('is-debug-tuning');
+      this.setPaused(this.debugWasPaused);
+      this.last = performance.now();
+    }
   };
 
   attachCompanion(snapshot) {
@@ -354,5 +386,6 @@ export class GameScreen {
     cancelAnimationFrame(this.frame);
     this.detachTouch?.();
     this.element.removeEventListener('click', this.onClick);
+    window.removeEventListener('hamster-debug-mode-change', this.onDebugModeChange);
   }
 }
