@@ -4,7 +4,7 @@ const originalRender = CanvasRenderer.prototype.render;
 const originalSpriteScale = CanvasRenderer.prototype.spriteScale;
 const originalDrawEffects = CanvasRenderer.prototype.drawEffects;
 
-const SPANIEL_FOLLOW_LAG_MS = 145;
+const SPANIEL_FOLLOW_LAG_MS = 420;
 
 const SPANIEL_SPRITE_SCALE = {
   spaniel_idle: 0.53,
@@ -43,23 +43,30 @@ function playfieldY(renderer, projectedY) {
   return projectedY;
 }
 
+function renderTime(elapsedMs = 0) {
+  if (Number.isFinite(elapsedMs) && elapsedMs > 0) return elapsedMs;
+  if (typeof performance !== 'undefined' && typeof performance.now === 'function') return performance.now();
+  return Date.now();
+}
+
 function companionGroundY(baseY, lane, tuning) {
   const profile = laneProfile(lane);
   return baseY + profile.yOffset + (Number(tuning.playerY) || 0) + (Number(tuning.spanielY) || 0);
 }
 
 function smoothLane(renderer, targetLane, elapsedMs = 0) {
+  const now = renderTime(elapsedMs);
   const target = Math.max(0, Math.min(2, Number.isFinite(targetLane) ? targetLane : 1));
   const previous = renderer.__spanielLaneLag;
-  if (!previous || elapsedMs < previous.elapsedMs || Math.abs(target - previous.targetLane) > 1.5) {
-    renderer.__spanielLaneLag = { lane: target, targetLane: target, elapsedMs };
+  if (!previous || now < previous.elapsedMs) {
+    renderer.__spanielLaneLag = { lane: target, targetLane: target, elapsedMs: now };
     return target;
   }
 
-  const dt = Math.max(0, Math.min(60, elapsedMs - previous.elapsedMs));
+  const dt = Math.max(0, Math.min(48, now - previous.elapsedMs));
   const follow = 1 - Math.exp(-dt / SPANIEL_FOLLOW_LAG_MS);
   const lane = previous.lane + (target - previous.lane) * follow;
-  renderer.__spanielLaneLag = { lane, targetLane: target, elapsedMs };
+  renderer.__spanielLaneLag = { lane, targetLane: target, elapsedMs: now };
   return lane;
 }
 
@@ -110,7 +117,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     const groundedY = companionGroundY(baseY, visualLane, tuning);
     const baseSize = this.isWideShort ? 88 : this.isCompact ? 82 : 98;
     let size = baseSize * projected.scale * this.spriteScale(companion.visualKey);
-    const phase = elapsedMs / 110;
+    const phase = renderTime(elapsedMs) / 110;
     const step = Math.abs(Math.sin(phase));
     const animation = {
       x: Math.sin(phase * 0.5) * 1.8,
@@ -174,7 +181,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     const ctx = this.ctx;
     const badgeW = this.isCompact ? 42 : 48;
     const badgeH = this.isCompact ? 22 : 24;
-    const floatY = Math.sin(elapsedMs / 280) * 1.8;
+    const floatY = Math.sin(renderTime(elapsedMs) / 280) * 1.8;
     const badgeX = x + size * 0.08 - badgeW / 2;
     const badgeY = y - size * 1.34 + floatY;
     const radius = badgeH / 2;
