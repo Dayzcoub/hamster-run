@@ -5,6 +5,7 @@ const originalSpriteScale = CanvasRenderer.prototype.spriteScale;
 const originalDrawEffects = CanvasRenderer.prototype.drawEffects;
 
 const SPANIEL_FOLLOW_LAG_MS = 320;
+const SPANIEL_JUMP_HEIGHT_RATIO = 0.55;
 
 const SPANIEL_SPRITE_SCALE = {
   spaniel_idle: 0.53,
@@ -126,7 +127,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     const projected = this.projector.project(companion.x, visualLane, this.width, this.height);
     const baseY = playfieldY(this, projected.y);
     const groundedY = companionGroundY(baseY, visualLane, tuning);
-    const yJump = delayedJump * (this.isCompact ? 0.72 : 0.82);
+    const yJump = delayedJump * (this.isCompact ? 0.72 : 0.82) * SPANIEL_JUMP_HEIGHT_RATIO;
     const baseSize = this.isWideShort ? 88 : this.isCompact ? 82 : 98;
     let size = baseSize * projected.scale * this.spriteScale(companion.visualKey);
     const phase = renderTime(elapsedMs) / 110;
