@@ -1,3 +1,5 @@
+import { backdrops } from '../data/backdrops.js';
+
 export class AssetLoader {
   constructor(manifestPath) {
     this.manifestPath = manifestPath;
@@ -10,6 +12,19 @@ export class AssetLoader {
     if (!response.ok) throw new Error(`Failed to load asset manifest: ${response.status}`);
     this.manifest = await response.json();
     await Promise.all(Object.values(this.manifest.sprites).map((sprite) => this.loadSprite(sprite)));
+    await this.loadBackdrops();
+  }
+
+  async loadBackdrops() {
+    await Promise.all(Object.values(backdrops).map(async (backdrop) => {
+      try {
+        const image = await this.loadImage(backdrop.webp || backdrop.png);
+        this.images.set(backdrop.visualKey, { image, meta: backdrop });
+      } catch {
+        // Some future level backdrops are intentionally declared before the art exists.
+        // Missing files should fall back to the procedural canvas background.
+      }
+    }));
   }
 
   async loadSprite(sprite) {
