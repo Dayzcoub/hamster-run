@@ -4,7 +4,7 @@ const originalRender = CanvasRenderer.prototype.render;
 const originalSpriteScale = CanvasRenderer.prototype.spriteScale;
 const originalDrawEffects = CanvasRenderer.prototype.drawEffects;
 
-const SPANIEL_FOLLOW_LAG_MS = 420;
+const SPANIEL_FOLLOW_LAG_MS = 320;
 
 const SPANIEL_SPRITE_SCALE = {
   spaniel_idle: 0.53,
@@ -54,20 +54,30 @@ function companionGroundY(baseY, lane, tuning) {
   return baseY + profile.yOffset + (Number(tuning.playerY) || 0) + (Number(tuning.spanielY) || 0);
 }
 
-function smoothLane(renderer, targetLane, elapsedMs = 0) {
+function smoothValue(renderer, key, targetValue, elapsedMs = 0, fallbackValue = 0) {
   const now = renderTime(elapsedMs);
-  const target = Math.max(0, Math.min(2, Number.isFinite(targetLane) ? targetLane : 1));
-  const previous = renderer.__spanielLaneLag;
+  const target = Number.isFinite(targetValue) ? targetValue : fallbackValue;
+  const storeKey = `__spanielLag_${key}`;
+  const previous = renderer[storeKey];
   if (!previous || now < previous.elapsedMs) {
-    renderer.__spanielLaneLag = { lane: target, targetLane: target, elapsedMs: now };
+    renderer[storeKey] = { value: target, elapsedMs: now };
     return target;
   }
 
   const dt = Math.max(0, Math.min(48, now - previous.elapsedMs));
   const follow = 1 - Math.exp(-dt / SPANIEL_FOLLOW_LAG_MS);
-  const lane = previous.lane + (target - previous.lane) * follow;
-  renderer.__spanielLaneLag = { lane, targetLane: target, elapsedMs: now };
-  return lane;
+  const value = previous.value + (target - previous.value) * follow;
+  renderer[storeKey] = { value, elapsedMs: now };
+  return value;
+}
+
+function smoothLane(renderer, targetLane, elapsedMs = 0) {
+  const target = Math.max(0, Math.min(2, Number.isFinite(targetLane) ? targetLane : 1));
+  return smoothValue(renderer, 'lane', target, elapsedMs, target);
+}
+
+function smoothJump(renderer, targetJump, elapsedMs = 0) {
+  return smoothValue(renderer, 'jump', Number(targetJump) || 0, elapsedMs, 0);
 }
 
 if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
@@ -92,7 +102,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     const drawable = [...levelState.objects].sort((a, b) => a.lane - b.lane || a.x - b.x);
     for (const object of drawable) this.drawObject(object, levelState.elapsedMs);
 
-    this.drawSpanielCompanion(levelState.companion, levelState.elapsedMs, levelState.stats);
+    this.drawSpanielCompanion(levelState.companion, levelState.elapsedMs, levelState.stats, levelState.player);
     if (!levelState.playerHidden) this.drawPlayer(levelState.player, levelState.elapsedMs);
     this.drawEffects(levelState.effects || []);
   };
@@ -107,14 +117,16 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     originalDrawEffects.call(this, normalEffects);
   };
 
-  CanvasRenderer.prototype.drawSpanielCompanion = function drawSpanielCompanion(companion, elapsedMs = 0, stats = null) {
+  CanvasRenderer.prototype.drawSpanielCompanion = function drawSpanielCompanion(companion, elapsedMs = 0, stats = null, player = null) {
     if (!companion?.visualKey || !this.assets.get(companion.visualKey)) return;
 
     const tuning = debugTuning();
     const visualLane = smoothLane(this, companion.renderLane, elapsedMs);
+    const delayedJump = smoothJump(this, player?.jumpOffset, elapsedMs);
     const projected = this.projector.project(companion.x, visualLane, this.width, this.height);
     const baseY = playfieldY(this, projected.y);
     const groundedY = companionGroundY(baseY, visualLane, tuning);
+    const yJump = delayedJump * (this.isCompact ? 0.72 : 0.82);
     const baseSize = this.isWideShort ? 88 : this.isCompact ? 82 : 98;
     let size = baseSize * projected.scale * this.spriteScale(companion.visualKey);
     const phase = renderTime(elapsedMs) / 110;
@@ -130,7 +142,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     };
 
     let x = projected.x - 10 + animation.x;
-    let y = groundedY + animation.y;
+    let y = groundedY - yJump + animation.y;
 
     if (companion.mode === 'rescue_smash') {
       const total = companion.rescueTotalMs || 760;
@@ -151,7 +163,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       const dashY = rawDy * Math.min(1, dashDistance / Math.max(1, Math.abs(rawDx)));
       const travel = attackEase * (1 - returnEase * 0.82);
       x = projected.x + dashX * travel - 8;
-      y = groundedY + dashY * travel - punch * 9;
+      y = groundedY - yJump + dashY * travel - punch * 9;
       size *= 1.18 + punch * 0.26 - returnEase * 0.12;
       animation.rotation = -0.08 + punch * 0.2 - returnEase * 0.07;
       animation.scaleX = 1.05 + punch * 0.1;
