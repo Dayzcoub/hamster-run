@@ -116,7 +116,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     const badgeH = this.isCompact ? 22 : 24;
     const floatY = Math.sin(elapsedMs / 280) * 1.8;
     const badgeX = x + size * 0.08 - badgeW / 2;
-    const badgeY = y - size * 1.08 + floatY;
+    const badgeY = y - size * 1.34 + floatY;
     const radius = badgeH / 2;
 
     ctx.save();
