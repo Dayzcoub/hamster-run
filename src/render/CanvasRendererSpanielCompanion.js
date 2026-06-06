@@ -4,6 +4,8 @@ const originalRender = CanvasRenderer.prototype.render;
 const originalSpriteScale = CanvasRenderer.prototype.spriteScale;
 const originalDrawEffects = CanvasRenderer.prototype.drawEffects;
 
+const SPANIEL_FOLLOW_LAG_MS = 145;
+
 const SPANIEL_SPRITE_SCALE = {
   spaniel_idle: 0.53,
   spaniel_run: 0.53,
@@ -44,6 +46,21 @@ function playfieldY(renderer, projectedY) {
 function companionGroundY(baseY, lane, tuning) {
   const profile = laneProfile(lane);
   return baseY + profile.yOffset + (Number(tuning.playerY) || 0) + (Number(tuning.spanielY) || 0);
+}
+
+function smoothLane(renderer, targetLane, elapsedMs = 0) {
+  const target = Math.max(0, Math.min(2, Number.isFinite(targetLane) ? targetLane : 1));
+  const previous = renderer.__spanielLaneLag;
+  if (!previous || elapsedMs < previous.elapsedMs || Math.abs(target - previous.targetLane) > 1.5) {
+    renderer.__spanielLaneLag = { lane: target, targetLane: target, elapsedMs };
+    return target;
+  }
+
+  const dt = Math.max(0, Math.min(60, elapsedMs - previous.elapsedMs));
+  const follow = 1 - Math.exp(-dt / SPANIEL_FOLLOW_LAG_MS);
+  const lane = previous.lane + (target - previous.lane) * follow;
+  renderer.__spanielLaneLag = { lane, targetLane: target, elapsedMs };
+  return lane;
 }
 
 if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
@@ -87,9 +104,10 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
     if (!companion?.visualKey || !this.assets.get(companion.visualKey)) return;
 
     const tuning = debugTuning();
-    const projected = this.projector.project(companion.x, companion.renderLane, this.width, this.height);
+    const visualLane = smoothLane(this, companion.renderLane, elapsedMs);
+    const projected = this.projector.project(companion.x, visualLane, this.width, this.height);
     const baseY = playfieldY(this, projected.y);
-    const groundedY = companionGroundY(baseY, companion.renderLane, tuning);
+    const groundedY = companionGroundY(baseY, visualLane, tuning);
     const baseSize = this.isWideShort ? 88 : this.isCompact ? 82 : 98;
     let size = baseSize * projected.scale * this.spriteScale(companion.visualKey);
     const phase = elapsedMs / 110;
@@ -115,9 +133,9 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       const attackEase = 1 - Math.pow(1 - attackProgress, 3);
       const returnEase = returnProgress * returnProgress * (3 - 2 * returnProgress);
       const punch = Math.sin(Math.min(1, attackProgress) * Math.PI);
-      const impactProjected = this.projector.project(companion.impactX || companion.x + 70, companion.renderLane, this.width, this.height);
+      const impactProjected = this.projector.project(companion.impactX || companion.x + 70, visualLane, this.width, this.height);
       const impactBaseY = playfieldY(this, impactProjected.y);
-      const impactGroundedY = companionGroundY(impactBaseY, companion.renderLane, tuning);
+      const impactGroundedY = companionGroundY(impactBaseY, visualLane, tuning);
       const rawDx = impactProjected.x - projected.x;
       const rawDy = impactGroundedY - groundedY;
       const maxDash = this.isWideShort ? 84 : this.isCompact ? 74 : 92;
