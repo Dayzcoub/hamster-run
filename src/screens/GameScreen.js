@@ -209,10 +209,9 @@ export class GameScreen {
     if (active) {
       this.debugWasPaused = this.paused;
       this.element.classList.add('is-debug-tuning');
-      this.setPaused(true);
+      this.last = performance.now();
     } else {
       this.element.classList.remove('is-debug-tuning');
-      this.setPaused(this.debugWasPaused);
       this.last = performance.now();
     }
   };
