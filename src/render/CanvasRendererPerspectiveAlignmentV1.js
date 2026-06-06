@@ -40,19 +40,20 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   CanvasRenderer.prototype.__perspectiveAlignmentV1Patch = true;
 
   CanvasRenderer.prototype.getPlayfieldBottomY = function getPlayfieldBottomY() {
-    return this.height * (this.isWideShort ? 0.965 : this.isCompact ? 0.94 : 0.9);
+    return this.height * (this.isWideShort ? 0.925 : this.isCompact ? 0.91 : 0.88);
   };
 
   CanvasRenderer.prototype.getPlayfieldTopY = function getPlayfieldTopY() {
     const bottom = this.getPlayfieldBottomY();
-    return bottom - this.height * (this.isWideShort ? 0.315 : this.isCompact ? 0.3 : 0.28);
+    return bottom - this.height * (this.isWideShort ? 0.245 : this.isCompact ? 0.235 : 0.22);
   };
 
   CanvasRenderer.prototype.remapProjectedYToPlayfield = function remapProjectedYToPlayfield(projectedY) {
     const originalTop = this.projector.laneY(0, this.height);
     const originalBottom = this.projector.laneY(2, this.height);
     const t = Math.max(0, Math.min(1, (projectedY - originalTop) / Math.max(1, originalBottom - originalTop)));
-    return this.getPlayfieldTopY() + t * (this.getPlayfieldBottomY() - this.getPlayfieldTopY());
+    const eased = Math.pow(t, 1.08);
+    return this.getPlayfieldTopY() + eased * (this.getPlayfieldBottomY() - this.getPlayfieldTopY());
   };
 
   CanvasRenderer.prototype.spriteScale = function perspectiveSpriteScale(visualKey) {
