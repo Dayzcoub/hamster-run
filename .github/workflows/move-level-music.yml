@@ -26,16 +26,34 @@ jobs:
           else
             echo "Свадьба в шатре.mp3 not found"
           fi
-          if [ -f "Большой концерт.mp3" ]; then
-            git mv "Большой концерт.mp3" assets/audio/music/level_big_concert.mp3
-          else
-            echo "Большой концерт.mp3 not found"
-          fi
           if [ -f "Kidsroom_theme.mp3" ]; then
             git mv "Kidsroom_theme.mp3" assets/audio/music/level_kids_room.mp3
           else
             echo "Kidsroom_theme.mp3 not found"
           fi
+
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          target = Path('assets/audio/music/level_big_concert.mp3')
+          if target.exists():
+              print('level_big_concert.mp3 already exists')
+              raise SystemExit(0)
+
+          candidates = [
+              item for item in Path('.').glob('*.mp3')
+              if 'концерт' in item.name.lower() or 'concert' in item.name.lower()
+          ]
+          print('Root mp3 candidates:', [item.name for item in candidates])
+          if not candidates:
+              print('No big concert mp3 candidate found')
+              raise SystemExit(0)
+
+          source = sorted(candidates, key=lambda item: item.stat().st_mtime, reverse=True)[0]
+          subprocess.run(['git', 'mv', str(source), str(target)], check=True)
+          print(f'Moved {source} -> {target}')
+          PY
 
       - name: Commit moved level music assets
         run: |
