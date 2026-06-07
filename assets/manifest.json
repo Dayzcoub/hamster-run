@@ -7,7 +7,8 @@
     "Runtime should prefer WebP and use PNG as fallback/source.",
     "Anchors are preliminary and must be tuned after first in-game render.",
     "This archive is meant to be extracted into the repository root.",
-    "Spaniel companion assets are temporarily stored under assets/sprites/IMG_*. They should be renamed and moved to assets/sprites/characters/spaniel after desktop cleanup."
+    "Spaniel companion assets are temporarily stored under assets/sprites/IMG_*. They should be renamed and moved to assets/sprites/characters/spaniel after desktop cleanup.",
+    "New collectible assets powercon/tape/led/truss were uploaded to repository root as IMG_3096..IMG_3103 and are registered from there until binary files can be physically moved."
   ],
   "sprites": {
     "hamster_run_01": {
@@ -15,14 +16,8 @@
       "visualKey": "hamster_run_01",
       "png": "assets/sprites/characters/hamster/png/hamster_run_01.png",
       "webp": "assets/sprites/characters/hamster/webp/hamster_run_01.webp",
-      "sourceSize": {
-        "width": 1024,
-        "height": 1024
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.88
-      },
+      "sourceSize": { "width": 1024, "height": 1024 },
+      "anchor": { "x": 0.5, "y": 0.88 },
       "status": "clean-pass"
     },
     "hamster_jump": {
@@ -30,14 +25,8 @@
       "visualKey": "hamster_jump",
       "png": "assets/sprites/characters/hamster/png/hamster_jump.png",
       "webp": "assets/sprites/characters/hamster/webp/hamster_jump.webp",
-      "sourceSize": {
-        "width": 1024,
-        "height": 1024
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.88
-      },
+      "sourceSize": { "width": 1024, "height": 1024 },
+      "anchor": { "x": 0.5, "y": 0.88 },
       "status": "clean-pass"
     },
     "hamster_slide": {
@@ -45,14 +34,8 @@
       "visualKey": "hamster_slide",
       "png": "assets/sprites/characters/hamster/png/hamster_slide.png",
       "webp": "assets/sprites/characters/hamster/webp/hamster_slide.webp",
-      "sourceSize": {
-        "width": 1024,
-        "height": 1024
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.82
-      },
+      "sourceSize": { "width": 1024, "height": 1024 },
+      "anchor": { "x": 0.5, "y": 0.82 },
       "status": "clean-pass"
     },
     "hamster_hit": {
@@ -60,14 +43,8 @@
       "visualKey": "hamster_hit",
       "png": "assets/sprites/characters/hamster/png/hamster_hit.png",
       "webp": "assets/sprites/characters/hamster/webp/hamster_hit.webp",
-      "sourceSize": {
-        "width": 1024,
-        "height": 1024
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.88
-      },
+      "sourceSize": { "width": 1024, "height": 1024 },
+      "anchor": { "x": 0.5, "y": 0.88 },
       "status": "clean-pass"
     },
     "hamster_celebrate": {
@@ -75,14 +52,8 @@
       "visualKey": "hamster_celebrate",
       "png": "assets/sprites/characters/hamster/png/hamster_celebrate.png",
       "webp": "assets/sprites/characters/hamster/webp/hamster_celebrate.webp",
-      "sourceSize": {
-        "width": 1024,
-        "height": 1024
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.88
-      },
+      "sourceSize": { "width": 1024, "height": 1024 },
+      "anchor": { "x": 0.5, "y": 0.88 },
       "status": "clean-pass"
     },
     "spaniel_idle": {
@@ -91,14 +62,8 @@
       "role": "companion / idle",
       "png": "assets/sprites/IMG_2924.png",
       "webp": "assets/sprites/IMG_2920.webp",
-      "sourceSize": {
-        "width": 1254,
-        "height": 1254
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.86
-      },
+      "sourceSize": { "width": 1254, "height": 1254 },
+      "anchor": { "x": 0.5, "y": 0.86 },
       "scaleHint": 0.62,
       "status": "draft_uploaded_temp_path"
     },
@@ -108,14 +73,8 @@
       "role": "companion / run",
       "png": "assets/sprites/IMG_2925.png",
       "webp": "assets/sprites/IMG_2921.webp",
-      "sourceSize": {
-        "width": 1254,
-        "height": 1254
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.82
-      },
+      "sourceSize": { "width": 1254, "height": 1254 },
+      "anchor": { "x": 0.5, "y": 0.82 },
       "scaleHint": 0.6,
       "status": "draft_uploaded_temp_path"
     },
@@ -125,14 +84,8 @@
       "role": "companion / rescue",
       "png": "assets/sprites/IMG_2926.png",
       "webp": "assets/sprites/IMG_2922.webp",
-      "sourceSize": {
-        "width": 1254,
-        "height": 1254
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.84
-      },
+      "sourceSize": { "width": 1254, "height": 1254 },
+      "anchor": { "x": 0.5, "y": 0.84 },
       "scaleHint": 0.62,
       "status": "draft_uploaded_temp_path"
     },
@@ -142,14 +95,8 @@
       "role": "companion / pickup toast",
       "png": "assets/sprites/IMG_2927.png",
       "webp": "assets/sprites/IMG_2923.webp",
-      "sourceSize": {
-        "width": 1254,
-        "height": 1254
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.82
-      },
+      "sourceSize": { "width": 1254, "height": 1254 },
+      "anchor": { "x": 0.5, "y": 0.82 },
       "scaleHint": 0.6,
       "status": "draft_uploaded_temp_path"
     },
@@ -159,14 +106,8 @@
       "role": "companion / portrait",
       "png": "assets/sprites/IMG_2928.png",
       "webp": "assets/sprites/IMG_2930.webp",
-      "sourceSize": {
-        "width": 1254,
-        "height": 1254
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.7
-      },
+      "sourceSize": { "width": 1254, "height": 1254 },
+      "anchor": { "x": 0.5, "y": 0.7 },
       "scaleHint": 0.72,
       "status": "draft_uploaded_temp_path"
     },
@@ -176,14 +117,8 @@
       "role": "main currency / bread",
       "png": "assets/sprites/collectibles/png/bread.png",
       "webp": "assets/sprites/collectibles/webp/bread.webp",
-      "sourceSize": {
-        "width": 768,
-        "height": 768
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.72
-      },
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.72 },
       "status": "approved_direction"
     },
     "cable_coil": {
@@ -192,14 +127,8 @@
       "role": "project resource / cable",
       "png": "assets/sprites/collectibles/png/cable_coil.png",
       "webp": "assets/sprites/collectibles/webp/cable_coil.webp",
-      "sourceSize": {
-        "width": 768,
-        "height": 768
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.72
-      },
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.72 },
       "status": "approved_direction"
     },
     "c2_connector": {
@@ -208,14 +137,8 @@
       "role": "project resource / C2",
       "png": "assets/sprites/collectibles/png/c2_connector.png",
       "webp": "assets/sprites/collectibles/webp/c2_connector.webp",
-      "sourceSize": {
-        "width": 768,
-        "height": 768
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.72
-      },
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.72 },
       "status": "approved_direction"
     },
     "bolt": {
@@ -224,14 +147,8 @@
       "role": "project resource / bolts",
       "png": "assets/sprites/collectibles/png/bolt.png",
       "webp": "assets/sprites/collectibles/webp/bolt.webp",
-      "sourceSize": {
-        "width": 768,
-        "height": 768
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.72
-      },
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.72 },
       "status": "approved_direction"
     },
     "stage_deck": {
@@ -240,15 +157,49 @@
       "role": "project resource / stage deck",
       "png": "assets/sprites/collectibles/png/stage_deck.png",
       "webp": "assets/sprites/collectibles/webp/stage_deck.webp",
-      "sourceSize": {
-        "width": 768,
-        "height": 768
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.72
-      },
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.72 },
       "status": "approved_direction"
+    },
+    "powercon": {
+      "type": "collectible",
+      "visualKey": "powercon",
+      "role": "project resource / PowerCON",
+      "png": "IMG_3096.png",
+      "webp": "IMG_3097.webp",
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.72 },
+      "status": "root_uploaded_pending_move"
+    },
+    "tape": {
+      "type": "collectible",
+      "visualKey": "tape",
+      "role": "project resource / gaffer tape",
+      "png": "IMG_3098.png",
+      "webp": "IMG_3099.webp",
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.72 },
+      "status": "root_uploaded_pending_move"
+    },
+    "led": {
+      "type": "collectible",
+      "visualKey": "led",
+      "role": "project resource / LED module",
+      "png": "IMG_3100.png",
+      "webp": "IMG_3101.webp",
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.72 },
+      "status": "root_uploaded_pending_move"
+    },
+    "truss": {
+      "type": "collectible",
+      "visualKey": "truss",
+      "role": "project resource / truss segment collectible",
+      "png": "IMG_3102.png",
+      "webp": "IMG_3103.webp",
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.72 },
+      "status": "root_uploaded_pending_move"
     },
     "flight_case": {
       "type": "obstacle",
@@ -256,14 +207,8 @@
       "role": "jump / lane-change obstacle",
       "png": "assets/sprites/obstacles/png/flight_case.png",
       "webp": "assets/sprites/obstacles/webp/flight_case.webp",
-      "sourceSize": {
-        "width": 768,
-        "height": 768
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.84
-      },
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.84 },
       "status": "approved_direction"
     },
     "cable_loop": {
@@ -272,14 +217,8 @@
       "role": "trip hazard / jump obstacle",
       "png": "assets/sprites/obstacles/png/cable_loop.png",
       "webp": "assets/sprites/obstacles/webp/cable_loop.webp",
-      "sourceSize": {
-        "width": 768,
-        "height": 768
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.84
-      },
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.84 },
       "status": "approved_direction"
     },
     "mic_stand": {
@@ -288,14 +227,8 @@
       "role": "narrow obstacle",
       "png": "assets/sprites/obstacles/png/mic_stand.png",
       "webp": "assets/sprites/obstacles/webp/mic_stand.webp",
-      "sourceSize": {
-        "width": 768,
-        "height": 768
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.84
-      },
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.84 },
       "status": "approved_direction"
     },
     "mystery_box": {
@@ -304,14 +237,8 @@
       "role": "chaotic cable box obstacle",
       "png": "assets/sprites/obstacles/png/mystery_box.png",
       "webp": "assets/sprites/obstacles/webp/mystery_box.webp",
-      "sourceSize": {
-        "width": 768,
-        "height": 768
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.84
-      },
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.84 },
       "status": "approved_direction"
     },
     "cart": {
@@ -320,14 +247,8 @@
       "role": "rolling cart obstacle",
       "png": "assets/sprites/obstacles/png/cart.png",
       "webp": "assets/sprites/obstacles/webp/cart.webp",
-      "sourceSize": {
-        "width": 768,
-        "height": 768
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.84
-      },
+      "sourceSize": { "width": 768, "height": 768 },
+      "anchor": { "x": 0.5, "y": 0.84 },
       "status": "approved_direction"
     },
     "truss_section_left": {
@@ -335,14 +256,8 @@
       "visualKey": "truss_section_left",
       "role": "two-lane truss obstacle / blocks lanes 0+1",
       "png": "assets/sprites/obstacles/png/truss_section_left.png",
-      "sourceSize": {
-        "width": 1024,
-        "height": 1024
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.84
-      },
+      "sourceSize": { "width": 1024, "height": 1024 },
+      "anchor": { "x": 0.5, "y": 0.84 },
       "status": "approved_truss_obstacle_asset"
     },
     "truss_section_right": {
@@ -350,14 +265,8 @@
       "visualKey": "truss_section_right",
       "role": "two-lane truss obstacle / blocks lanes 1+2",
       "png": "assets/sprites/obstacles/png/truss_section_right.png",
-      "sourceSize": {
-        "width": 1024,
-        "height": 1024
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.84
-      },
+      "sourceSize": { "width": 1024, "height": 1024 },
+      "anchor": { "x": 0.5, "y": 0.84 },
       "status": "approved_truss_obstacle_asset"
     },
     "truss_section_master": {
@@ -365,14 +274,8 @@
       "visualKey": "truss_section_master",
       "role": "base master reference asset for truss obstacle",
       "png": "assets/sprites/obstacles/png/truss_section_master.png",
-      "sourceSize": {
-        "width": 1024,
-        "height": 1024
-      },
-      "anchor": {
-        "x": 0.5,
-        "y": 0.84
-      },
+      "sourceSize": { "width": 1024, "height": 1024 },
+      "anchor": { "x": 0.5, "y": 0.84 },
       "status": "reference_asset_not_spawned"
     }
   }
