@@ -334,6 +334,28 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     this.drawBackground(standState);
     this.drawLanes(standState);
 
+    if (window.__HAMSTER_TRUSS_DEBUG_MODE) {
+      const w = this.width;
+      const elapsedMs = 0;
+      const samples = [
+        { visualKey: 'truss_section_left', lane: 0, x: w * 0.42 },
+        { visualKey: 'truss_section_right', lane: 1, x: w * 0.62 },
+      ];
+
+      for (const sample of samples) {
+        this.drawObject({
+          visualKey: sample.visualKey,
+          kind: 'obstacle',
+          x: sample.x,
+          lane: sample.lane,
+        }, elapsedMs);
+      }
+
+      this.drawDebugTuningLabels('TRUSS DEBUG');
+      this.drawBottomFieldMask();
+      return;
+    }
+
     const w = this.width;
     const elapsedMs = 0;
     const hamsterKey = levelState.player?.visualKey || 'hamster_run_01';
@@ -372,7 +394,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     this.drawBottomFieldMask();
   };
 
-  CanvasRenderer.prototype.drawDebugTuningLabels = function drawDebugTuningLabels() {
+  CanvasRenderer.prototype.drawDebugTuningLabels = function drawDebugTuningLabels(labelPrefix = 'LANE') {
     const ctx = this.ctx;
     const w = this.width;
     ctx.save();
@@ -383,15 +405,15 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
       const y = this.remapLaneToPlayfieldY(lane);
       ctx.globalAlpha = 0.84;
       ctx.fillStyle = 'rgba(7,14,24,0.7)';
-      this.roundRect(ctx, 12, y - 13, 72, 24, 12);
+      this.roundRect(ctx, 12, y - 13, labelPrefix === 'LANE' ? 72 : 118, 24, 12);
       ctx.fill();
       ctx.fillStyle = '#92ebff';
-      ctx.fillText(`LANE ${lane}`, 24, y);
+      ctx.fillText(`${labelPrefix} ${lane}`, 24, y);
       ctx.globalAlpha = 0.28;
       ctx.strokeStyle = lane === 1 ? 'rgba(255,194,71,0.72)' : 'rgba(92,235,255,0.5)';
       ctx.lineWidth = lane === 1 ? 1.5 : 1;
       ctx.beginPath();
-      ctx.moveTo(92, y);
+      ctx.moveTo(labelPrefix === 'LANE' ? 92 : 140, y);
       ctx.lineTo(w - 16, y - 14);
       ctx.stroke();
     }
