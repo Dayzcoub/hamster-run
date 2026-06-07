@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'hamster_spawn_scale_factors_v1';
+const DEV_FLAG_KEY = 'hamster_dev_spawn_debug_enabled';
 const DEFAULT_SELECTED = 'bread';
 
 const DEFAULT_FACTORS = {
@@ -17,6 +18,14 @@ const DEFAULT_FACTORS = {
   mystery_box: 1,
   cart: 1,
 };
+
+function isDevEnabled() {
+  try {
+    return window.localStorage?.getItem(DEV_FLAG_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 function loadFactors() {
   try {
@@ -286,8 +295,9 @@ function updateVisibility() {
   const root = document.querySelector('[data-spawn-assets-debug-root]');
   if (!root) return;
   const activeGame = document.querySelector('.game-screen');
-  root.hidden = !activeGame;
-  if (!activeGame && root.classList.contains('is-open')) setOpen(root, false);
+  const visible = Boolean(activeGame && isDevEnabled());
+  root.hidden = !visible;
+  if (!visible && root.classList.contains('is-open')) setOpen(root, false);
 }
 
 function boot() {
@@ -297,7 +307,8 @@ function boot() {
   wire(root);
   updateVisibility();
   const observer = new MutationObserver(updateVisibility);
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+  window.addEventListener('hamster-dev-settings-change', updateVisibility);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
