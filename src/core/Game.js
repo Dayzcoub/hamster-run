@@ -7,6 +7,7 @@ import { LevelSelectScreen } from '../screens/LevelSelectScreen.js';
 import { GameScreen } from '../screens/GameScreen.js';
 import { ResultScreen } from '../screens/ResultScreen.js';
 import { menuMusic } from '../audio/menu-music.js';
+import { levelMusic } from '../audio/level-music.js';
 import { normalizeAudioSettings } from '../audio/audio-settings.js';
 import { levels } from '../data/levels.js';
 
@@ -33,6 +34,7 @@ export class Game {
   configureAudio() {
     this.state.settings.audio = normalizeAudioSettings(this.state.settings);
     menuMusic.configure(this.state.settings);
+    levelMusic.configure(this.state.settings);
   }
 
   setScreen(screen) {
@@ -44,12 +46,14 @@ export class Game {
   }
 
   showMainMenu() {
+    levelMusic.stop();
     this.orientationLock.stop();
     this.configureAudio();
     this.setScreen(new MainMenuScreen(this));
   }
 
   showLevels() {
+    levelMusic.stop();
     this.orientationLock.start();
     this.configureAudio();
     menuMusic.play();
@@ -60,12 +64,15 @@ export class Game {
     menuMusic.stop();
     const level = levels.find((item) => item.id === levelId);
     if (!level) throw new Error(`Unknown level: ${levelId}`);
+    this.configureAudio();
+    levelMusic.play(level.id);
     this.orientationLock.requestLandscape();
     this.setScreen(new GameScreen(this, level));
   }
 
   showResult(result) {
     menuMusic.stop();
+    levelMusic.stop();
     this.applyResult(result);
     this.orientationLock.start();
     this.setScreen(new ResultScreen(this, result));
