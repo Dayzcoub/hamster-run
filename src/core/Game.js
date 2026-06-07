@@ -7,6 +7,7 @@ import { LevelSelectScreen } from '../screens/LevelSelectScreen.js';
 import { GameScreen } from '../screens/GameScreen.js';
 import { ResultScreen } from '../screens/ResultScreen.js';
 import { menuMusic } from '../audio/menu-music.js';
+import { normalizeAudioSettings } from '../audio/audio-settings.js';
 import { levels } from '../data/levels.js';
 
 const PASSING_GRADES = new Set(['C', 'B', 'A', 'S']);
@@ -20,12 +21,18 @@ export class Game {
     this.assets = new AssetLoader('assets/manifest.json');
     this.activeScreen = null;
     this.state = this.storage.load();
+    this.configureAudio();
   }
 
   async start() {
     await this.assets.load();
     this.input.bind();
     this.showMainMenu();
+  }
+
+  configureAudio() {
+    this.state.settings.audio = normalizeAudioSettings(this.state.settings);
+    menuMusic.configure(this.state.settings);
   }
 
   setScreen(screen) {
@@ -38,12 +45,14 @@ export class Game {
 
   showMainMenu() {
     this.orientationLock.stop();
+    this.configureAudio();
     this.setScreen(new MainMenuScreen(this));
   }
 
   showLevels() {
-    menuMusic.pause();
     this.orientationLock.start();
+    this.configureAudio();
+    menuMusic.play();
     this.setScreen(new LevelSelectScreen(this, levels));
   }
 
@@ -131,6 +140,29 @@ export class Game {
 
   isLevelUnlocked(levelId) {
     return this.state.unlockedLevels.includes(levelId);
+  }
+
+  saveAudioSettings(nextAudio) {
+    this.state.settings.audio = normalizeAudioSettings({
+      ...this.state.settings,
+      audio: {
+        ...(this.state.settings.audio || {}),
+        ...(nextAudio || {}),
+      },
+    });
+    this.state.settings.music = this.state.settings.audio.enabled;
+    this.state.settings.sound = this.state.settings.audio.sfxVolume > 0;
+    this.storage.save(this.state);
+    this.configureAudio();
+    window.dispatchEvent(new CustomEvent('hamster-audio-settings-change', {
+      detail: { audio: this.state.settings.audio },
+    }));
+  }
+
+  toggleAudioEnabled() {
+    const audio = normalizeAudioSettings(this.state.settings);
+    this.saveAudioSettings({ enabled: !audio.enabled });
+    return this.state.settings.audio;
   }
 
   setRenderQuality(renderQuality) {
