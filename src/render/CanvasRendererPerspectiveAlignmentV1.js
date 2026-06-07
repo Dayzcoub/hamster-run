@@ -20,6 +20,23 @@ const COLLECTIBLE_SCALE_FACTORS = {
   truss: 0.78,
 };
 
+const SPAWN_DEBUG_OBJECTS = [
+  { visualKey: 'bread', kind: 'collectible' },
+  { visualKey: 'cable_coil', kind: 'collectible' },
+  { visualKey: 'c2_connector', kind: 'collectible' },
+  { visualKey: 'bolt', kind: 'collectible' },
+  { visualKey: 'stage_deck', kind: 'collectible' },
+  { visualKey: 'powercon', kind: 'collectible' },
+  { visualKey: 'tape', kind: 'collectible' },
+  { visualKey: 'led', kind: 'collectible' },
+  { visualKey: 'truss', kind: 'collectible' },
+  { visualKey: 'flight_case', kind: 'obstacle' },
+  { visualKey: 'cable_loop', kind: 'obstacle' },
+  { visualKey: 'mic_stand', kind: 'obstacle' },
+  { visualKey: 'mystery_box', kind: 'obstacle' },
+  { visualKey: 'cart', kind: 'obstacle' },
+];
+
 // Manual lane heights: [top lane, middle lane, bottom lane].
 // Larger value means lower on screen, smaller value means higher on screen.
 const LANE_Y_FACTORS = {
@@ -74,6 +91,16 @@ function trussTuning() {
     lift: Number.isFinite(Number(tuning.lift)) ? Number(tuning.lift) : DEFAULT_TRUSS_TUNING.lift,
     rotation: Number.isFinite(Number(tuning.rotation)) ? Number(tuning.rotation) : DEFAULT_TRUSS_TUNING.rotation,
   };
+}
+
+function spawnScaleFactor(visualKey) {
+  const overrides = window.__HAMSTER_SPAWN_SCALE_FACTORS || {};
+  if (Object.prototype.hasOwnProperty.call(overrides, visualKey)) {
+    const value = Number(overrides[visualKey]);
+    return Number.isFinite(value) && value > 0 ? value : 1;
+  }
+  if (Object.prototype.hasOwnProperty.call(COLLECTIBLE_SCALE_FACTORS, visualKey)) return COLLECTIBLE_SCALE_FACTORS[visualKey];
+  return 1;
 }
 
 function isTrussSection(visualKey) {
@@ -157,14 +184,12 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const tuning = visualTuning();
     const trussOnly = trussTuning();
     const scale = baseSpriteScale.call(this, visualKey);
+    const spawnScale = spawnScaleFactor(visualKey);
     if (visualKey?.startsWith('hamster_')) return scale * 0.9 * (Number(tuning.playerScale) || 1);
     if (visualKey?.startsWith('spaniel_')) return scale * 0.92;
     if (isTrussSection(visualKey)) return scale * 1.28 * (Number(tuning.objectScale) || 1) * trussOnly.scale;
-    if (Object.prototype.hasOwnProperty.call(COLLECTIBLE_SCALE_FACTORS, visualKey)) {
-      return scale * 0.92 * COLLECTIBLE_SCALE_FACTORS[visualKey] * (Number(tuning.objectScale) || 1);
-    }
-    if (['bread', 'cable_coil', 'c2_connector', 'bolt', 'stage_deck'].includes(visualKey)) return scale * 0.92 * (Number(tuning.objectScale) || 1);
-    if (['flight_case', 'cable_loop', 'mic_stand', 'mystery_box', 'cart'].includes(visualKey)) return scale * 0.94 * (Number(tuning.objectScale) || 1);
+    if (['bread', 'cable_coil', 'c2_connector', 'bolt', 'stage_deck', 'powercon', 'tape', 'led', 'truss'].includes(visualKey)) return scale * 0.92 * spawnScale * (Number(tuning.objectScale) || 1);
+    if (['flight_case', 'cable_loop', 'mic_stand', 'mystery_box', 'cart'].includes(visualKey)) return scale * 0.94 * spawnScale * (Number(tuning.objectScale) || 1);
     return scale;
   };
 
@@ -208,8 +233,29 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
 
     this.drawObjectGroundingV1({ ...object, __groundX: x, __groundY: y, __groundScale: projected.scale, __shadowProfile: profile });
     this.drawSpriteContourGlow(object.visualKey, x, y, size, collectible);
+    if (window.__HAMSTER_SPAWN_DEBUG_MODE && window.__HAMSTER_SPAWN_DEBUG_SELECTED === object.visualKey) this.drawSpawnDebugSelection(x, y, size, collectible);
     this.drawSprite(object.visualKey, x, y, size, projected.scale, false, false, spriteAnimation);
     this.drawObjectMarker(object, x, y, size, projected.scale, elapsedMs);
+
+    if (window.__HAMSTER_SPAWN_DEBUG_MODE && Array.isArray(window.__HAMSTER_SPAWN_DEBUG_HIT_ZONES) && !truss) {
+      window.__HAMSTER_SPAWN_DEBUG_HIT_ZONES.push({ visualKey: object.visualKey, lane: object.lane, x, y, radius: Math.max(20, size * 0.58) });
+    }
+  };
+
+  CanvasRenderer.prototype.drawSpawnDebugSelection = function drawSpawnDebugSelection(x, y, size, collectible) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = 0.88;
+    ctx.strokeStyle = collectible ? 'rgba(255, 211, 92, 0.95)' : 'rgba(92, 235, 255, 0.95)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(x, y - size * 0.18, size * 0.54, size * 0.42, -0.08, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 0.32;
+    ctx.lineWidth = 7;
+    ctx.stroke();
+    ctx.restore();
   };
 
   CanvasRenderer.prototype.drawObjectGroundingV1 = function drawObjectGroundingPerspectiveV1(object) {
@@ -344,6 +390,11 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     this.drawBackground(standState);
     this.drawLanes(standState);
 
+    if (window.__HAMSTER_SPAWN_DEBUG_MODE) {
+      this.renderSpawnAssetsDebugStand();
+      return;
+    }
+
     if (window.__HAMSTER_TRUSS_DEBUG_MODE) {
       const w = this.width;
       const elapsedMs = 0;
@@ -353,12 +404,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
       ];
 
       for (const sample of samples) {
-        this.drawObject({
-          visualKey: sample.visualKey,
-          kind: 'obstacle',
-          x: sample.x,
-          lane: sample.lane,
-        }, elapsedMs);
+        this.drawObject({ visualKey: sample.visualKey, kind: 'obstacle', x: sample.x, lane: sample.lane }, elapsedMs);
       }
 
       this.drawDebugTuningLabels('TRUSS DEBUG');
@@ -373,35 +419,60 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
 
     for (let lane = 0; lane < 3; lane += 1) {
       if (typeof this.drawSpanielCompanion === 'function') {
-        this.drawSpanielCompanion({
-          ...spanielTemplate,
-          visualKey: spanielTemplate.visualKey || 'spaniel_run',
-          x: w * 0.1,
-          renderLane: lane,
-          mode: 'debug_idle',
-        }, elapsedMs, { companionRescueAvailable: false });
+        this.drawSpanielCompanion({ ...spanielTemplate, visualKey: spanielTemplate.visualKey || 'spaniel_run', x: w * 0.1, renderLane: lane, mode: 'debug_idle' }, elapsedMs, { companionRescueAvailable: false });
       }
 
-      this.drawPlayer({
-        visualKey: hamsterKey,
-        x: w * 0.2,
-        renderLane: lane,
-        jumpOffset: 0,
-      }, elapsedMs);
+      this.drawPlayer({ visualKey: hamsterKey, x: w * 0.2, renderLane: lane, jumpOffset: 0 }, elapsedMs);
 
       DEBUG_OBJECT_KEYS.forEach((visualKey, index) => {
         const objectKind = ['bread', 'stage_deck', 'cable_coil', 'c2_connector', 'bolt'].includes(visualKey) ? 'collectible' : 'obstacle';
-        this.drawObject({
-          visualKey,
-          kind: objectKind,
-          x: w * (0.28 + index * 0.055),
-          lane,
-        }, elapsedMs);
+        this.drawObject({ visualKey, kind: objectKind, x: w * (0.28 + index * 0.055), lane }, elapsedMs);
       });
     }
 
     this.drawDebugTuningLabels();
     this.drawBottomFieldMask();
+  };
+
+  CanvasRenderer.prototype.renderSpawnAssetsDebugStand = function renderSpawnAssetsDebugStand() {
+    window.__HAMSTER_SPAWN_DEBUG_HIT_ZONES = [];
+    const w = this.width;
+    const elapsedMs = 0;
+    const count = SPAWN_DEBUG_OBJECTS.length;
+    const left = this.isWideShort ? 0.08 : 0.1;
+    const right = this.isWideShort ? 0.9 : 0.88;
+
+    for (let lane = 0; lane < 3; lane += 1) {
+      SPAWN_DEBUG_OBJECTS.forEach((entry, index) => {
+        const t = count <= 1 ? 0.5 : index / (count - 1);
+        const x = w * (left + (right - left) * t);
+        this.drawObject({ visualKey: entry.visualKey, kind: entry.kind, x, lane }, elapsedMs);
+      });
+    }
+
+    this.drawSpawnDebugLabels();
+    this.drawBottomFieldMask();
+  };
+
+  CanvasRenderer.prototype.drawSpawnDebugLabels = function drawSpawnDebugLabels() {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.font = `900 ${this.isCompact ? 9 : 11}px system-ui, -apple-system, Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(220,233,255,0.72)';
+    const w = this.width;
+    const count = SPAWN_DEBUG_OBJECTS.length;
+    const left = this.isWideShort ? 0.08 : 0.1;
+    const right = this.isWideShort ? 0.9 : 0.88;
+    const y = Math.max(44, this.getPlayfieldTopY() - 42);
+
+    SPAWN_DEBUG_OBJECTS.forEach((entry, index) => {
+      const t = count <= 1 ? 0.5 : index / (count - 1);
+      const x = w * (left + (right - left) * t);
+      ctx.fillText(entry.visualKey, x, y + (index % 2) * 12);
+    });
+    ctx.restore();
   };
 
   CanvasRenderer.prototype.drawDebugTuningLabels = function drawDebugTuningLabels() {
