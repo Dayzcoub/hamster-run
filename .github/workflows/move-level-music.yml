@@ -1,0 +1,50 @@
+name: Move level music assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  move:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Move MP3 files to audio assets folder
+        run: |
+          mkdir -p assets/audio/music
+          if [ -f "Дк.mp3" ]; then
+            git mv "Дк.mp3" assets/audio/music/level_dk_almost_ready.mp3
+          else
+            echo "Дк.mp3 not found"
+          fi
+          if [ -f "Свадьба в шатре.mp3" ]; then
+            git mv "Свадьба в шатре.mp3" assets/audio/music/level_wedding_tent.mp3
+          else
+            echo "Свадьба в шатре.mp3 not found"
+          fi
+          if [ -f "Большой концерт.mp3" ]; then
+            git mv "Большой концерт.mp3" assets/audio/music/level_big_concert.mp3
+          else
+            echo "Большой концерт.mp3 not found"
+          fi
+          if [ -f "Kidsroom_theme.mp3" ]; then
+            git mv "Kidsroom_theme.mp3" assets/audio/music/level_kids_room.mp3
+          else
+            echo "Kidsroom_theme.mp3 not found"
+          fi
+
+      - name: Commit moved level music assets
+        run: |
+          git status --short
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No level music asset changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "Move level music assets"
+          git push
