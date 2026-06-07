@@ -13,6 +13,13 @@ const LANE_PROFILES = [
   { yOffset: 12, shadowScale: 1.16 },
 ];
 
+const COLLECTIBLE_SCALE_FACTORS = {
+  powercon: 0.8,
+  tape: 0.72,
+  led: 0.78,
+  truss: 0.78,
+};
+
 // Manual lane heights: [top lane, middle lane, bottom lane].
 // Larger value means lower on screen, smaller value means higher on screen.
 const LANE_Y_FACTORS = {
@@ -153,6 +160,9 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     if (visualKey?.startsWith('hamster_')) return scale * 0.9 * (Number(tuning.playerScale) || 1);
     if (visualKey?.startsWith('spaniel_')) return scale * 0.92;
     if (isTrussSection(visualKey)) return scale * 1.28 * (Number(tuning.objectScale) || 1) * trussOnly.scale;
+    if (Object.prototype.hasOwnProperty.call(COLLECTIBLE_SCALE_FACTORS, visualKey)) {
+      return scale * 0.92 * COLLECTIBLE_SCALE_FACTORS[visualKey] * (Number(tuning.objectScale) || 1);
+    }
     if (['bread', 'cable_coil', 'c2_connector', 'bolt', 'stage_deck'].includes(visualKey)) return scale * 0.92 * (Number(tuning.objectScale) || 1);
     if (['flight_case', 'cable_loop', 'mic_stand', 'mystery_box', 'cart'].includes(visualKey)) return scale * 0.94 * (Number(tuning.objectScale) || 1);
     return scale;
@@ -394,7 +404,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     this.drawBottomFieldMask();
   };
 
-  CanvasRenderer.prototype.drawDebugTuningLabels = function drawDebugTuningLabels(labelPrefix = 'LANE') {
+  CanvasRenderer.prototype.drawDebugTuningLabels = function drawDebugTuningLabels() {
     const ctx = this.ctx;
     const w = this.width;
     ctx.save();
@@ -405,15 +415,15 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
       const y = this.remapLaneToPlayfieldY(lane);
       ctx.globalAlpha = 0.84;
       ctx.fillStyle = 'rgba(7,14,24,0.7)';
-      this.roundRect(ctx, 12, y - 13, labelPrefix === 'LANE' ? 72 : 118, 24, 12);
+      this.roundRect(ctx, 12, y - 13, 72, 24, 12);
       ctx.fill();
       ctx.fillStyle = '#92ebff';
-      ctx.fillText(`${labelPrefix} ${lane}`, 24, y);
+      ctx.fillText(`LANE ${lane}`, 24, y);
       ctx.globalAlpha = 0.28;
       ctx.strokeStyle = lane === 1 ? 'rgba(255,194,71,0.72)' : 'rgba(92,235,255,0.5)';
       ctx.lineWidth = lane === 1 ? 1.5 : 1;
       ctx.beginPath();
-      ctx.moveTo(labelPrefix === 'LANE' ? 92 : 140, y);
+      ctx.moveTo(92, y);
       ctx.lineTo(w - 16, y - 14);
       ctx.stroke();
     }
