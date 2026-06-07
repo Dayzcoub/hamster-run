@@ -1,6 +1,15 @@
 const PANEL_STORAGE_KEY = 'hamster_truss_debug_panel_open_v1';
 const STORAGE_KEY = 'hamster_truss_visual_tuning_v1';
+const DEV_FLAG_KEY = 'hamster_dev_truss_debug_enabled';
 const DEFAULTS = { scale: 1, lift: 0, rotation: 0 };
+
+function isDevEnabled() {
+  try {
+    return window.localStorage?.getItem(DEV_FLAG_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 function currentTuning() {
   return {
@@ -146,22 +155,24 @@ function wireRoot(root) {
   });
 
   sync(root, currentTuning());
-  setOpen(root, readPanelOpen());
+  setOpen(root, isDevEnabled() && readPanelOpen());
 }
 
 function updateVisibility() {
   const root = ensureFallbackRoot();
   wireRoot(root);
   const activeGame = document.querySelector('.game-screen--concert');
-  root.hidden = !activeGame;
-  if (!activeGame && root.classList.contains('is-open')) setOpen(root, false);
+  const visible = Boolean(activeGame && isDevEnabled());
+  root.hidden = !visible;
+  if (!visible && root.classList.contains('is-open')) setOpen(root, false);
 }
 
 function boot() {
   installPanelPositionOverride();
   updateVisibility();
   const observer = new MutationObserver(updateVisibility);
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+  window.addEventListener('hamster-dev-settings-change', updateVisibility);
 }
 
 if (document.readyState === 'loading') {
