@@ -21,8 +21,11 @@ const SPANIEL_LANE_PROFILES = [
   { yOffset: 12 },
 ];
 
-function debugTuning() {
-  return window.__HAMSTER_DEBUG_TUNING || {};
+function visualTuning() {
+  return {
+    ...(window.__HAMSTER_VISUAL_TUNING || {}),
+    ...(window.__HAMSTER_DEBUG_TUNING || {}),
+  };
 }
 
 function laneProfile(lane = 1) {
@@ -85,7 +88,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
   CanvasRenderer.prototype.__spanielCompanionPatch = true;
 
   CanvasRenderer.prototype.spriteScale = function patchedSpriteScale(visualKey) {
-    const tuning = debugTuning();
+    const tuning = visualTuning();
     const spanielScale = Number(tuning.spanielScale) || 1;
     const base = SPANIEL_SPRITE_SCALE[visualKey] || originalSpriteScale.call(this, visualKey);
     return visualKey?.startsWith('spaniel_') ? base * spanielScale : base;
@@ -121,7 +124,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
   CanvasRenderer.prototype.drawSpanielCompanion = function drawSpanielCompanion(companion, elapsedMs = 0, stats = null, player = null) {
     if (!companion?.visualKey || !this.assets.get(companion.visualKey)) return;
 
-    const tuning = debugTuning();
+    const tuning = visualTuning();
     const visualLane = smoothLane(this, companion.renderLane, elapsedMs);
     const delayedJump = smoothJump(this, player?.jumpOffset, elapsedMs);
     const projected = this.projector.project(companion.x, visualLane, this.width, this.height);
