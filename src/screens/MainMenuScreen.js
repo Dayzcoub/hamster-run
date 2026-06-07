@@ -43,6 +43,8 @@ export class MainMenuScreen {
     const spanielPortrait = game.assets.get('spaniel_portrait');
     const renderQuality = game.state.settings.renderQuality || 'auto';
     this.element.innerHTML = `
+      <button class="menu-audio-toggle" data-action="audio" type="button" aria-label="Музыка меню" data-audio-icon>${audioIcon(this.game)}</button>
+
       <div class="player-badge" aria-label="Профиль игрока">
         ${hero ? `<img src="${hero.meta.webp}" alt="Хомяк-монтажник" />` : '<span class="player-badge__avatar">🐹</span>'}
         <div class="player-badge__body">
@@ -57,7 +59,6 @@ export class MainMenuScreen {
         <span><i>🍞</i><strong>${this.game.state.bread || 0}</strong><button type="button" aria-label="Добавить хлеб">+</button></span>
         <span><i>🧵</i><strong>87</strong><button type="button" aria-label="Добавить ресурсы">+</button></span>
         <span><i>⚡</i><strong>1 240</strong><button type="button" aria-label="Добавить финты">+</button></span>
-        <button class="icon-button" data-action="audio" type="button" aria-label="Музыка меню" data-audio-icon>${audioIcon(this.game)}</button>
         <button class="icon-button" type="button" aria-label="Настройки">⚙</button>
       </div>
 
