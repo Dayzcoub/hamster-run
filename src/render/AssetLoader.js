@@ -11,7 +11,7 @@ export class AssetLoader {
     const response = await fetch(this.manifestPath);
     if (!response.ok) throw new Error(`Failed to load asset manifest: ${response.status}`);
     this.manifest = await response.json();
-    await Promise.all(Object.values(this.manifest.sprites).map((sprite) => this.loadSprite(sprite)));
+    await Promise.all(Object.values(this.manifest.sprites).filter(shouldPreloadSprite).map((sprite) => this.loadSprite(sprite)));
     await this.loadBackdrops();
   }
 
@@ -186,6 +186,10 @@ export class AssetLoader {
   get(visualKey) {
     return this.images.get(visualKey) || null;
   }
+}
+
+function shouldPreloadSprite(sprite) {
+  return sprite?.type !== 'obstacle_reference';
 }
 
 function isTrussBackgroundPixel(r, g, b, alpha) {
