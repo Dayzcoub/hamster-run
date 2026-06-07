@@ -1,0 +1,132 @@
+name: Move spawn assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_message:
+        description: 'Commit message for moved spawn assets'
+        required: false
+        default: 'Move collectible spawn assets into sprite folders'
+
+permissions:
+  contents: write
+
+jobs:
+  move-spawn-assets:
+    name: Move uploaded collectible assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Move root assets into collectible folders
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p assets/sprites/collectibles/png
+          mkdir -p assets/sprites/collectibles/webp
+
+          move_asset() {
+            local src="$1"
+            local dst="$2"
+
+            if [[ -f "$dst" ]]; then
+              echo "Destination already exists: $dst"
+              if [[ -f "$src" ]]; then
+                echo "Removing duplicate root file: $src"
+                git rm "$src"
+              fi
+              return 0
+            fi
+
+            if [[ ! -f "$src" ]]; then
+              echo "Missing source asset: $src"
+              exit 1
+            fi
+
+            git mv "$src" "$dst"
+          }
+
+          move_asset "IMG_3096.png"  "assets/sprites/collectibles/png/powercon.png"
+          move_asset "IMG_3097.webp" "assets/sprites/collectibles/webp/powercon.webp"
+          move_asset "IMG_3098.png"  "assets/sprites/collectibles/png/tape.png"
+          move_asset "IMG_3099.webp" "assets/sprites/collectibles/webp/tape.webp"
+          move_asset "IMG_3100.png"  "assets/sprites/collectibles/png/led.png"
+          move_asset "IMG_3101.webp" "assets/sprites/collectibles/webp/led.webp"
+          move_asset "IMG_3102.png"  "assets/sprites/collectibles/png/truss.png"
+          move_asset "IMG_3103.webp" "assets/sprites/collectibles/webp/truss.webp"
+
+      - name: Update manifest paths
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node <<'NODE'
+          const fs = require('fs');
+          const manifestPath = 'assets/manifest.json';
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+          const updates = {
+            powercon: {
+              png: 'assets/sprites/collectibles/png/powercon.png',
+              webp: 'assets/sprites/collectibles/webp/powercon.webp',
+            },
+            tape: {
+              png: 'assets/sprites/collectibles/png/tape.png',
+              webp: 'assets/sprites/collectibles/webp/tape.webp',
+            },
+            led: {
+              png: 'assets/sprites/collectibles/png/led.png',
+              webp: 'assets/sprites/collectibles/webp/led.webp',
+            },
+            truss: {
+              png: 'assets/sprites/collectibles/png/truss.png',
+              webp: 'assets/sprites/collectibles/webp/truss.webp',
+            },
+          };
+
+          for (const [key, paths] of Object.entries(updates)) {
+            if (!manifest.sprites[key]) {
+              throw new Error(`Missing manifest sprite entry: ${key}`);
+            }
+            manifest.sprites[key].png = paths.png;
+            manifest.sprites[key].webp = paths.webp;
+            manifest.sprites[key].status = 'approved_direction';
+          }
+
+          manifest.notes = (manifest.notes || []).filter((note) => {
+            return !String(note).includes('IMG_3096') && !String(note).includes('root as IMG_3096');
+          });
+          manifest.notes.push('Collectible assets powercon/tape/led/truss are stored in assets/sprites/collectibles/png and assets/sprites/collectibles/webp.');
+
+          fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+          NODE
+
+          node -e "JSON.parse(require('fs').readFileSync('assets/manifest.json', 'utf8')); console.log('manifest json ok')"
+
+      - name: Show changes
+        run: git status --short
+
+      - name: Commit and push changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git add assets/manifest.json assets/sprites/collectibles/png assets/sprites/collectibles/webp
+          git add -u IMG_3096.png IMG_3097.webp IMG_3098.png IMG_3099.webp IMG_3100.png IMG_3101.webp IMG_3102.png IMG_3103.webp || true
+          git commit -m "${{ github.event.inputs.commit_message }}"
+          git push
