@@ -15,6 +15,10 @@ const qualityLabels = {
   quality: 'Качество: красиво',
 };
 
+function audioIcon(game) {
+  return game.state.settings.audio?.enabled ? '🔊' : '🔇';
+}
+
 function crewStatus(state, spanielPortrait) {
   const hasSpaniel = state.unlockedCompanions?.includes('spaniel');
   const hasHomeTechdir = Boolean(state.rewards?.skin_home_techdir);
@@ -53,6 +57,7 @@ export class MainMenuScreen {
         <span><i>🍞</i><strong>${this.game.state.bread || 0}</strong><button type="button" aria-label="Добавить хлеб">+</button></span>
         <span><i>🧵</i><strong>87</strong><button type="button" aria-label="Добавить ресурсы">+</button></span>
         <span><i>⚡</i><strong>1 240</strong><button type="button" aria-label="Добавить финты">+</button></span>
+        <button class="icon-button" data-action="audio" type="button" aria-label="Музыка меню" data-audio-icon>${audioIcon(this.game)}</button>
         <button class="icon-button" type="button" aria-label="Настройки">⚙</button>
       </div>
 
@@ -93,8 +98,14 @@ export class MainMenuScreen {
   }
 
   onClick = (event) => {
-    menuMusic.play();
     const action = event.target?.closest('[data-action]')?.dataset?.action;
+    if (action !== 'audio') menuMusic.play();
+    if (action === 'audio') {
+      const audio = this.game.toggleAudioEnabled();
+      const icon = this.element.querySelector('[data-audio-icon]');
+      if (icon) icon.textContent = audio.enabled ? '🔊' : '🔇';
+      if (audio.enabled) menuMusic.play();
+    }
     if (action === 'play') this.game.startLevel('dk_almost_ready');
     if (action === 'levels') this.game.showLevels();
     if (action === 'quality') {
