@@ -14,6 +14,27 @@ rotation: -9
 
 These values compensate the current PNG so it looks acceptable in gameplay. This is only a temporary visual correction, not the final art direction.
 
+## Current debug tool state
+
+The truss debug screen/panel is intentionally disconnected from normal production startup.
+
+The tool file is kept in the repository for future asset tuning:
+
+```text
+src/truss-debug-panel.js
+src/truss-debug-panel.css
+```
+
+To temporarily enable it again, add this import to `src/main.js` during an art tuning session:
+
+```js
+import './truss-debug-panel.js';
+```
+
+Recommended position: after `CanvasRendererPerspectiveAlignmentV1.js` is imported, so the debug panel can reuse the renderer debug stand safely.
+
+After tuning the new asset, remove the import again before keeping the build as normal gameplay.
+
 ## Problem
 
 The current truss section asset still does not naturally sit on the floor plane of the game background. It needs code-side scale, lift, and rotation compensation to feel close enough.
@@ -67,5 +88,5 @@ After the new asset is accepted:
 
 1. Re-test Big Concert on real phone.
 2. Reduce or remove temporary truss tuning if the asset naturally sits correctly.
-3. Remove/disconnect temporary truss debug UI if no longer needed.
+3. Remove/disconnect temporary truss debug import from `src/main.js` if it was enabled for tuning.
 4. Keep only final baked constants in `src/gameplay-visual-tuning.js`.
