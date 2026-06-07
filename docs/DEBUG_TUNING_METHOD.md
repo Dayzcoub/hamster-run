@@ -31,10 +31,8 @@ This worked well for the DK backdrop perspective pass: lane heights, hamster Y/s
 The current perspective tuning is baked in:
 
 ```js
-// src/gameplay-perspective-tuning.js
-window.__HAMSTER_DEBUG_MODE = false;
-
-window.__HAMSTER_DEBUG_TUNING = {
+// src/gameplay-visual-tuning.js
+const VISUAL_TUNING = {
   laneTop: 0.736,
   laneMid: 0.822,
   laneBottom: 0.98,
@@ -45,12 +43,19 @@ window.__HAMSTER_DEBUG_TUNING = {
   objectY: -29,
   objectScale: 0.87,
 };
+
+window.__HAMSTER_VISUAL_TUNING = VISUAL_TUNING;
+window.__HAMSTER_DEBUG_MODE = false;
+window.__HAMSTER_DEBUG_TUNING = {
+  ...VISUAL_TUNING,
+  ...(window.__HAMSTER_DEBUG_TUNING || {}),
+};
 ```
 
 `src/main.js` should import the baked tuning file before the renderer patches that read it:
 
 ```js
-import './gameplay-perspective-tuning.js';
+import './gameplay-visual-tuning.js';
 import './render/CanvasRendererSpanielCompanion.js';
 import './render/CanvasRendererPerspectiveAlignmentV1.js';
 ```
