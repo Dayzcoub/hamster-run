@@ -72,12 +72,12 @@ function settingsPanel(game) {
           <button class="menu-settings__close" data-action="settings-close" type="button" aria-label="Закрыть">×</button>
         </header>
 
-        <div class="settings-block">
+        <div class="settings-block settings-block--quality">
           <h3>Качество графики</h3>
           <div class="settings-choice-row">${qualityButtons}</div>
         </div>
 
-        <div class="settings-block">
+        <div class="settings-block settings-block--audio">
           <h3>Звук</h3>
           <button class="settings-toggle ${audio.enabled ? 'is-on' : ''}" data-action="audio" type="button" data-audio-toggle>
             <span data-audio-icon>${audio.enabled ? '🔊' : '🔇'}</span>
@@ -173,10 +173,10 @@ export class MainMenuScreen {
     const field = event.target?.dataset?.audioField;
     if (!field) return;
     const value = Number(event.target.value);
-    this.game.saveAudioSettings({ [field]: value });
+    this.game.saveAudioSettings({ enabled: true, [field]: value });
     const label = this.element.querySelector(`[data-audio-value="${field}"]`);
     if (label) label.textContent = percent(value);
-    this.syncAudioIcons();
+    this.syncAudioControls();
     menuMusic.play();
   };
 
@@ -192,21 +192,22 @@ export class MainMenuScreen {
 
   toggleAudio() {
     const audio = this.game.toggleAudioEnabled();
-    this.syncAudioIcons();
-    const toggle = this.element.querySelector('[data-audio-toggle]');
-    if (toggle) {
-      toggle.classList.toggle('is-on', audio.enabled);
-      const text = toggle.querySelector('strong');
-      if (text) text.textContent = audio.enabled ? 'Звук включён' : 'Звук выключен';
-    }
+    this.syncAudioControls();
     if (audio.enabled) menuMusic.play();
   }
 
-  syncAudioIcons() {
+  syncAudioControls() {
     const icon = audioIcon(this.game);
     this.element.querySelectorAll('[data-audio-icon]').forEach((item) => {
       item.textContent = icon;
     });
+    const toggle = this.element.querySelector('[data-audio-toggle]');
+    if (toggle) {
+      const enabled = Boolean(this.game.state.settings.audio?.enabled);
+      toggle.classList.toggle('is-on', enabled);
+      const text = toggle.querySelector('strong');
+      if (text) text.textContent = enabled ? 'Звук включён' : 'Звук выключен';
+    }
   }
 
   setQuality(value) {
