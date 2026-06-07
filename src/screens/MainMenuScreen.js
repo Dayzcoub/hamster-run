@@ -6,17 +6,27 @@ const menuItems = [
   { action: 'levels', label: 'Уровни', icon: '▱', kind: 'secondary' },
   { label: 'Склад — скоро', icon: '▤', kind: 'disabled' },
   { label: 'Магазин — скоро', icon: '🛒', kind: 'disabled' },
-  { action: 'quality', label: 'Качество: auto', icon: '⚙', kind: 'secondary muted' },
+  { action: 'settings', label: 'Настройки', icon: '⚙', kind: 'secondary muted' },
 ];
 
 const qualityLabels = {
-  auto: 'Качество: авто',
-  performance: 'Качество: FPS',
-  quality: 'Качество: красиво',
+  auto: 'Авто',
+  performance: 'FPS',
+  quality: 'Красиво',
+};
+
+const audioLabels = {
+  menuMusicVolume: 'Музыка меню',
+  levelMusicVolume: 'Музыка уровней',
+  sfxVolume: 'Звуковые эффекты',
 };
 
 function audioIcon(game) {
   return game.state.settings.audio?.enabled ? '🔊' : '🔇';
+}
+
+function percent(value) {
+  return `${Math.round(Number(value || 0) * 100)}%`;
 }
 
 function crewStatus(state, spanielPortrait) {
@@ -33,6 +43,53 @@ function crewStatus(state, spanielPortrait) {
   return `<div class="crew-status ${hasHomeTechdir ? 'has-skin' : ''}" aria-label="Команда"><span>Команда</span><strong>🐹 Хомяк</strong>${skinLabel}</div>`;
 }
 
+function settingsPanel(game) {
+  const audio = game.state.settings.audio || {};
+  const renderQuality = game.state.settings.renderQuality || 'auto';
+  const qualityButtons = Object.entries(qualityLabels).map(([value, label]) => `
+    <button class="settings-choice ${renderQuality === value ? 'is-active' : ''}" data-quality-option="${value}" type="button">${label}</button>
+  `).join('');
+  const sliders = Object.entries(audioLabels).map(([field, label]) => {
+    const value = Number(audio[field] ?? 0);
+    return `
+      <label class="settings-slider">
+        <span>${label}</span>
+        <input type="range" min="0" max="1" step="0.01" value="${value}" data-audio-field="${field}" />
+        <strong data-audio-value="${field}">${percent(value)}</strong>
+      </label>
+    `;
+  }).join('');
+
+  return `
+    <div class="menu-settings" data-settings-panel hidden>
+      <div class="menu-settings__scrim" data-action="settings-close"></div>
+      <section class="menu-settings__panel" role="dialog" aria-modal="true" aria-label="Настройки игры">
+        <header class="menu-settings__header">
+          <div>
+            <span>Настройки</span>
+            <strong>Звук и производительность</strong>
+          </div>
+          <button class="menu-settings__close" data-action="settings-close" type="button" aria-label="Закрыть">×</button>
+        </header>
+
+        <div class="settings-block">
+          <h3>Качество графики</h3>
+          <div class="settings-choice-row">${qualityButtons}</div>
+        </div>
+
+        <div class="settings-block">
+          <h3>Звук</h3>
+          <button class="settings-toggle ${audio.enabled ? 'is-on' : ''}" data-action="audio" type="button" data-audio-toggle>
+            <span data-audio-icon>${audio.enabled ? '🔊' : '🔇'}</span>
+            <strong>${audio.enabled ? 'Звук включён' : 'Звук выключен'}</strong>
+          </button>
+          ${sliders}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
 export class MainMenuScreen {
   constructor(game) {
     this.game = game;
@@ -41,7 +98,6 @@ export class MainMenuScreen {
     const phrase = menuPhrases[Math.floor(Math.random() * menuPhrases.length)];
     const hero = game.assets.get('hamster_run_01');
     const spanielPortrait = game.assets.get('spaniel_portrait');
-    const renderQuality = game.state.settings.renderQuality || 'auto';
     this.element.innerHTML = `
       <button class="menu-audio-toggle" data-action="audio" type="button" aria-label="Музыка меню" data-audio-icon>${audioIcon(this.game)}</button>
 
@@ -59,7 +115,7 @@ export class MainMenuScreen {
         <span><i>🍞</i><strong>${this.game.state.bread || 0}</strong><button type="button" aria-label="Добавить хлеб">+</button></span>
         <span><i>🧵</i><strong>87</strong><button type="button" aria-label="Добавить ресурсы">+</button></span>
         <span><i>⚡</i><strong>1 240</strong><button type="button" aria-label="Добавить финты">+</button></span>
-        <button class="icon-button" type="button" aria-label="Настройки">⚙</button>
+        <button class="icon-button" data-action="settings" type="button" aria-label="Настройки">⚙</button>
       </div>
 
       <div class="menu-hero">
@@ -76,7 +132,7 @@ export class MainMenuScreen {
         ${menuItems.map((item) => `
           <button class="menu-action menu-action--${item.kind.replace(' ', ' menu-action--')} ${item.kind === 'primary' ? 'btn-primary' : item.kind.includes('disabled') ? 'btn-disabled' : 'btn-secondary'}" ${item.action ? `data-action="${item.action}"` : 'disabled'} type="button">
             <span class="menu-action__icon" aria-hidden="true">${item.icon}</span>
-            <span ${item.action === 'quality' ? 'data-quality-label' : ''}>${item.action === 'quality' ? qualityLabels[renderQuality] : item.label}</span>
+            <span>${item.label}</span>
           </button>
         `).join('')}
       </nav>
@@ -90,33 +146,78 @@ export class MainMenuScreen {
         <span>Присоединяйся к CREW</span>
         <i>DC</i><i>VK</i><i>TG</i><i>YT</i>
       </div>
+      ${settingsPanel(this.game)}
     `;
   }
 
   mount() {
     this.element.addEventListener('click', this.onClick);
+    this.element.addEventListener('input', this.onInput);
     menuMusic.play();
   }
 
   onClick = (event) => {
     const action = event.target?.closest('[data-action]')?.dataset?.action;
     if (action !== 'audio') menuMusic.play();
-    if (action === 'audio') {
-      const audio = this.game.toggleAudioEnabled();
-      const icon = this.element.querySelector('[data-audio-icon]');
-      if (icon) icon.textContent = audio.enabled ? '🔊' : '🔇';
-      if (audio.enabled) menuMusic.play();
-    }
+    if (action === 'audio') this.toggleAudio();
+    if (action === 'settings') this.openSettings();
+    if (action === 'settings-close') this.closeSettings();
     if (action === 'play') this.game.startLevel('dk_almost_ready');
     if (action === 'levels') this.game.showLevels();
-    if (action === 'quality') {
-      const next = this.game.cycleRenderQuality();
-      const label = this.element.querySelector('[data-quality-label]');
-      if (label) label.textContent = qualityLabels[next] || qualityLabels.auto;
-    }
+
+    const qualityOption = event.target?.closest('[data-quality-option]')?.dataset?.qualityOption;
+    if (qualityOption) this.setQuality(qualityOption);
   };
+
+  onInput = (event) => {
+    const field = event.target?.dataset?.audioField;
+    if (!field) return;
+    const value = Number(event.target.value);
+    this.game.saveAudioSettings({ [field]: value });
+    const label = this.element.querySelector(`[data-audio-value="${field}"]`);
+    if (label) label.textContent = percent(value);
+    this.syncAudioIcons();
+    menuMusic.play();
+  };
+
+  openSettings() {
+    const panel = this.element.querySelector('[data-settings-panel]');
+    if (panel) panel.hidden = false;
+  }
+
+  closeSettings() {
+    const panel = this.element.querySelector('[data-settings-panel]');
+    if (panel) panel.hidden = true;
+  }
+
+  toggleAudio() {
+    const audio = this.game.toggleAudioEnabled();
+    this.syncAudioIcons();
+    const toggle = this.element.querySelector('[data-audio-toggle]');
+    if (toggle) {
+      toggle.classList.toggle('is-on', audio.enabled);
+      const text = toggle.querySelector('strong');
+      if (text) text.textContent = audio.enabled ? 'Звук включён' : 'Звук выключен';
+    }
+    if (audio.enabled) menuMusic.play();
+  }
+
+  syncAudioIcons() {
+    const icon = audioIcon(this.game);
+    this.element.querySelectorAll('[data-audio-icon]').forEach((item) => {
+      item.textContent = icon;
+    });
+  }
+
+  setQuality(value) {
+    this.game.setRenderQuality(value);
+    this.element.querySelectorAll('[data-quality-option]').forEach((button) => {
+      button.classList.toggle('is-active', button.dataset.qualityOption === value);
+    });
+  }
 
   destroy() {
     this.element.removeEventListener('click', this.onClick);
+    this.element.removeEventListener('input', this.onInput);
   }
 }
