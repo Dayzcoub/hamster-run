@@ -11,6 +11,7 @@ class MenuMusicController {
     this.enabled = true;
     this.unlocked = false;
     this.pendingPlay = false;
+    this.playToken = 0;
     this.settings = { ...DEFAULT_AUDIO_SETTINGS };
     this.onFirstGesture = this.onFirstGesture.bind(this);
   }
@@ -26,6 +27,14 @@ class MenuMusicController {
     return this.enabled
       ? this.settings.masterVolume * this.settings.menuMusicVolume
       : 0;
+  }
+
+  setGainImmediate(gain) {
+    if (this.audio) this.audio.volume = Math.max(0, Math.min(1, gain));
+    if (!this.gainNode) return;
+    const now = this.audioContext?.currentTime || 0;
+    this.gainNode.gain.cancelScheduledValues(now);
+    this.gainNode.gain.setValueAtTime(gain, now);
   }
 
   applyVolume() {
@@ -81,15 +90,17 @@ class MenuMusicController {
 
   onFirstGesture() {
     this.unlocked = true;
+    const token = this.playToken;
     this.ensureAudioGraph();
     this.resumeAudioContext().finally(() => {
-      if (this.pendingPlay) this.play();
+      if (this.pendingPlay && token === this.playToken) this.play();
     });
   }
 
   async play() {
     if (!this.enabled) return;
     this.pendingPlay = true;
+    const token = ++this.playToken;
     const audio = this.ensureAudio();
     this.ensureAudioGraph();
     this.applyVolume();
@@ -99,22 +110,32 @@ class MenuMusicController {
     }
     try {
       await this.resumeAudioContext();
+      if (!this.pendingPlay || token !== this.playToken || !this.enabled) return;
       this.applyVolume();
       await audio.play();
+      if (!this.pendingPlay || token !== this.playToken || !this.enabled) {
+        this.setGainImmediate(0);
+        audio.pause();
+      }
     } catch {
-      this.mountGestureUnlock();
+      if (this.pendingPlay && token === this.playToken) this.mountGestureUnlock();
     }
   }
 
   pause() {
     this.pendingPlay = false;
+    this.playToken += 1;
     if (!this.audio) return;
     this.audio.pause();
   }
 
   stop() {
-    this.pause();
-    if (this.audio) this.audio.currentTime = 0;
+    this.pendingPlay = false;
+    this.playToken += 1;
+    this.setGainImmediate(0);
+    if (!this.audio) return;
+    this.audio.pause();
+    this.audio.currentTime = 0;
   }
 }
 
