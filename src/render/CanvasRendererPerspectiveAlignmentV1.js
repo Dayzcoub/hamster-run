@@ -21,7 +21,7 @@ const LANE_Y_FACTORS = {
   default: [0.66, 0.76, 0.86],
 };
 
-const DEFAULT_DEBUG_TUNING = {
+const DEFAULT_VISUAL_TUNING = {
   laneTop: 0.64,
   laneMid: 0.75,
   laneBottom: 0.88,
@@ -44,8 +44,12 @@ const DEBUG_OBJECT_KEYS = [
   'cable_loop',
 ];
 
-function debugTuning() {
-  return { ...DEFAULT_DEBUG_TUNING, ...(window.__HAMSTER_DEBUG_TUNING || {}) };
+function visualTuning() {
+  return {
+    ...DEFAULT_VISUAL_TUNING,
+    ...(window.__HAMSTER_VISUAL_TUNING || {}),
+    ...(window.__HAMSTER_DEBUG_TUNING || {}),
+  };
 }
 
 function laneProfile(lane = 1) {
@@ -84,7 +88,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   };
 
   CanvasRenderer.prototype.getLaneYFactors = function getLaneYFactors() {
-    const tuning = debugTuning();
+    const tuning = visualTuning();
     if (Number.isFinite(tuning.laneTop) && Number.isFinite(tuning.laneMid) && Number.isFinite(tuning.laneBottom)) {
       return [tuning.laneTop, tuning.laneMid, tuning.laneBottom];
     }
@@ -122,7 +126,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   };
 
   CanvasRenderer.prototype.spriteScale = function perspectiveSpriteScale(visualKey) {
-    const tuning = debugTuning();
+    const tuning = visualTuning();
     const scale = baseSpriteScale.call(this, visualKey);
     if (visualKey?.startsWith('hamster_')) return scale * 0.9 * (Number(tuning.playerScale) || 1);
     if (visualKey?.startsWith('spaniel_')) return scale * 0.92;
@@ -132,7 +136,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   };
 
   CanvasRenderer.prototype.drawPlayer = function drawPlayerPerspectiveV1(player, elapsedMs = 0) {
-    const tuning = debugTuning();
+    const tuning = visualTuning();
     const visualKey = player.visualKey;
     const projected = this.projector.project(player.x, player.renderLane, this.width, this.height);
     const profile = laneProfile(player.renderLane);
@@ -147,7 +151,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
   };
 
   CanvasRenderer.prototype.drawObject = function drawObjectPerspectiveV1(object, elapsedMs = 0) {
-    const tuning = debugTuning();
+    const tuning = visualTuning();
     const projected = this.projector.project(object.x, object.lane, this.width, this.height);
     const profile = laneProfile(object.lane);
     const collectible = object.kind === 'collectible';
