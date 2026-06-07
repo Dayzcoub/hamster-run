@@ -54,6 +54,21 @@ function setControlValue(root, key, value) {
   if (output) output.textContent = formatValue(key, value);
 }
 
+function installPanelPositionOverride() {
+  if (document.querySelector('[data-truss-debug-position-style]')) return;
+  const style = document.createElement('style');
+  style.dataset.trussDebugPositionStyle = 'true';
+  style.textContent = `
+    .truss-debug { top: max(10px, env(safe-area-inset-top)); bottom: auto; }
+    .truss-debug__panel { max-height: min(42vh, 260px); overflow: auto; }
+    @media (orientation: landscape) and (max-height: 520px) {
+      .truss-debug { top: max(8px, env(safe-area-inset-top)); bottom: auto; }
+      .truss-debug__panel { max-height: 34vh; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 function setDebugMode(open) {
   window.__HAMSTER_TRUSS_DEBUG_MODE = open;
   window.__HAMSTER_DEBUG_MODE = open;
@@ -143,6 +158,7 @@ function updateVisibility() {
 }
 
 function boot() {
+  installPanelPositionOverride();
   updateVisibility();
   const observer = new MutationObserver(updateVisibility);
   observer.observe(document.body, { childList: true, subtree: true });
