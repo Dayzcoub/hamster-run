@@ -41,6 +41,19 @@ function isPackageComplete(level, stats) {
   return targetTotal > 0 && packageCollected(level, stats) >= targetTotal;
 }
 
+function weightedPick(ids = [], weights = {}) {
+  if (!ids.length) return null;
+  const totalWeight = ids.reduce((sum, id) => sum + Math.max(0, Number(weights[id]) || 1), 0);
+  if (totalWeight <= 0) return ids[Math.floor(Math.random() * ids.length)];
+
+  let cursor = Math.random() * totalWeight;
+  for (const id of ids) {
+    cursor -= Math.max(0, Number(weights[id]) || 1);
+    if (cursor <= 0) return id;
+  }
+  return ids[ids.length - 1];
+}
+
 export class ObjectSpawner {
   constructor(level) {
     this.level = level;
@@ -69,8 +82,9 @@ export class ObjectSpawner {
     }
 
     const isObstacle = Math.random() < obstacleChance;
-    const source = isObstacle ? this.level.obstacles : this.pickCollectibleSource(progress, stats, finalPhase, packageComplete);
-    const id = source[Math.floor(Math.random() * source.length)];
+    const id = isObstacle
+      ? this.pickObstacleId(finalPhase)
+      : weightedPick(this.pickCollectibleSource(progress, stats, finalPhase, packageComplete));
     const catalogItem = objectCatalog[id];
     const lane = this.pickLane(isObstacle, catalogItem);
     const blockedLanes = this.resolveBlockedLanes(catalogItem, lane);
@@ -90,6 +104,13 @@ export class ObjectSpawner {
       x: 1180,
       collected: false,
     };
+  }
+
+  pickObstacleId(finalPhase = false) {
+    const weights = finalPhase
+      ? { ...(this.level.obstacleWeights || {}), ...(this.level.finalObstacleWeights || {}) }
+      : this.level.obstacleWeights || {};
+    return weightedPick(this.level.obstacles, weights);
   }
 
   pickCollectibleSource(progress, stats, finalPhase = false, packageComplete = false) {
