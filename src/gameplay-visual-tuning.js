@@ -13,9 +13,9 @@ const VISUAL_TUNING = {
 };
 
 const DEFAULT_TRUSS_TUNING = {
-  scale: 1,
-  lift: 0,
-  rotation: 0,
+  scale: 0.78,
+  lift: 15,
+  rotation: -9,
 };
 
 function loadTrussTuning() {
