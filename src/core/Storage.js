@@ -1,3 +1,5 @@
+import { DEFAULT_AUDIO_SETTINGS, normalizeAudioSettings } from '../audio/audio-settings.js';
+
 const SAVE_KEY = 'packit_run_save_v1';
 
 const DEFAULT_SAVE = {
@@ -12,6 +14,7 @@ const DEFAULT_SAVE = {
     music: true,
     vibration: true,
     renderQuality: 'auto',
+    audio: { ...DEFAULT_AUDIO_SETTINGS },
   },
 };
 
@@ -22,6 +25,12 @@ export class Storage {
       if (!raw) return structuredClone(DEFAULT_SAVE);
       const parsed = JSON.parse(raw);
       const defaults = structuredClone(DEFAULT_SAVE);
+      const settings = {
+        ...defaults.settings,
+        ...(parsed.settings || {}),
+      };
+      settings.audio = normalizeAudioSettings(settings);
+
       return {
         ...defaults,
         ...parsed,
@@ -29,10 +38,7 @@ export class Storage {
         unlockedCompanions: Array.isArray(parsed.unlockedCompanions) ? parsed.unlockedCompanions : defaults.unlockedCompanions,
         completedLevels: parsed.completedLevels || defaults.completedLevels,
         rewards: parsed.rewards || defaults.rewards,
-        settings: {
-          ...defaults.settings,
-          ...(parsed.settings || {}),
-        },
+        settings,
       };
     } catch (error) {
       console.warn('Failed to load save, using default', error);
