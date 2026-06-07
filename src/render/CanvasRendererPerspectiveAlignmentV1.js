@@ -31,6 +31,12 @@ const DEFAULT_VISUAL_TUNING = {
   objectScale: 1,
 };
 
+const DEFAULT_TRUSS_TUNING = {
+  scale: 1,
+  lift: 0,
+  rotation: 0,
+};
+
 const DEBUG_OBJECT_KEYS = [
   'bread',
   'stage_deck',
@@ -42,6 +48,8 @@ const DEBUG_OBJECT_KEYS = [
   'mystery_box',
   'bolt',
   'cable_loop',
+  'truss_section_left',
+  'truss_section_right',
 ];
 
 function visualTuning() {
@@ -49,6 +57,15 @@ function visualTuning() {
     ...DEFAULT_VISUAL_TUNING,
     ...(window.__HAMSTER_VISUAL_TUNING || {}),
     ...(window.__HAMSTER_DEBUG_TUNING || {}),
+  };
+}
+
+function trussTuning() {
+  const tuning = window.__HAMSTER_TRUSS_TUNING || {};
+  return {
+    scale: Number.isFinite(Number(tuning.scale)) ? Number(tuning.scale) : DEFAULT_TRUSS_TUNING.scale,
+    lift: Number.isFinite(Number(tuning.lift)) ? Number(tuning.lift) : DEFAULT_TRUSS_TUNING.lift,
+    rotation: Number.isFinite(Number(tuning.rotation)) ? Number(tuning.rotation) : DEFAULT_TRUSS_TUNING.rotation,
   };
 }
 
@@ -131,10 +148,11 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
 
   CanvasRenderer.prototype.spriteScale = function perspectiveSpriteScale(visualKey) {
     const tuning = visualTuning();
+    const trussOnly = trussTuning();
     const scale = baseSpriteScale.call(this, visualKey);
     if (visualKey?.startsWith('hamster_')) return scale * 0.9 * (Number(tuning.playerScale) || 1);
     if (visualKey?.startsWith('spaniel_')) return scale * 0.92;
-    if (isTrussSection(visualKey)) return scale * 1.28 * (Number(tuning.objectScale) || 1);
+    if (isTrussSection(visualKey)) return scale * 1.28 * (Number(tuning.objectScale) || 1) * trussOnly.scale;
     if (['bread', 'cable_coil', 'c2_connector', 'bolt', 'stage_deck'].includes(visualKey)) return scale * 0.92 * (Number(tuning.objectScale) || 1);
     if (['flight_case', 'cable_loop', 'mic_stand', 'mystery_box', 'cart'].includes(visualKey)) return scale * 0.94 * (Number(tuning.objectScale) || 1);
     return scale;
@@ -157,6 +175,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
 
   CanvasRenderer.prototype.drawObject = function drawObjectPerspectiveV1(object, elapsedMs = 0) {
     const tuning = visualTuning();
+    const trussOnly = trussTuning();
     const projected = this.projector.project(object.x, object.lane, this.width, this.height);
     const profile = laneProfile(object.lane);
     const collectible = object.kind === 'collectible';
@@ -169,14 +188,17 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const pulse = collectible ? 1 + Math.sin((elapsedMs || 0) / 140) * 0.04 : 1;
     const size = baseSize * projected.scale * this.spriteScale(object.visualKey) * pulse;
     const groundOffset = truss ? 24 : collectible ? 7 : 11;
-    const yOffset = truss ? 28 : 0;
+    const yOffset = truss ? 28 - trussOnly.lift : 0;
     const groundY = this.remapProjectedYToPlayfield(projected.y) + profile.yOffset + OBJECT_FLOOR_DROP + (Number(tuning.objectY) || 0) + groundOffset * projected.scale;
     const x = projected.x;
     const y = Math.min(groundY + yOffset, this.getPlayfieldBottomY() - 8 * projected.scale);
+    const spriteAnimation = truss && trussOnly.rotation
+      ? { rotation: trussOnly.rotation * Math.PI / 180, shadowScale: 0.9, shadowAlpha: 0 }
+      : null;
 
     this.drawObjectGroundingV1({ ...object, __groundX: x, __groundY: y, __groundScale: projected.scale, __shadowProfile: profile });
     this.drawSpriteContourGlow(object.visualKey, x, y, size, collectible);
-    this.drawSprite(object.visualKey, x, y, size, projected.scale, false, false);
+    this.drawSprite(object.visualKey, x, y, size, projected.scale, false, false, spriteAnimation);
     this.drawObjectMarker(object, x, y, size, projected.scale, elapsedMs);
   };
 
@@ -184,12 +206,13 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const projected = this.projector.project(object.x, object.lane, this.width, this.height);
     const collectible = object.kind === 'collectible';
     const truss = isTrussSection(object.visualKey);
+    const trussOnly = trussTuning();
     const profile = object.__shadowProfile || laneProfile(object.lane);
     const scale = object.__groundScale || projected.scale;
     const x = object.__groundX ?? projected.x;
     const y = Math.min((object.__groundY ?? this.remapProjectedYToPlayfield(projected.y)) + (collectible ? 8 : truss ? 7 : 11) * scale, this.getPlayfieldBottomY() - 2);
-    const width = (truss ? 92 : collectible ? 26 : 38) * scale * profile.shadowScale;
-    const height = (truss ? 10 : collectible ? 5 : 7) * scale * profile.shadowScale;
+    const width = (truss ? 92 * trussOnly.scale : collectible ? 26 : 38) * scale * profile.shadowScale;
+    const height = (truss ? 10 * Math.max(0.72, trussOnly.scale) : collectible ? 5 : 7) * scale * profile.shadowScale;
 
     drawGroundShadow(this.ctx, x, y, width, height, this.lowPerf ? 0.5 : truss ? 0.68 : 0.62);
 
@@ -335,11 +358,11 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
       }, elapsedMs);
 
       DEBUG_OBJECT_KEYS.forEach((visualKey, index) => {
-        const objectKind = index < 4 ? 'collectible' : 'obstacle';
+        const objectKind = ['bread', 'stage_deck', 'cable_coil', 'c2_connector', 'bolt'].includes(visualKey) ? 'collectible' : 'obstacle';
         this.drawObject({
           visualKey,
           kind: objectKind,
-          x: w * (0.32 + index * 0.06),
+          x: w * (0.28 + index * 0.055),
           lane,
         }, elapsedMs);
       });
