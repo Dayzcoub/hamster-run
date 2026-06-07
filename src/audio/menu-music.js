@@ -1,5 +1,6 @@
+import { DEFAULT_AUDIO_SETTINGS, normalizeAudioSettings } from './audio-settings.js';
+
 const MENU_MUSIC_SRC = 'assets/audio/music/menu_theme.mp3';
-const MENU_MUSIC_VOLUME = 0.42;
 
 class MenuMusicController {
   constructor() {
@@ -7,7 +8,22 @@ class MenuMusicController {
     this.enabled = true;
     this.unlocked = false;
     this.pendingPlay = false;
+    this.settings = { ...DEFAULT_AUDIO_SETTINGS };
     this.onFirstGesture = this.onFirstGesture.bind(this);
+  }
+
+  configure(settings = {}) {
+    this.settings = normalizeAudioSettings(settings);
+    this.enabled = Boolean(this.settings.enabled);
+    this.applyVolume();
+    if (!this.enabled) this.pause();
+  }
+
+  applyVolume() {
+    if (!this.audio) return;
+    this.audio.volume = this.enabled
+      ? this.settings.masterVolume * this.settings.menuMusicVolume
+      : 0;
   }
 
   ensureAudio() {
@@ -15,8 +31,8 @@ class MenuMusicController {
     const audio = new Audio(MENU_MUSIC_SRC);
     audio.loop = true;
     audio.preload = 'auto';
-    audio.volume = MENU_MUSIC_VOLUME;
     this.audio = audio;
+    this.applyVolume();
     return audio;
   }
 
@@ -35,6 +51,7 @@ class MenuMusicController {
     if (!this.enabled) return;
     this.pendingPlay = true;
     const audio = this.ensureAudio();
+    this.applyVolume();
     if (!this.unlocked) {
       this.mountGestureUnlock();
       return;
