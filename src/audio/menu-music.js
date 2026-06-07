@@ -5,6 +5,9 @@ const MENU_MUSIC_SRC = 'assets/audio/music/menu_theme.mp3';
 class MenuMusicController {
   constructor() {
     this.audio = null;
+    this.audioContext = null;
+    this.sourceNode = null;
+    this.gainNode = null;
     this.enabled = true;
     this.unlocked = false;
     this.pendingPlay = false;
@@ -19,11 +22,24 @@ class MenuMusicController {
     if (!this.enabled) this.pause();
   }
 
-  applyVolume() {
-    if (!this.audio) return;
-    this.audio.volume = this.enabled
+  currentGain() {
+    return this.enabled
       ? this.settings.masterVolume * this.settings.menuMusicVolume
       : 0;
+  }
+
+  applyVolume() {
+    const gain = this.currentGain();
+    if (this.audio) {
+      // Desktop browsers respect audio.volume. iOS Safari often ignores it,
+      // so the Web Audio GainNode below is the real volume control there.
+      this.audio.volume = Math.max(0, Math.min(1, gain));
+    }
+    if (this.gainNode) {
+      const now = this.audioContext?.currentTime || 0;
+      this.gainNode.gain.cancelScheduledValues(now);
+      this.gainNode.gain.setTargetAtTime(gain, now, 0.015);
+    }
   }
 
   ensureAudio() {
@@ -36,6 +52,27 @@ class MenuMusicController {
     return audio;
   }
 
+  ensureAudioGraph() {
+    const audio = this.ensureAudio();
+    if (this.gainNode) return;
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    this.audioContext = this.audioContext || new AudioContextClass();
+    this.sourceNode = this.sourceNode || this.audioContext.createMediaElementSource(audio);
+    this.gainNode = this.audioContext.createGain();
+    this.sourceNode.connect(this.gainNode);
+    this.gainNode.connect(this.audioContext.destination);
+    this.applyVolume();
+  }
+
+  async resumeAudioContext() {
+    if (!this.audioContext) return;
+    if (this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
+    }
+  }
+
   mountGestureUnlock() {
     window.addEventListener('pointerdown', this.onFirstGesture, { once: true, passive: true });
     window.addEventListener('keydown', this.onFirstGesture, { once: true });
@@ -44,19 +81,25 @@ class MenuMusicController {
 
   onFirstGesture() {
     this.unlocked = true;
-    if (this.pendingPlay) this.play();
+    this.ensureAudioGraph();
+    this.resumeAudioContext().finally(() => {
+      if (this.pendingPlay) this.play();
+    });
   }
 
   async play() {
     if (!this.enabled) return;
     this.pendingPlay = true;
     const audio = this.ensureAudio();
+    this.ensureAudioGraph();
     this.applyVolume();
     if (!this.unlocked) {
       this.mountGestureUnlock();
       return;
     }
     try {
+      await this.resumeAudioContext();
+      this.applyVolume();
       await audio.play();
     } catch {
       this.mountGestureUnlock();
