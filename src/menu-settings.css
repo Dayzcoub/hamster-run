@@ -135,6 +135,56 @@
   font-size: 0.86rem;
 }
 
+.settings-block--dev {
+  border-color: rgba(255, 194, 71, 0.22);
+  background: rgba(18, 15, 9, 0.42);
+}
+
+.settings-block--dev.is-unlocked {
+  border-color: rgba(255, 194, 71, 0.42);
+}
+
+.settings-dev-lock,
+.settings-dev-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+}
+
+.settings-dev-tools {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.settings-dev-lock[hidden],
+.settings-dev-tools[hidden] {
+  display: none;
+}
+
+.settings-dev-input {
+  min-height: 40px;
+  width: 100%;
+  padding: 0 0.72rem;
+  border-radius: 14px;
+  color: var(--text-main);
+  background: rgba(8, 16, 29, 0.86);
+  border: 1px solid rgba(92,235,255,0.22);
+  font-weight: 850;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.settings-dev-input:focus {
+  border-color: rgba(255, 194, 71, 0.65);
+}
+
+.settings-dev-note {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.72rem;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
 @media (orientation: landscape) and (max-height: 520px) {
   .menu-settings {
     place-items: start center;
@@ -195,5 +245,19 @@
 
   .settings-slider strong {
     font-size: 0.78rem;
+  }
+
+  .settings-dev-lock {
+    grid-template-columns: minmax(180px, 1fr) 110px;
+  }
+
+  .settings-dev-tools {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .settings-dev-input {
+    min-height: 34px;
+    border-radius: 12px;
+    font-size: 0.82rem;
   }
 }
