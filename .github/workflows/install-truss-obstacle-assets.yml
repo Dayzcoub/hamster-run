@@ -1,0 +1,101 @@
+name: Install truss obstacle assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Move and connect truss obstacle assets
+        run: |
+          set -euo pipefail
+          mkdir -p assets/sprites/obstacles/png
+
+          if [ -f hamster_crew_truss_asset_pack/truss_section_left.png ]; then
+            git mv hamster_crew_truss_asset_pack/truss_section_left.png assets/sprites/obstacles/png/truss_section_left.png
+          fi
+          if [ -f hamster_crew_truss_asset_pack/truss_section_right.png ]; then
+            git mv hamster_crew_truss_asset_pack/truss_section_right.png assets/sprites/obstacles/png/truss_section_right.png
+          fi
+          if [ -f hamster_crew_truss_asset_pack/truss_section_master.png ]; then
+            git mv hamster_crew_truss_asset_pack/truss_section_master.png assets/sprites/obstacles/png/truss_section_master.png
+          fi
+          if [ -f hamster_crew_truss_asset_pack/README.txt ]; then
+            git rm hamster_crew_truss_asset_pack/README.txt
+          fi
+          rmdir hamster_crew_truss_asset_pack 2>/dev/null || true
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest_path = Path('assets/manifest.json')
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          sprites = manifest.setdefault('sprites', {})
+
+          truss_sprites = {
+              'truss_section_left': {
+                  'type': 'obstacle',
+                  'visualKey': 'truss_section_left',
+                  'role': 'two-lane truss obstacle / blocks lanes 0+1',
+                  'png': 'assets/sprites/obstacles/png/truss_section_left.png',
+                  'sourceSize': {'width': 1024, 'height': 1024},
+                  'anchor': {'x': 0.5, 'y': 0.84},
+                  'status': 'approved_truss_obstacle_asset',
+              },
+              'truss_section_right': {
+                  'type': 'obstacle',
+                  'visualKey': 'truss_section_right',
+                  'role': 'two-lane truss obstacle / blocks lanes 1+2',
+                  'png': 'assets/sprites/obstacles/png/truss_section_right.png',
+                  'sourceSize': {'width': 1024, 'height': 1024},
+                  'anchor': {'x': 0.5, 'y': 0.84},
+                  'status': 'approved_truss_obstacle_asset',
+              },
+              'truss_section_master': {
+                  'type': 'obstacle_reference',
+                  'visualKey': 'truss_section_master',
+                  'role': 'base master reference asset for truss obstacle',
+                  'png': 'assets/sprites/obstacles/png/truss_section_master.png',
+                  'sourceSize': {'width': 1024, 'height': 1024},
+                  'anchor': {'x': 0.5, 'y': 0.84},
+                  'status': 'reference_asset_not_spawned',
+              },
+          }
+          sprites.update(truss_sprites)
+          manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          levels_path = Path('src/data/levels.js')
+          levels_text = levels_path.read_text(encoding='utf-8')
+          old = "obstacles: ['case', 'cable_loop', 'mystery_box', 'cart'],"
+          new = "obstacles: ['case', 'cable_loop', 'mystery_box', 'cart', 'truss_section_left', 'truss_section_right'],"
+          marker = "id: 'big_concert'"
+          index = levels_text.find(marker)
+          if index == -1:
+              raise SystemExit('big_concert level not found')
+          before = levels_text[:index]
+          after = levels_text[index:]
+          if "truss_section_left" not in after.split("id: 'kids_room'", 1)[0]:
+              after = after.replace(old, new, 1)
+          levels_path.write_text(before + after, encoding='utf-8')
+          PY
+
+      - name: Commit truss obstacle assets
+        run: |
+          git status --short
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No truss asset changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/manifest.json src/data/levels.js assets/sprites/obstacles/png
+          git commit -m "Install truss obstacle assets"
+          git push
