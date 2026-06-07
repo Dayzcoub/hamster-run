@@ -134,7 +134,7 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const scale = baseSpriteScale.call(this, visualKey);
     if (visualKey?.startsWith('hamster_')) return scale * 0.9 * (Number(tuning.playerScale) || 1);
     if (visualKey?.startsWith('spaniel_')) return scale * 0.92;
-    if (isTrussSection(visualKey)) return scale * 2.25 * (Number(tuning.objectScale) || 1);
+    if (isTrussSection(visualKey)) return scale * 1.18 * (Number(tuning.objectScale) || 1);
     if (['bread', 'cable_coil', 'c2_connector', 'bolt', 'stage_deck'].includes(visualKey)) return scale * 0.92 * (Number(tuning.objectScale) || 1);
     if (['flight_case', 'cable_loop', 'mic_stand', 'mystery_box', 'cart'].includes(visualKey)) return scale * 0.94 * (Number(tuning.objectScale) || 1);
     return scale;
@@ -162,14 +162,14 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const collectible = object.kind === 'collectible';
     const truss = isTrussSection(object.visualKey);
     const baseSize = truss
-      ? (this.isWideShort ? 84 : this.isCompact ? 78 : 98)
+      ? (this.isWideShort ? 66 : this.isCompact ? 60 : 74)
       : collectible
         ? (this.isWideShort ? 40 : this.isCompact ? 38 : 48)
         : (this.isWideShort ? 66 : this.isCompact ? 62 : 82);
     const pulse = collectible ? 1 + Math.sin((elapsedMs || 0) / 140) * 0.04 : 1;
     const size = baseSize * projected.scale * this.spriteScale(object.visualKey) * pulse;
-    const groundOffset = truss ? 7 : collectible ? 7 : 11;
-    const yOffset = truss ? -8 : 0;
+    const groundOffset = truss ? 20 : collectible ? 7 : 11;
+    const yOffset = truss ? 20 : 0;
     const groundY = this.remapProjectedYToPlayfield(projected.y) + profile.yOffset + OBJECT_FLOOR_DROP + (Number(tuning.objectY) || 0) + groundOffset * projected.scale;
     const x = projected.x;
     const y = Math.min(groundY + yOffset, this.getPlayfieldBottomY() - 8 * projected.scale);
@@ -187,11 +187,11 @@ if (!CanvasRenderer.prototype.__perspectiveAlignmentV1Patch) {
     const profile = object.__shadowProfile || laneProfile(object.lane);
     const scale = object.__groundScale || projected.scale;
     const x = object.__groundX ?? projected.x;
-    const y = Math.min((object.__groundY ?? this.remapProjectedYToPlayfield(projected.y)) + (collectible ? 8 : 11) * scale, this.getPlayfieldBottomY() - 2);
-    const width = (truss ? 108 : collectible ? 26 : 38) * scale * profile.shadowScale;
-    const height = (truss ? 13 : collectible ? 5 : 7) * scale * profile.shadowScale;
+    const y = Math.min((object.__groundY ?? this.remapProjectedYToPlayfield(projected.y)) + (collectible ? 8 : truss ? 7 : 11) * scale, this.getPlayfieldBottomY() - 2);
+    const width = (truss ? 82 : collectible ? 26 : 38) * scale * profile.shadowScale;
+    const height = (truss ? 9 : collectible ? 5 : 7) * scale * profile.shadowScale;
 
-    drawGroundShadow(this.ctx, x, y, width, height, this.lowPerf ? 0.5 : truss ? 0.74 : 0.62);
+    drawGroundShadow(this.ctx, x, y, width, height, this.lowPerf ? 0.5 : truss ? 0.68 : 0.62);
 
     const ctx = this.ctx;
     ctx.save();
