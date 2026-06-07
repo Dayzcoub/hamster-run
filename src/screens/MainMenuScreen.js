@@ -9,6 +9,11 @@ const menuItems = [
   { action: 'settings', label: 'Настройки', icon: '⚙', kind: 'secondary muted' },
 ];
 
+const DEV_PASSWORD = 'montage';
+const DEV_UNLOCK_KEY = 'hamster_dev_tools_unlocked';
+const DEV_SPAWN_DEBUG_KEY = 'hamster_dev_spawn_debug_enabled';
+const DEV_TRUSS_DEBUG_KEY = 'hamster_dev_truss_debug_enabled';
+
 const qualityLabels = {
   auto: 'Авто',
   performance: 'FPS',
@@ -29,6 +34,24 @@ function percent(value) {
   return `${Math.round(Number(value || 0) * 100)}%`;
 }
 
+function localFlag(key) {
+  try {
+    return window.localStorage?.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function setLocalFlag(key, value) {
+  try {
+    if (value) window.localStorage?.setItem(key, '1');
+    else window.localStorage?.removeItem(key);
+  } catch {
+    // Ignore storage failures.
+  }
+  window.dispatchEvent(new CustomEvent('hamster-dev-settings-change'));
+}
+
 function crewStatus(state, spanielPortrait) {
   const hasSpaniel = state.unlockedCompanions?.includes('spaniel');
   const hasHomeTechdir = Boolean(state.rewards?.skin_home_techdir);
@@ -46,6 +69,9 @@ function crewStatus(state, spanielPortrait) {
 function settingsPanel(game) {
   const audio = game.state.settings.audio || {};
   const renderQuality = game.state.settings.renderQuality || 'auto';
+  const devUnlocked = localFlag(DEV_UNLOCK_KEY);
+  const spawnDebugEnabled = localFlag(DEV_SPAWN_DEBUG_KEY);
+  const trussDebugEnabled = localFlag(DEV_TRUSS_DEBUG_KEY);
   const qualityButtons = Object.entries(qualityLabels).map(([value, label]) => `
     <button class="settings-choice ${renderQuality === value ? 'is-active' : ''}" data-quality-option="${value}" type="button">${label}</button>
   `).join('');
@@ -84,6 +110,20 @@ function settingsPanel(game) {
             <strong>${audio.enabled ? 'Звук включён' : 'Звук выключен'}</strong>
           </button>
           ${sliders}
+        </div>
+
+        <div class="settings-block settings-block--dev ${devUnlocked ? 'is-unlocked' : ''}" data-dev-tools-block>
+          <h3>Dev tools</h3>
+          <div class="settings-dev-lock" ${devUnlocked ? 'hidden' : ''} data-dev-lock>
+            <input class="settings-dev-input" data-dev-password type="password" inputmode="text" autocomplete="off" placeholder="Пароль" />
+            <button class="settings-toggle" data-action="dev-unlock" type="button">Открыть</button>
+          </div>
+          <div class="settings-dev-tools" ${devUnlocked ? '' : 'hidden'} data-dev-tools>
+            <button class="settings-toggle ${spawnDebugEnabled ? 'is-on' : ''}" data-action="dev-toggle-spawn" type="button">Ассеты: ${spawnDebugEnabled ? 'вкл' : 'выкл'}</button>
+            <button class="settings-toggle ${trussDebugEnabled ? 'is-on' : ''}" data-action="dev-toggle-truss" type="button">Ферма: ${trussDebugEnabled ? 'вкл' : 'выкл'}</button>
+            <button class="settings-toggle" data-action="dev-lock" type="button">Скрыть dev tools</button>
+          </div>
+          <p class="settings-dev-note" data-dev-note>Debug-панели появляются только во время уровня после включения тут.</p>
         </div>
       </section>
     </div>
@@ -164,6 +204,10 @@ export class MainMenuScreen {
     if (action === 'settings-close') this.closeSettings();
     if (action === 'play') this.game.startLevel('dk_almost_ready');
     if (action === 'levels') this.game.showLevels();
+    if (action === 'dev-unlock') this.unlockDevTools();
+    if (action === 'dev-lock') this.lockDevTools();
+    if (action === 'dev-toggle-spawn') this.toggleDevFlag(DEV_SPAWN_DEBUG_KEY);
+    if (action === 'dev-toggle-truss') this.toggleDevFlag(DEV_TRUSS_DEBUG_KEY);
 
     const qualityOption = event.target?.closest('[data-quality-option]')?.dataset?.qualityOption;
     if (qualityOption) this.setQuality(qualityOption);
@@ -188,6 +232,54 @@ export class MainMenuScreen {
   closeSettings() {
     const panel = this.element.querySelector('[data-settings-panel]');
     if (panel) panel.hidden = true;
+  }
+
+  unlockDevTools() {
+    const input = this.element.querySelector('[data-dev-password]');
+    const value = String(input?.value || '').trim();
+    const note = this.element.querySelector('[data-dev-note]');
+    if (value !== DEV_PASSWORD) {
+      if (note) note.textContent = 'Неверный пароль.';
+      return;
+    }
+    setLocalFlag(DEV_UNLOCK_KEY, true);
+    this.renderDevToolsState();
+  }
+
+  lockDevTools() {
+    setLocalFlag(DEV_UNLOCK_KEY, false);
+    setLocalFlag(DEV_SPAWN_DEBUG_KEY, false);
+    setLocalFlag(DEV_TRUSS_DEBUG_KEY, false);
+    this.renderDevToolsState();
+  }
+
+  toggleDevFlag(key) {
+    setLocalFlag(key, !localFlag(key));
+    this.renderDevToolsState();
+  }
+
+  renderDevToolsState() {
+    const unlocked = localFlag(DEV_UNLOCK_KEY);
+    const spawnEnabled = localFlag(DEV_SPAWN_DEBUG_KEY);
+    const trussEnabled = localFlag(DEV_TRUSS_DEBUG_KEY);
+    const block = this.element.querySelector('[data-dev-tools-block]');
+    const lock = this.element.querySelector('[data-dev-lock]');
+    const tools = this.element.querySelector('[data-dev-tools]');
+    const note = this.element.querySelector('[data-dev-note]');
+    if (block) block.classList.toggle('is-unlocked', unlocked);
+    if (lock) lock.hidden = unlocked;
+    if (tools) tools.hidden = !unlocked;
+    if (note) note.textContent = unlocked ? 'Debug-панели появляются только во время уровня после включения тут.' : 'Debug-панели закрыты паролем.';
+    const spawnButton = this.element.querySelector('[data-action="dev-toggle-spawn"]');
+    if (spawnButton) {
+      spawnButton.classList.toggle('is-on', spawnEnabled);
+      spawnButton.textContent = `Ассеты: ${spawnEnabled ? 'вкл' : 'выкл'}`;
+    }
+    const trussButton = this.element.querySelector('[data-action="dev-toggle-truss"]');
+    if (trussButton) {
+      trussButton.classList.toggle('is-on', trussEnabled);
+      trussButton.textContent = `Ферма: ${trussEnabled ? 'вкл' : 'выкл'}`;
+    }
   }
 
   toggleAudio() {
