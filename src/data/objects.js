@@ -17,7 +17,7 @@ export const objectCatalog = {
   mystery_box: { type: 'obstacle', visualKey: 'mystery_box', dodge: 'jump', damage: 1, clearanceHeight: 34 },
   cart: { type: 'obstacle', visualKey: 'cart', dodge: 'jump', damage: 1, clearanceHeight: 42 },
 
-  // Future two-lane obstacles. They are not included in any level until the PNG assets are placed in the repo.
+  // Big Concert two-lane dodge-only obstacles: jump/slide do not clear them.
   truss_section_left: {
     type: 'obstacle',
     visualKey: 'truss_section_left',
