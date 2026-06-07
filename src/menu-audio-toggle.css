@@ -1,0 +1,30 @@
+.menu-audio-toggle {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 12;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(27,44,69,0.96), rgba(8,14,24,0.96));
+  border: 1px solid rgba(92,235,255,0.36);
+  box-shadow: 0 12px 34px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.08);
+  font-size: 1.35rem;
+}
+
+.menu-audio-toggle:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .menu-audio-toggle {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    width: 42px;
+    height: 42px;
+    border-radius: 15px;
+    font-size: 1.15rem;
+  }
+}
