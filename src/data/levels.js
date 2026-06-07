@@ -69,6 +69,15 @@ export const levels = [
     targetResources: { truss: 8, c2: 12, led: 8, cable: 10 },
     collectibles: ['bread', 'truss', 'c2', 'led', 'cable', 'bolts'],
     obstacles: ['case', 'cable_loop', 'mystery_box', 'cart', 'truss_section_left', 'truss_section_right'],
+    obstacleWeights: {
+      truss_section_left: 1.45,
+      truss_section_right: 1.45,
+    },
+    finalObstacleWeights: {
+      truss_section_left: 1.9,
+      truss_section_right: 1.9,
+      cart: 1.25,
+    },
     unlocksAfterComplete: ['kids_room'],
     intro: 'До открытия дверей 03:00. Паника разрешена.',
     resultPhrases: {
