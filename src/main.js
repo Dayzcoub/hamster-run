@@ -5,8 +5,6 @@ import './render/CanvasRendererSpanielCompanion.js';
 import './spaniel-rescue-patch.js';
 import { Game } from './core/Game.js';
 import './render/CanvasRendererPerspectiveAlignmentV1.js';
-import './truss-debug-panel.js';
-import './spawn-assets-debug-panel.js';
 
 const app = document.querySelector('#app');
 const game = new Game(app);
