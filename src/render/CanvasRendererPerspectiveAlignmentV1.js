@@ -13,11 +13,21 @@ const LANE_PROFILES = [
   { yOffset: 12, shadowScale: 1.16 },
 ];
 
-const COLLECTIBLE_SCALE_FACTORS = {
-  powercon: 0.8,
-  tape: 0.72,
-  led: 0.78,
+const SPAWN_SCALE_FACTORS = {
+  bread: 1.14,
+  cable_coil: 1.32,
+  c2_connector: 1,
+  bolt: 1,
+  stage_deck: 1,
+  powercon: 0.9,
+  tape: 0.78,
+  led: 0.88,
   truss: 0.78,
+  flight_case: 1.17,
+  cable_loop: 1.09,
+  mic_stand: 1.5,
+  mystery_box: 1.24,
+  cart: 1.31,
 };
 
 const SPAWN_DEBUG_OBJECTS = [
@@ -99,7 +109,7 @@ function spawnScaleFactor(visualKey) {
     const value = Number(overrides[visualKey]);
     return Number.isFinite(value) && value > 0 ? value : 1;
   }
-  if (Object.prototype.hasOwnProperty.call(COLLECTIBLE_SCALE_FACTORS, visualKey)) return COLLECTIBLE_SCALE_FACTORS[visualKey];
+  if (Object.prototype.hasOwnProperty.call(SPAWN_SCALE_FACTORS, visualKey)) return SPAWN_SCALE_FACTORS[visualKey];
   return 1;
 }
 
