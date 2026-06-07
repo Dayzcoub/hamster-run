@@ -329,6 +329,51 @@
         "y": 0.84
       },
       "status": "approved_direction"
+    },
+    "truss_section_left": {
+      "type": "obstacle",
+      "visualKey": "truss_section_left",
+      "role": "two-lane truss obstacle / blocks lanes 0+1",
+      "png": "assets/sprites/obstacles/png/truss_section_left.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1024
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.84
+      },
+      "status": "approved_truss_obstacle_asset"
+    },
+    "truss_section_right": {
+      "type": "obstacle",
+      "visualKey": "truss_section_right",
+      "role": "two-lane truss obstacle / blocks lanes 1+2",
+      "png": "assets/sprites/obstacles/png/truss_section_right.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1024
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.84
+      },
+      "status": "approved_truss_obstacle_asset"
+    },
+    "truss_section_master": {
+      "type": "obstacle_reference",
+      "visualKey": "truss_section_master",
+      "role": "base master reference asset for truss obstacle",
+      "png": "assets/sprites/obstacles/png/truss_section_master.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1024
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.84
+      },
+      "status": "reference_asset_not_spawned"
     }
   }
 }
