@@ -6,6 +6,7 @@ import { MainMenuScreen } from '../screens/MainMenuScreen.js';
 import { LevelSelectScreen } from '../screens/LevelSelectScreen.js';
 import { GameScreen } from '../screens/GameScreen.js';
 import { ResultScreen } from '../screens/ResultScreen.js';
+import { menuMusic } from '../audio/menu-music.js';
 import { levels } from '../data/levels.js';
 
 const PASSING_GRADES = new Set(['C', 'B', 'A', 'S']);
@@ -41,11 +42,13 @@ export class Game {
   }
 
   showLevels() {
+    menuMusic.pause();
     this.orientationLock.start();
     this.setScreen(new LevelSelectScreen(this, levels));
   }
 
   startLevel(levelId) {
+    menuMusic.stop();
     const level = levels.find((item) => item.id === levelId);
     if (!level) throw new Error(`Unknown level: ${levelId}`);
     this.orientationLock.requestLandscape();
@@ -53,6 +56,7 @@ export class Game {
   }
 
   showResult(result) {
+    menuMusic.stop();
     this.applyResult(result);
     this.orientationLock.start();
     this.setScreen(new ResultScreen(this, result));
