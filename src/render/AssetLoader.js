@@ -58,6 +58,9 @@ export class AssetLoader {
     const height = canvas.height;
     const isCharacter = sprite.type === 'character';
     const isCableLoop = sprite.visualKey === 'cable_loop';
+    const isTrussSection = sprite.visualKey?.startsWith('truss_section_');
+
+    if (isTrussSection) this.removeConnectedLightBackground(imageData, width, height);
 
     for (let i = 0; i < data.length; i += 4) {
       const pixel = i / 4;
@@ -74,9 +77,10 @@ export class AssetLoader {
       const chroma = max - min;
 
       const bakedCharacterShadow = isCharacter && yNorm > 0.62 && chroma < 42 && max > 45;
-      const bakedObjectShadow = !isCharacter && yNorm > 0.62 && chroma < 42 && max > 130;
+      const bakedObjectShadow = !isCharacter && !isTrussSection && yNorm > 0.62 && chroma < 42 && max > 130;
       const softNeutralHalo = a > 0.02 && a < 0.82 && chroma < 48 && max > 35;
       const whiteMatteEdge = a > 0.02 && a < 0.98 && chroma < 52 && max > 214;
+      const trussBakedWhite = isTrussSection && a > 0.84 && chroma < 30 && max > 226;
       const cableLoopInnerWhiteMatte = isCableLoop
         && a > 0.62
         && chroma < 62
@@ -86,7 +90,7 @@ export class AssetLoader {
         && yNorm > 0.18
         && yNorm < 0.76;
 
-      if (bakedCharacterShadow || bakedObjectShadow || softNeutralHalo || whiteMatteEdge || cableLoopInnerWhiteMatte) {
+      if (bakedCharacterShadow || bakedObjectShadow || softNeutralHalo || whiteMatteEdge || trussBakedWhite || cableLoopInnerWhiteMatte) {
         data[i + 3] = 0;
         continue;
       }
@@ -103,6 +107,42 @@ export class AssetLoader {
 
     ctx.putImageData(imageData, 0, 0);
     return canvas;
+  }
+
+  removeConnectedLightBackground(imageData, width, height) {
+    const data = imageData.data;
+    const visited = new Uint8Array(width * height);
+    const queue = [];
+    const enqueue = (x, y) => {
+      if (x < 0 || y < 0 || x >= width || y >= height) return;
+      const index = y * width + x;
+      if (visited[index]) return;
+      const offset = index * 4;
+      if (!isTrussBackgroundPixel(data[offset], data[offset + 1], data[offset + 2], data[offset + 3])) return;
+      visited[index] = 1;
+      queue.push(index);
+    };
+
+    for (let x = 0; x < width; x += 1) {
+      enqueue(x, 0);
+      enqueue(x, height - 1);
+    }
+    for (let y = 0; y < height; y += 1) {
+      enqueue(0, y);
+      enqueue(width - 1, y);
+    }
+
+    for (let cursor = 0; cursor < queue.length; cursor += 1) {
+      const index = queue[cursor];
+      const x = index % width;
+      const y = Math.floor(index / width);
+      const offset = index * 4;
+      data[offset + 3] = 0;
+      enqueue(x + 1, y);
+      enqueue(x - 1, y);
+      enqueue(x, y + 1);
+      enqueue(x, y - 1);
+    }
   }
 
   trimTransparentBounds(source, sprite) {
@@ -146,6 +186,14 @@ export class AssetLoader {
   get(visualKey) {
     return this.images.get(visualKey) || null;
   }
+}
+
+function isTrussBackgroundPixel(r, g, b, alpha) {
+  if (alpha < 8) return true;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const chroma = max - min;
+  return max > 166 && chroma < 42;
 }
 
 function clampByte(value) {
