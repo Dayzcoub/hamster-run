@@ -1,4 +1,5 @@
 import { menuPhrases } from '../data/texts.js';
+import { menuMusic } from '../audio/menu-music.js';
 
 const menuItems = [
   { action: 'play', label: 'Играть', icon: '▶', kind: 'primary' },
@@ -88,9 +89,11 @@ export class MainMenuScreen {
 
   mount() {
     this.element.addEventListener('click', this.onClick);
+    menuMusic.play();
   }
 
   onClick = (event) => {
+    menuMusic.play();
     const action = event.target?.closest('[data-action]')?.dataset?.action;
     if (action === 'play') this.game.startLevel('dk_almost_ready');
     if (action === 'levels') this.game.showLevels();
