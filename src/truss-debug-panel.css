@@ -1,0 +1,133 @@
+.truss-debug[hidden],
+.truss-debug__panel[hidden] {
+  display: none;
+}
+
+.truss-debug {
+  position: fixed;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 60;
+  display: grid;
+  justify-items: end;
+  gap: 0.42rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: none;
+}
+
+.truss-debug button,
+.truss-debug input {
+  pointer-events: auto;
+}
+
+.truss-debug__toggle {
+  min-width: 74px;
+  min-height: 38px;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  color: #07111e;
+  background: linear-gradient(180deg, #ffd466 0%, #ffb629 100%);
+  border: 1px solid rgba(255,226,140,0.9);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.36), 0 0 0 1px rgba(8,16,29,0.4);
+  font-weight: 950;
+  font-size: 0.82rem;
+}
+
+.truss-debug__panel {
+  width: min(360px, calc(100vw - 24px));
+  padding: 0.62rem;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(18,31,52,0.96), rgba(5,11,20,0.96));
+  border: 1px solid rgba(92,235,255,0.28);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.08);
+  pointer-events: auto;
+}
+
+.truss-debug__panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  margin-bottom: 0.45rem;
+}
+
+.truss-debug__panel header strong {
+  color: #ffc247;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.76rem;
+}
+
+.truss-debug__panel header button {
+  min-height: 28px;
+  padding: 0 0.55rem;
+  border-radius: 10px;
+  color: #dce9ff;
+  background: rgba(8, 16, 29, 0.88);
+  border: 1px solid rgba(92,235,255,0.22);
+  font-weight: 900;
+  font-size: 0.74rem;
+}
+
+.truss-debug__panel label {
+  display: grid;
+  grid-template-columns: 64px minmax(120px, 1fr) 52px;
+  align-items: center;
+  gap: 0.42rem;
+  min-height: 32px;
+  color: rgba(220,233,255,0.86);
+  font-weight: 850;
+  font-size: 0.76rem;
+}
+
+.truss-debug__panel input {
+  width: 100%;
+  accent-color: #ffc247;
+}
+
+.truss-debug__panel b {
+  color: #5cebff;
+  text-align: right;
+  font-size: 0.74rem;
+}
+
+.truss-debug__panel p {
+  margin: 0.42rem 0 0;
+  padding: 0.38rem 0.45rem;
+  border-radius: 11px;
+  color: rgba(220,233,255,0.88);
+  background: rgba(3, 8, 16, 0.58);
+  border: 1px solid rgba(120,160,210,0.14);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .truss-debug {
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .truss-debug__toggle {
+    min-width: 66px;
+    min-height: 32px;
+    font-size: 0.74rem;
+  }
+
+  .truss-debug__panel {
+    width: min(420px, 50vw);
+    padding: 0.48rem;
+    border-radius: 15px;
+  }
+
+  .truss-debug__panel label {
+    grid-template-columns: 58px minmax(120px, 1fr) 46px;
+    min-height: 27px;
+    font-size: 0.7rem;
+  }
+
+  .truss-debug__panel p {
+    margin-top: 0.32rem;
+    font-size: 0.68rem;
+  }
+}
