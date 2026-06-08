@@ -111,6 +111,7 @@ export class GameScreen {
     this.previousBread = 0;
     this.previousPackage = 0;
     this.previousResourceTotal = 0;
+    this.previousExtraResourcePoints = 0;
     this.previousMistakesLeft = 3;
     this.previousStylePoints = 0;
     this.previousStyleCombo = 0;
@@ -366,6 +367,7 @@ export class GameScreen {
     const packageCollected = this.packageCollected(snapshot);
     const resourceTotal = this.resourceTotal(snapshot);
     const precisionDodges = snapshot.stats.precisionDodges || 0;
+    const extraResourcePoints = snapshot.stats.extraResourcePoints || 0;
     const finalPhase = isFinalPhase(snapshot);
 
     if (finalPhase && !this.finalPhaseAnnounced) {
@@ -378,7 +380,11 @@ export class GameScreen {
       this.spawnLocalEffect('complete', 'ПАКЕТ СОБРАН!');
     }
     if (resourceTotal > this.previousResourceTotal && packageCollected === this.previousPackage) {
-      this.spawnLocalEffect('pickup', `ЛИШНЕЕ +${resourceTotal - this.previousResourceTotal}`);
+      const gainedExtraPoints = Math.max(0, extraResourcePoints - this.previousExtraResourcePoints);
+      const label = gainedExtraPoints > 0
+        ? `ЛИШНЕЕ +${resourceTotal - this.previousResourceTotal} · +${gainedExtraPoints}`
+        : `ЛИШНЕЕ +${resourceTotal - this.previousResourceTotal}`;
+      this.spawnLocalEffect('pickup', label);
     }
     if (snapshot.stats.stylePoints > this.previousStylePoints) {
       const gained = snapshot.stats.stylePoints - this.previousStylePoints;
@@ -397,6 +403,7 @@ export class GameScreen {
     this.previousBread = snapshot.stats.bread;
     this.previousPackage = packageCollected;
     this.previousResourceTotal = resourceTotal;
+    this.previousExtraResourcePoints = extraResourcePoints;
     this.previousMistakesLeft = snapshot.player.mistakesLeft;
     this.previousStylePoints = snapshot.stats.stylePoints || 0;
     this.previousStyleCombo = snapshot.stats.styleCombo || 0;
@@ -451,20 +458,22 @@ export class GameScreen {
     if (eventTitle && eventText) {
       if (packageComplete) {
         eventTitle.textContent = finalPhase ? 'Финал:' : 'Пакет собран:';
-        eventText.textContent = finalPhase ? 'добирай хлеб и чистые финты до сирены' : 'добирай хлеб и финты до конца таймера';
+        eventText.textContent = finalPhase ? 'добирай хлеб, лишние части и чистые финты до сирены' : 'добирай хлеб, лишние части и финты до конца таймера';
       } else if (finalPhase) {
         eventTitle.textContent = 'Финал:';
         eventText.textContent = 'дожми пакет до конца таймера';
       } else {
         eventTitle.textContent = 'Цель:';
-        eventText.textContent = 'собери пакет ресурсов · хлеб и финты дают рекорд';
+        eventText.textContent = 'собери пакет ресурсов · хлеб, лишние части и финты дают рекорд';
       }
     }
     this.element.querySelector('[data-hud-value="bread"]').textContent = snapshot.stats.bread;
     this.element.querySelector('[data-hud-value="package"]').textContent = `${packageCollected}/${this.packageTargetTotal || 0}`;
     this.element.querySelector('[data-hud-value="mistakes"]').textContent = snapshot.player.mistakesLeft;
     this.element.querySelector('[data-hud-value="style"]').textContent = snapshot.stats.stylePoints || 0;
-    this.element.querySelector('[data-hud-value="score"]').textContent = snapshot.stats.stylePoints || 0;
+    this.element.querySelector('[data-hud-value="score"]').textContent = typeof snapshot.stats.liveScore === 'function'
+      ? snapshot.stats.liveScore(snapshot.player)
+      : snapshot.stats.stylePoints || 0;
     this.element.querySelector('[data-hud="timer"]').textContent = formatRemainingTime(snapshot);
     this.element.querySelector('[data-hud="progress"]').style.width = `${Math.round(snapshot.progress * 100)}%`;
   }
