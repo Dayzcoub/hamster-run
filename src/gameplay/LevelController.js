@@ -54,6 +54,7 @@ export class LevelController {
       distance: this.distance,
       progress: Math.min(1, this.elapsedMs / (this.level.duration * 1000)),
       stats: this.stats,
+      activeEvent: this.spawner.currentEvent?.() || null,
     };
   }
 }
