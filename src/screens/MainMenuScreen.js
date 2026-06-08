@@ -1,4 +1,5 @@
 import { menuPhrases } from '../data/texts.js';
+import { levels } from '../data/levels.js';
 import { menuMusic } from '../audio/menu-music.js';
 
 const menuItems = [
@@ -11,8 +12,6 @@ const menuItems = [
 
 const DEV_PASSWORD = 'montage';
 const DEV_UNLOCK_KEY = 'hamster_dev_tools_unlocked';
-const DEV_SPAWN_DEBUG_KEY = 'hamster_dev_spawn_debug_enabled';
-const DEV_TRUSS_DEBUG_KEY = 'hamster_dev_truss_debug_enabled';
 
 const qualityLabels = {
   auto: 'Авто',
@@ -34,6 +33,10 @@ function percent(value) {
   return `${Math.round(Number(value || 0) * 100)}%`;
 }
 
+function normalizePassword(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
 function localFlag(key) {
   try {
     return window.localStorage?.getItem(key) === '1';
@@ -49,7 +52,6 @@ function setLocalFlag(key, value) {
   } catch {
     // Ignore storage failures.
   }
-  window.dispatchEvent(new CustomEvent('hamster-dev-settings-change'));
 }
 
 function crewStatus(state, spanielPortrait) {
@@ -70,8 +72,7 @@ function settingsPanel(game) {
   const audio = game.state.settings.audio || {};
   const renderQuality = game.state.settings.renderQuality || 'auto';
   const devUnlocked = localFlag(DEV_UNLOCK_KEY);
-  const spawnDebugEnabled = localFlag(DEV_SPAWN_DEBUG_KEY);
-  const trussDebugEnabled = localFlag(DEV_TRUSS_DEBUG_KEY);
+  const allLevelsUnlocked = levels.every((level) => game.state.unlockedLevels?.includes(level.id));
   const qualityButtons = Object.entries(qualityLabels).map(([value, label]) => `
     <button class="settings-choice ${renderQuality === value ? 'is-active' : ''}" data-quality-option="${value}" type="button">${label}</button>
   `).join('');
@@ -115,15 +116,14 @@ function settingsPanel(game) {
         <div class="settings-block settings-block--dev ${devUnlocked ? 'is-unlocked' : ''}" data-dev-tools-block>
           <h3>Dev tools</h3>
           <div class="settings-dev-lock" ${devUnlocked ? 'hidden' : ''} data-dev-lock>
-            <input class="settings-dev-input" data-dev-password type="password" inputmode="text" autocomplete="off" placeholder="Пароль" />
+            <input class="settings-dev-input" data-dev-password type="password" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Пароль" />
             <button class="settings-toggle" data-action="dev-unlock" type="button">Открыть</button>
           </div>
           <div class="settings-dev-tools" ${devUnlocked ? '' : 'hidden'} data-dev-tools>
-            <button class="settings-toggle ${spawnDebugEnabled ? 'is-on' : ''}" data-action="dev-toggle-spawn" type="button">Ассеты: ${spawnDebugEnabled ? 'вкл' : 'выкл'}</button>
-            <button class="settings-toggle ${trussDebugEnabled ? 'is-on' : ''}" data-action="dev-toggle-truss" type="button">Ферма: ${trussDebugEnabled ? 'вкл' : 'выкл'}</button>
+            <button class="settings-toggle ${allLevelsUnlocked ? 'is-on' : ''}" data-action="dev-unlock-levels" type="button">${allLevelsUnlocked ? 'Все уровни открыты' : 'Открыть все уровни'}</button>
             <button class="settings-toggle" data-action="dev-lock" type="button">Скрыть dev tools</button>
           </div>
-          <p class="settings-dev-note" data-dev-note>Debug-панели появляются только во время уровня после включения тут.</p>
+          <p class="settings-dev-note" data-dev-note>${devUnlocked ? 'Dev-доступ влияет только на прогресс открытия уровней.' : 'Debug-панели отключены. Dev-доступ нужен только для тестового открытия уровней.'}</p>
         </div>
       </section>
     </div>
@@ -193,6 +193,7 @@ export class MainMenuScreen {
   mount() {
     this.element.addEventListener('click', this.onClick);
     this.element.addEventListener('input', this.onInput);
+    this.element.addEventListener('keydown', this.onKeyDown);
     menuMusic.play();
   }
 
@@ -206,8 +207,7 @@ export class MainMenuScreen {
     if (action === 'levels') this.game.showLevels();
     if (action === 'dev-unlock') this.unlockDevTools();
     if (action === 'dev-lock') this.lockDevTools();
-    if (action === 'dev-toggle-spawn') this.toggleDevFlag(DEV_SPAWN_DEBUG_KEY);
-    if (action === 'dev-toggle-truss') this.toggleDevFlag(DEV_TRUSS_DEBUG_KEY);
+    if (action === 'dev-unlock-levels') this.unlockAllLevelsForDev();
 
     const qualityOption = event.target?.closest('[data-quality-option]')?.dataset?.qualityOption;
     if (qualityOption) this.setQuality(qualityOption);
@@ -224,6 +224,14 @@ export class MainMenuScreen {
     menuMusic.play();
   };
 
+  onKeyDown = (event) => {
+    if (event.key !== 'Enter') return;
+    if (event.target?.matches('[data-dev-password]')) {
+      event.preventDefault();
+      this.unlockDevTools();
+    }
+  };
+
   openSettings() {
     const panel = this.element.querySelector('[data-settings-panel]');
     if (panel) panel.hidden = false;
@@ -236,7 +244,7 @@ export class MainMenuScreen {
 
   unlockDevTools() {
     const input = this.element.querySelector('[data-dev-password]');
-    const value = String(input?.value || '').trim();
+    const value = normalizePassword(input?.value);
     const note = this.element.querySelector('[data-dev-note]');
     if (value !== DEV_PASSWORD) {
       if (note) note.textContent = 'Неверный пароль.';
@@ -248,20 +256,19 @@ export class MainMenuScreen {
 
   lockDevTools() {
     setLocalFlag(DEV_UNLOCK_KEY, false);
-    setLocalFlag(DEV_SPAWN_DEBUG_KEY, false);
-    setLocalFlag(DEV_TRUSS_DEBUG_KEY, false);
     this.renderDevToolsState();
   }
 
-  toggleDevFlag(key) {
-    setLocalFlag(key, !localFlag(key));
-    this.renderDevToolsState();
+  unlockAllLevelsForDev() {
+    const allIds = levels.map((level) => level.id);
+    this.game.state.unlockedLevels = Array.from(new Set([...(this.game.state.unlockedLevels || []), ...allIds]));
+    this.game.storage.save(this.game.state);
+    this.renderDevToolsState('Все уровни открыты и сохранены.');
   }
 
-  renderDevToolsState() {
+  renderDevToolsState(message = '') {
     const unlocked = localFlag(DEV_UNLOCK_KEY);
-    const spawnEnabled = localFlag(DEV_SPAWN_DEBUG_KEY);
-    const trussEnabled = localFlag(DEV_TRUSS_DEBUG_KEY);
+    const allLevelsUnlocked = levels.every((level) => this.game.state.unlockedLevels?.includes(level.id));
     const block = this.element.querySelector('[data-dev-tools-block]');
     const lock = this.element.querySelector('[data-dev-lock]');
     const tools = this.element.querySelector('[data-dev-tools]');
@@ -269,16 +276,11 @@ export class MainMenuScreen {
     if (block) block.classList.toggle('is-unlocked', unlocked);
     if (lock) lock.hidden = unlocked;
     if (tools) tools.hidden = !unlocked;
-    if (note) note.textContent = unlocked ? 'Debug-панели появляются только во время уровня после включения тут.' : 'Debug-панели закрыты паролем.';
-    const spawnButton = this.element.querySelector('[data-action="dev-toggle-spawn"]');
-    if (spawnButton) {
-      spawnButton.classList.toggle('is-on', spawnEnabled);
-      spawnButton.textContent = `Ассеты: ${spawnEnabled ? 'вкл' : 'выкл'}`;
-    }
-    const trussButton = this.element.querySelector('[data-action="dev-toggle-truss"]');
-    if (trussButton) {
-      trussButton.classList.toggle('is-on', trussEnabled);
-      trussButton.textContent = `Ферма: ${trussEnabled ? 'вкл' : 'выкл'}`;
+    if (note) note.textContent = message || (unlocked ? 'Dev-доступ влияет только на прогресс открытия уровней.' : 'Debug-панели отключены. Dev-доступ нужен только для тестового открытия уровней.');
+    const unlockButton = this.element.querySelector('[data-action="dev-unlock-levels"]');
+    if (unlockButton) {
+      unlockButton.classList.toggle('is-on', allLevelsUnlocked);
+      unlockButton.textContent = allLevelsUnlocked ? 'Все уровни открыты' : 'Открыть все уровни';
     }
   }
 
@@ -312,5 +314,6 @@ export class MainMenuScreen {
   destroy() {
     this.element.removeEventListener('click', this.onClick);
     this.element.removeEventListener('input', this.onInput);
+    this.element.removeEventListener('keydown', this.onKeyDown);
   }
 }
