@@ -20,6 +20,11 @@ function remainingSeconds(level, elapsedMs) {
   return Math.ceil(Math.max(0, durationMs - elapsedMs) / 1000);
 }
 
+function activeLevelEvent(level, elapsedMs) {
+  const seconds = elapsedMs / 1000;
+  return (level.eventWindows || []).find((event) => seconds >= event.start && seconds <= event.end) || null;
+}
+
 function resourceCollected(stats, resource) {
   return resource === 'bread' ? stats?.bread || 0 : stats?.resources?.[resource] || 0;
 }
@@ -41,6 +46,13 @@ function isPackageComplete(level, stats) {
   return targetTotal > 0 && packageCollected(level, stats) >= targetTotal;
 }
 
+function mergeWeights(...sources) {
+  return sources.reduce((acc, source) => {
+    for (const [key, value] of Object.entries(source || {})) acc[key] = (acc[key] || 1) * Math.max(0, Number(value) || 1);
+    return acc;
+  }, {});
+}
+
 function weightedPick(ids = [], weights = {}) {
   if (!ids.length) return null;
   const totalWeight = ids.reduce((sum, id) => sum + Math.max(0, Number(weights[id]) || 1), 0);
@@ -60,6 +72,7 @@ export class ObjectSpawner {
     this.tuning = { ...DEFAULT_SPAWN_TUNING, ...(level.spawnTuning || {}) };
     this.timerMs = 500;
     this.lastObstacleLane = null;
+    this.activeEvent = null;
   }
 
   update(deltaMs, elapsedMs, stats = null) {
@@ -69,22 +82,26 @@ export class ObjectSpawner {
     const progress = elapsedMs / (this.level.duration * 1000);
     const finalPhase = remainingSeconds(this.level, elapsedMs) <= FINAL_PHASE_SECONDS;
     const packageComplete = isPackageComplete(this.level, stats);
+    const event = activeLevelEvent(this.level, elapsedMs);
+    this.activeEvent = event;
     const minDelay = this.tuning.minDelayStart - progress * this.tuning.minDelayProgressDrop;
     const maxDelay = this.tuning.maxDelayStart - progress * this.tuning.maxDelayProgressDrop;
     const finalPhaseDelayFactor = finalPhase ? 0.88 : 1;
+    const eventDelayFactor = event?.delayFactor || 1;
     const nextDelay = minDelay + Math.random() * Math.max(220, maxDelay - minDelay);
-    this.timerMs = Math.max(520, nextDelay * finalPhaseDelayFactor);
+    this.timerMs = Math.max(420, nextDelay * finalPhaseDelayFactor * eventDelayFactor);
 
     let obstacleChance = this.tuning.obstacleBaseChance + progress * this.tuning.obstacleProgressChance;
+    if (event) obstacleChance += Number(event.obstacleChanceBonus) || 0;
     if (finalPhase) {
       obstacleChance += packageComplete ? 0.04 : -0.03;
-      obstacleChance = clamp(obstacleChance, 0.22, 0.54);
+      obstacleChance = clamp(obstacleChance, 0.22, 0.58);
     }
 
     const isObstacle = Math.random() < obstacleChance;
     const id = isObstacle
-      ? this.pickObstacleId(finalPhase)
-      : weightedPick(this.pickCollectibleSource(progress, stats, finalPhase, packageComplete));
+      ? this.pickObstacleId(finalPhase, event)
+      : weightedPick(this.pickCollectibleSource(progress, stats, finalPhase, packageComplete), event?.collectibleWeights || {});
     const catalogItem = objectCatalog[id];
     const lane = this.pickLane(isObstacle, catalogItem);
     const blockedLanes = this.resolveBlockedLanes(catalogItem, lane);
@@ -106,10 +123,10 @@ export class ObjectSpawner {
     };
   }
 
-  pickObstacleId(finalPhase = false) {
+  pickObstacleId(finalPhase = false, event = null) {
     const weights = finalPhase
-      ? { ...(this.level.obstacleWeights || {}), ...(this.level.finalObstacleWeights || {}) }
-      : this.level.obstacleWeights || {};
+      ? mergeWeights(this.level.obstacleWeights, this.level.finalObstacleWeights, event?.obstacleWeights)
+      : mergeWeights(this.level.obstacleWeights, event?.obstacleWeights);
     return weightedPick(this.level.obstacles, weights);
   }
 
@@ -148,5 +165,9 @@ export class ObjectSpawner {
     if (catalogItem.blockedLanes?.length) return [...catalogItem.blockedLanes];
     const span = Math.max(1, catalogItem.laneSpan || 1);
     return Array.from({ length: span }, (_, index) => Math.min(2, lane + index));
+  }
+
+  currentEvent() {
+    return this.activeEvent;
   }
 }
