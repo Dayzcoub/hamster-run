@@ -1,3 +1,6 @@
+const MAX_DEBUG_FREEZE_MS = 20000;
+let debugStartedAt = 0;
+
 function hasOpenDebugPanel() {
   return Boolean(
     document.querySelector('.spawn-assets-debug.is-open')
@@ -6,12 +9,22 @@ function hasOpenDebugPanel() {
   );
 }
 
+function resetOpenDebugPanels() {
+  document.querySelectorAll('.spawn-assets-debug.is-open, .truss-debug.is-open, .game-screen [data-truss-debug-root].is-open').forEach((root) => {
+    root.classList.remove('is-open');
+    const panel = root.querySelector('[data-spawn-debug-panel], [data-truss-debug-panel]');
+    if (panel) panel.hidden = true;
+  });
+}
+
 function resetDebugMode(source = 'safety') {
   const wasActive = Boolean(window.__HAMSTER_DEBUG_MODE || window.__HAMSTER_SPAWN_DEBUG_MODE || window.__HAMSTER_TRUSS_DEBUG_MODE);
   window.__HAMSTER_DEBUG_MODE = false;
   window.__HAMSTER_SPAWN_DEBUG_MODE = false;
   window.__HAMSTER_TRUSS_DEBUG_MODE = false;
   window.__HAMSTER_SPAWN_DEBUG_HIT_ZONES = [];
+  debugStartedAt = 0;
+  resetOpenDebugPanels();
   if (wasActive) {
     window.dispatchEvent(new CustomEvent('hamster-debug-mode-change', { detail: { active: false, source } }));
   }
@@ -19,11 +32,18 @@ function resetDebugMode(source = 'safety') {
 
 function enforceDebugModeSafety() {
   const active = Boolean(window.__HAMSTER_DEBUG_MODE || window.__HAMSTER_SPAWN_DEBUG_MODE || window.__HAMSTER_TRUSS_DEBUG_MODE);
-  if (!active) return;
+  if (!active) {
+    debugStartedAt = 0;
+    return;
+  }
+
+  const now = performance.now();
+  if (!debugStartedAt) debugStartedAt = now;
 
   const hasGame = Boolean(document.querySelector('.game-screen'));
-  if (!hasGame || !hasOpenDebugPanel()) {
-    resetDebugMode('safety');
+  const expired = now - debugStartedAt > MAX_DEBUG_FREEZE_MS;
+  if (!hasGame || !hasOpenDebugPanel() || expired) {
+    resetDebugMode(expired ? 'safety-timeout' : 'safety');
   }
 }
 
