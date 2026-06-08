@@ -449,10 +449,12 @@ export class GameScreen {
     const packageCollected = this.packageCollected(snapshot);
     const packageComplete = this.packageTargetTotal > 0 && packageCollected >= this.packageTargetTotal;
     const finalPhase = isFinalPhase(snapshot);
+    const levelEvent = snapshot.activeEvent;
     const packageChip = this.element.querySelector('.hud-chip--package');
     if (packageChip) packageChip.classList.toggle('is-package-complete', packageComplete);
     this.element.classList.toggle('is-package-complete', packageComplete);
     this.element.classList.toggle('is-final-phase', finalPhase);
+    this.element.classList.toggle('is-level-event-active', Boolean(levelEvent));
     const eventTitle = this.element.querySelector('[data-event-title]');
     const eventText = this.element.querySelector('[data-event-text]');
     if (eventTitle && eventText) {
@@ -462,6 +464,9 @@ export class GameScreen {
       } else if (finalPhase) {
         eventTitle.textContent = 'Финал:';
         eventText.textContent = 'дожми пакет до конца таймера';
+      } else if (levelEvent) {
+        eventTitle.textContent = levelEvent.title || 'Событие:';
+        eventText.textContent = levelEvent.text || 'темп монтажа изменился';
       } else {
         eventTitle.textContent = 'Цель:';
         eventText.textContent = 'собери пакет ресурсов · хлеб, лишние части и финты дают рекорд';
