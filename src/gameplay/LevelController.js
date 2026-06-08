@@ -2,6 +2,8 @@ import { Player } from './Player.js';
 import { ObjectSpawner } from './ObjectSpawner.js';
 import { CollisionSystem } from './CollisionSystem.js';
 
+const EXTRA_PACKAGE_RESOURCE_POINTS = 25;
+
 export class LevelController {
   constructor(level) {
     this.level = level;
@@ -61,6 +63,8 @@ class LevelStats {
     this.level = level;
     this.bread = 0;
     this.resources = {};
+    this.extraResources = {};
+    this.extraResourcePoints = 0;
     this.mistakes = 0;
     this.stylePoints = 0;
     this.styleCombo = 0;
@@ -74,8 +78,17 @@ class LevelStats {
   }
 
   collect(resource, value = 1) {
-    if (resource === 'bread') this.bread += value;
-    else this.resources[resource] = (this.resources[resource] || 0) + value;
+    const amount = Number.isFinite(Number(value)) ? Number(value) : 1;
+    const target = this.level.targetResources?.[resource] || 0;
+    const before = this.collectedForResource(resource);
+
+    if (resource === 'bread') this.bread += amount;
+    else this.resources[resource] = (this.resources[resource] || 0) + amount;
+
+    if (resource !== 'bread' && target > 0 && before >= target) {
+      this.extraResources[resource] = (this.extraResources[resource] || 0) + amount;
+      this.extraResourcePoints += amount * EXTRA_PACKAGE_RESOURCE_POINTS;
+    }
   }
 
   useCompanionRescue(object = null, player = null) {
@@ -121,6 +134,10 @@ class LevelStats {
     return resource === 'bread' ? this.bread : this.resources[resource] || 0;
   }
 
+  liveScore(player) {
+    return Math.max(0, Math.round(this.bread * 15 + player.mistakesLeft * 120 + this.stylePoints + this.extraResourcePoints));
+  }
+
   result(player, elapsedMs) {
     const targets = this.level.targetResources || {};
     const targetTotal = Object.values(targets).reduce((sum, value) => sum + value, 0) || 1;
@@ -131,12 +148,14 @@ class LevelStats {
     const resourcePercent = collectedTotal / targetTotal;
     const finalPercent = Math.max(0, Math.round((resourcePercent - this.mistakes * 0.1) * 100));
     const grade = finalPercent >= 95 ? 'S' : finalPercent >= 80 ? 'A' : finalPercent >= 65 ? 'B' : finalPercent >= 45 ? 'C' : 'D';
-    const score = Math.max(0, Math.round(finalPercent * 10 + this.bread * 15 + player.mistakesLeft * 120 + this.stylePoints));
+    const score = Math.max(0, Math.round(finalPercent * 10 + this.bread * 15 + player.mistakesLeft * 120 + this.stylePoints + this.extraResourcePoints));
 
     return {
       level: this.level,
       bread: this.bread,
       resources: this.resources,
+      extraResources: this.extraResources,
+      extraResourcePoints: this.extraResourcePoints,
       mistakes: this.mistakes,
       mistakesLeft: player.mistakesLeft,
       companionRescues: this.companionRescues,
