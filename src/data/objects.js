@@ -16,6 +16,20 @@ export const objectCatalog = {
   mystery_box: { type: 'obstacle', visualKey: 'mystery_box', dodge: 'jump', damage: 1, clearanceHeight: 34 },
   cart: { type: 'obstacle', visualKey: 'cart', dodge: 'jump', damage: 1, clearanceHeight: 42 },
 
+  // Themed obstacle aliases. They use existing art now, but keep separate gameplay IDs
+  // so level weights can be tuned now and art can be swapped later without changing logic.
+  wedding_generator: { type: 'obstacle', visualKey: 'cart', dodge: 'jump', damage: 1, clearanceHeight: 42 },
+  wedding_wet_cable: { type: 'obstacle', visualKey: 'cable_loop', dodge: 'jump', damage: 1, clearanceHeight: 16 },
+  wedding_guest_chair: { type: 'obstacle', visualKey: 'mystery_box', dodge: 'jump', damage: 1, clearanceHeight: 32 },
+
+  concert_subwoofer: { type: 'obstacle', visualKey: 'flight_case', dodge: 'jump', damage: 1, clearanceHeight: 38 },
+  concert_smoke_machine: { type: 'obstacle', visualKey: 'mystery_box', dodge: 'jump', damage: 1, clearanceHeight: 30 },
+  concert_moving_head: { type: 'obstacle', visualKey: 'mic_stand', dodge: 'slide', damage: 1 },
+
+  kids_toy_car: { type: 'obstacle', visualKey: 'cart', dodge: 'jump', damage: 1, clearanceHeight: 30 },
+  kids_blocks: { type: 'obstacle', visualKey: 'mystery_box', dodge: 'jump', damage: 1, clearanceHeight: 28 },
+  kids_sock_trap: { type: 'obstacle', visualKey: 'cable_loop', dodge: 'jump', damage: 1, clearanceHeight: 14 },
+
   // Big Concert two-lane dodge-only obstacles: jump/slide do not clear them.
   truss_section_left: {
     type: 'obstacle',
