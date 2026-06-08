@@ -8,6 +8,7 @@ import { LevelController } from '../gameplay/LevelController.js';
 
 const COUNTDOWN_TOTAL_MS = 3200;
 const FINAL_PHASE_SECONDS = 20;
+const LEVEL_EVENT_BANNER_MS = 2300;
 const TRUSS_TUNING_STORAGE_KEY = 'hamster_truss_visual_tuning_v1';
 const DEFAULT_TRUSS_TUNING = { scale: 1, lift: 0, rotation: 0 };
 
@@ -118,6 +119,8 @@ export class GameScreen {
     this.previousPrecisionDodges = 0;
     this.packageCompleteAnnounced = false;
     this.finalPhaseAnnounced = false;
+    this.currentLevelEventId = null;
+    this.levelEventBannerMs = 0;
     this.paused = false;
     this.debugWasPaused = false;
     this.debugModeActive = false;
@@ -148,6 +151,11 @@ export class GameScreen {
       </header>
       <div class="canvas-wrap"><canvas class="game-canvas" aria-label="Игровое поле"></canvas></div>
       <footer class="event-bar" data-event-bar><span aria-hidden="true">📦</span><strong data-event-title>Цель:</strong> <span data-event-text>собери пакет ресурсов · хлеб и финты дают рекорд</span></footer>
+      <aside class="level-event-banner" data-level-event-banner hidden aria-live="polite">
+        <span>Событие</span>
+        <strong data-level-event-banner-title></strong>
+        <em data-level-event-banner-text></em>
+      </aside>
       ${level.id === 'big_concert' ? this.trussDebugMarkup() : ''}
       <aside class="start-countdown" aria-live="polite" aria-label="Старт уровня">
         <span class="start-countdown__kicker">ПАКЕТ НА УРОВЕНЬ</span>
@@ -244,6 +252,7 @@ export class GameScreen {
     const result = this.controller.update(deltaMs, actions);
     const snapshot = this.controller.snapshot();
     this.updateLocalEffects(snapshot, deltaMs);
+    this.updateLevelEventBanner(snapshot, deltaMs);
     this.updateScreenShake(deltaMs);
     snapshot.effects = this.localEffects;
     snapshot.screenShake = this.getScreenShake(now);
@@ -411,6 +420,32 @@ export class GameScreen {
 
     for (const effect of this.localEffects) effect.ageMs += deltaMs;
     this.localEffects = this.localEffects.filter((effect) => effect.ageMs < effect.durationMs);
+  }
+
+  updateLevelEventBanner(snapshot, deltaMs) {
+    const event = snapshot.activeEvent;
+    const banner = this.element.querySelector('[data-level-event-banner]');
+    if (!banner) return;
+
+    if (event?.id && event.id !== this.currentLevelEventId) {
+      this.currentLevelEventId = event.id;
+      this.levelEventBannerMs = LEVEL_EVENT_BANNER_MS;
+      const title = banner.querySelector('[data-level-event-banner-title]');
+      const text = banner.querySelector('[data-level-event-banner-text]');
+      if (title) title.textContent = String(event.title || 'Событие').replace(/:$/, '');
+      if (text) text.textContent = event.text || 'темп монтажа изменился';
+      banner.hidden = false;
+      banner.style.animation = 'none';
+      banner.offsetHeight;
+      banner.style.animation = '';
+    } else if (!event) {
+      this.currentLevelEventId = null;
+    }
+
+    if (!banner.hidden) {
+      this.levelEventBannerMs = Math.max(0, this.levelEventBannerMs - deltaMs);
+      if (this.levelEventBannerMs <= 0) banner.hidden = true;
+    }
   }
 
   triggerScreenShake() {
