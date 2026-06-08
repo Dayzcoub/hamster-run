@@ -1,5 +1,27 @@
 const MAX_DEBUG_FREEZE_MS = 20000;
+const DEV_TRUSS_DEBUG_KEY = 'hamster_dev_truss_debug_enabled';
 let debugStartedAt = 0;
+
+function localFlag(key) {
+  try {
+    return window.localStorage?.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function syncEmbeddedTrussDebugVisibility() {
+  const trussEnabled = localFlag(DEV_TRUSS_DEBUG_KEY);
+  document.querySelectorAll('.game-screen [data-truss-debug-root]').forEach((root) => {
+    root.hidden = !trussEnabled;
+    root.dataset.devHidden = trussEnabled ? 'false' : 'true';
+    if (!trussEnabled) {
+      root.classList.remove('is-open');
+      const panel = root.querySelector('[data-truss-debug-panel]');
+      if (panel) panel.hidden = true;
+    }
+  });
+}
 
 function hasOpenDebugPanel() {
   return Boolean(
@@ -25,12 +47,14 @@ function resetDebugMode(source = 'safety') {
   window.__HAMSTER_SPAWN_DEBUG_HIT_ZONES = [];
   debugStartedAt = 0;
   resetOpenDebugPanels();
+  syncEmbeddedTrussDebugVisibility();
   if (wasActive) {
     window.dispatchEvent(new CustomEvent('hamster-debug-mode-change', { detail: { active: false, source } }));
   }
 }
 
 function enforceDebugModeSafety() {
+  syncEmbeddedTrussDebugVisibility();
   const active = Boolean(window.__HAMSTER_DEBUG_MODE || window.__HAMSTER_SPAWN_DEBUG_MODE || window.__HAMSTER_TRUSS_DEBUG_MODE);
   if (!active) {
     debugStartedAt = 0;
@@ -56,8 +80,10 @@ setInterval(enforceDebugModeSafety, 250);
 
 if (document.body) {
   new MutationObserver(enforceDebugModeSafety).observe(document.body, { childList: true, subtree: true, attributes: true });
+  enforceDebugModeSafety();
 } else {
   document.addEventListener('DOMContentLoaded', () => {
     new MutationObserver(enforceDebugModeSafety).observe(document.body, { childList: true, subtree: true, attributes: true });
+    enforceDebugModeSafety();
   }, { once: true });
 }
