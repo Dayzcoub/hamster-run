@@ -14,8 +14,12 @@ function flag(key) {
   }
 }
 
+function hasActiveGameScreen() {
+  return Boolean(document.querySelector('.game-screen'));
+}
+
 async function loadSpawnDebug() {
-  if (loaded.spawn || !flag(DEV_SPAWN_DEBUG_KEY)) return;
+  if (loaded.spawn || !flag(DEV_SPAWN_DEBUG_KEY) || !hasActiveGameScreen()) return;
   loaded.spawn = true;
   try {
     await import('./spawn-assets-debug-panel.js');
@@ -26,7 +30,7 @@ async function loadSpawnDebug() {
 }
 
 async function loadTrussDebug() {
-  if (loaded.truss || !flag(DEV_TRUSS_DEBUG_KEY)) return;
+  if (loaded.truss || !flag(DEV_TRUSS_DEBUG_KEY) || !hasActiveGameScreen()) return;
   loaded.truss = true;
   try {
     await import('./truss-debug-panel.js');
@@ -37,6 +41,7 @@ async function loadTrussDebug() {
 }
 
 function syncDevDebugTools() {
+  if (!hasActiveGameScreen()) return;
   void loadSpawnDebug();
   void loadTrussDebug();
 }
@@ -48,4 +53,13 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', syncDevDebugTools, { once: true });
 } else {
   syncDevDebugTools();
+}
+
+const observer = new MutationObserver(syncDevDebugTools);
+if (document.body) {
+  observer.observe(document.body, { childList: true, subtree: true });
+} else {
+  document.addEventListener('DOMContentLoaded', () => {
+    observer.observe(document.body, { childList: true, subtree: true });
+  }, { once: true });
 }
