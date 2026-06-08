@@ -28,11 +28,21 @@ function packageProgress(result) {
   return { targetTotal, collectedTotal, summary };
 }
 
+function extraResourceSummary(result) {
+  const extras = result.extraResources || {};
+  const entries = Object.entries(extras).filter(([, value]) => Number(value) > 0);
+  if (!entries.length) return '';
+  return entries
+    .map(([key, value]) => `${RESOURCE_LABELS[key] || key} +${value}`)
+    .join(' · ');
+}
+
 function resultTip(result) {
   const progress = packageProgress(result);
   if (result.unlockedRewards?.length) return 'Новая награда открыта. Загляни позже в склад/магазин, когда добавим экран прогрессии.';
   if (!result.passed) return 'Объект на доработку: для сдачи нужен минимум C. Добери пакет и избегай косяков.';
   if (result.firstPassed) return 'Объект сдан: следующий уровень открыт. Теперь можно улучшать оценку и рекорд.';
+  if ((result.extraResourcePoints || 0) > 0) return 'Лишние части пакета теперь не пропадают: они дают бонус к общему счёту.';
   if (result.mistakes > 0) return 'Меньше косяков: каждый косяк режет выполнение примерно на 10%.';
   if (progress.collectedTotal < progress.targetTotal) return 'Добери пакет: оценка растёт от нужных ресурсов, хлеб отдельно даёт очки.';
   if ((result.precisionDodges || 0) < 2) return 'Чистые финты дают доп. бонус: прыгай и подкатывайся ближе к препятствию.';
@@ -61,6 +71,15 @@ function rewardList(result) {
       <span>Награда</span>
       ${rewards.map((reward) => `<strong>${reward.label}</strong>`).join('')}
     </div>
+  `;
+}
+
+function extraResourceCard(result) {
+  const points = result.extraResourcePoints || 0;
+  if (points <= 0) return '';
+  const summary = extraResourceSummary(result);
+  return `
+    <div class="stat-card stat-card--extra"><i aria-hidden="true">＋</i><strong>Лишние части</strong><b>+${points}</b>${summary ? `<small>${summary}</small>` : ''}</div>
   `;
 }
 
@@ -111,6 +130,7 @@ export class ResultScreen {
           </div>
           <div class="stat-card stat-card--package"><i aria-hidden="true">📦</i><strong>Пакет</strong><b>${packageInfo.collectedTotal}/${packageInfo.targetTotal}</b></div>
           <div class="stat-card"><i aria-hidden="true">🍞</i><strong>Хлеб</strong><b>${result.bread}</b></div>
+          ${extraResourceCard(result)}
           <div class="stat-card stat-card--danger"><i aria-hidden="true">⚠</i><strong>Косяки</strong><b>${result.mistakes}</b></div>
           <div class="stat-card"><i aria-hidden="true">☆</i><strong>Финты</strong><b>${result.stylePoints || 0}</b></div>
           <div class="stat-card stat-card--precision"><i aria-hidden="true">✦</i><strong>Чистые финты</strong><b>${result.precisionDodges || 0}</b></div>
