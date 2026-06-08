@@ -9,8 +9,6 @@ import { LevelController } from '../gameplay/LevelController.js';
 const COUNTDOWN_TOTAL_MS = 3200;
 const FINAL_PHASE_SECONDS = 20;
 const LEVEL_EVENT_BANNER_MS = 2300;
-const TRUSS_TUNING_STORAGE_KEY = 'hamster_truss_visual_tuning_v1';
-const DEFAULT_TRUSS_TUNING = { scale: 1, lift: 0, rotation: 0 };
 
 const RESOURCE_LABELS = {
   bread: 'хлеб',
@@ -58,39 +56,6 @@ function isFinalPhase(snapshot) {
   return remainingSeconds(snapshot) <= FINAL_PHASE_SECONDS;
 }
 
-function clampNumber(value, min, max, fallback) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return fallback;
-  return Math.max(min, Math.min(max, numeric));
-}
-
-function loadTrussTuning() {
-  try {
-    const saved = window.localStorage?.getItem(TRUSS_TUNING_STORAGE_KEY);
-    if (!saved) return { ...DEFAULT_TRUSS_TUNING, ...(window.__HAMSTER_TRUSS_TUNING || {}) };
-    return { ...DEFAULT_TRUSS_TUNING, ...JSON.parse(saved) };
-  } catch {
-    return { ...DEFAULT_TRUSS_TUNING, ...(window.__HAMSTER_TRUSS_TUNING || {}) };
-  }
-}
-
-function normalizeTrussTuning(next = {}) {
-  return {
-    scale: clampNumber(next.scale, 0.55, 1.75, DEFAULT_TRUSS_TUNING.scale),
-    lift: clampNumber(next.lift, -80, 80, DEFAULT_TRUSS_TUNING.lift),
-    rotation: clampNumber(next.rotation, -45, 45, DEFAULT_TRUSS_TUNING.rotation),
-  };
-}
-
-function saveTrussTuning(tuning) {
-  window.__HAMSTER_TRUSS_TUNING = { ...tuning };
-  try {
-    window.localStorage?.setItem(TRUSS_TUNING_STORAGE_KEY, JSON.stringify(tuning));
-  } catch {
-    // Storage can be unavailable in private mode; live tuning still works.
-  }
-}
-
 function vibrateCollision() {
   try {
     if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
@@ -122,9 +87,6 @@ export class GameScreen {
     this.currentLevelEventId = null;
     this.levelEventBannerMs = 0;
     this.paused = false;
-    this.debugWasPaused = false;
-    this.debugModeActive = false;
-    this.trussDebugOpen = false;
     this.countdownMs = COUNTDOWN_TOTAL_MS;
     this.lastCountdownLabel = '';
     this.packageTargetTotal = targetTotal(level);
@@ -140,7 +102,7 @@ export class GameScreen {
           <span class="hud-status__text">${level.intro}</span>
           <strong class="hud-timer" data-hud="timer">${formatRemainingTime({ level, elapsedMs: 0 })}</strong>
         </div>
-        <div class="hud-score" aria-label="Очки финтов"><span aria-hidden="true">⚡</span><strong data-hud-value="score">0</strong></div>
+        <div class="hud-score" aria-label="Общие очки"><span aria-hidden="true">⚡</span><strong data-hud-value="score">0</strong></div>
         <div class="hud-chips">
           <span class="hud-chip hud-chip--bread"><i aria-hidden="true">🍞</i><b>Хлеб</b><strong data-hud-value="bread">0</strong></span>
           <span class="hud-chip hud-chip--package" title="${packageSummary(level)}"><i aria-hidden="true">📦</i><b>Пакет</b><strong data-hud-value="package">0/${this.packageTargetTotal || 0}</strong></span>
@@ -156,7 +118,6 @@ export class GameScreen {
         <strong data-level-event-banner-title></strong>
         <em data-level-event-banner-text></em>
       </aside>
-      ${level.id === 'big_concert' ? this.trussDebugMarkup() : ''}
       <aside class="start-countdown" aria-live="polite" aria-label="Старт уровня">
         <span class="start-countdown__kicker">ПАКЕТ НА УРОВЕНЬ</span>
         <strong data-countdown-label>3</strong>
@@ -177,51 +138,16 @@ export class GameScreen {
     `;
   }
 
-  trussDebugMarkup() {
-    return `
-      <aside class="truss-debug truss-debug--ingame" data-truss-debug-root>
-        <button class="truss-debug__toggle" type="button" data-action="truss-debug-toggle">Ферма</button>
-        <section class="truss-debug__panel" data-truss-debug-panel hidden aria-label="Настройка фермы">
-          <header>
-            <strong>Ферма</strong>
-            <button type="button" data-action="truss-debug-reset">Сброс</button>
-          </header>
-          <label><span>Scale</span><input data-truss-debug-input="scale" type="range" min="0.55" max="1.75" step="0.01" /><b data-truss-debug-value="scale"></b></label>
-          <label><span>Подъём</span><input data-truss-debug-input="lift" type="range" min="-80" max="80" step="1" /><b data-truss-debug-value="lift"></b></label>
-          <label><span>Поворот</span><input data-truss-debug-input="rotation" type="range" min="-45" max="45" step="1" /><b data-truss-debug-value="rotation"></b></label>
-          <p data-truss-debug-copy></p>
-        </section>
-      </aside>
-    `;
-  }
-
   mount() {
     this.canvas = this.element.querySelector('canvas');
     this.renderer = new CanvasRenderer(this.canvas, this.game.assets);
     this.detachTouch = this.game.input.attachTouchTarget(this.canvas);
     this.element.addEventListener('click', this.onClick);
-    this.element.addEventListener('input', this.onInput);
-    window.addEventListener('hamster-debug-mode-change', this.onDebugModeChange);
-    this.syncTrussDebug(loadTrussTuning());
     this.last = performance.now();
     this.frame = requestAnimationFrame(this.tick);
   }
 
   tick = (now) => {
-    const debugActive = Boolean(window.__HAMSTER_DEBUG_MODE);
-    if (debugActive) {
-      this.game.input.consume();
-      const snapshot = this.lastSnapshot || this.controller.snapshot();
-      snapshot.effects = [];
-      snapshot.screenShake = null;
-      this.attachCompanion(snapshot);
-      this.lastSnapshot = snapshot;
-      this.renderer.render(snapshot);
-      this.last = now;
-      this.frame = requestAnimationFrame(this.tick);
-      return;
-    }
-
     const deltaMs = Math.min(42, now - this.last);
     this.last = now;
 
@@ -269,20 +195,6 @@ export class GameScreen {
     this.frame = requestAnimationFrame(this.tick);
   };
 
-  onDebugModeChange = (event) => {
-    const active = Boolean(event.detail?.active);
-    if (active === this.debugModeActive) return;
-    this.debugModeActive = active;
-    if (active) {
-      this.debugWasPaused = this.paused;
-      this.element.classList.add('is-debug-tuning');
-      this.last = performance.now();
-    } else {
-      this.element.classList.remove('is-debug-tuning');
-      this.last = performance.now();
-    }
-  };
-
   attachCompanion(snapshot) {
     if (!this.hasSpanielCompanion || !this.game.assets.get('spaniel_run')) return;
     const player = snapshot.player;
@@ -300,14 +212,6 @@ export class GameScreen {
     if (action === 'resume') this.setPaused(false);
     if (action === 'levels') this.game.showLevels();
     if (action === 'menu') this.game.showMainMenu();
-    if (action === 'truss-debug-toggle') this.setTrussDebugOpen(!this.trussDebugOpen);
-    if (action === 'truss-debug-reset') this.syncTrussDebug(DEFAULT_TRUSS_TUNING);
-  };
-
-  onInput = (event) => {
-    const key = event.target?.dataset?.trussDebugInput;
-    if (!key) return;
-    this.syncTrussDebug({ ...loadTrussTuning(), [key]: Number(event.target.value) });
   };
 
   setPaused(paused) {
@@ -318,29 +222,6 @@ export class GameScreen {
       pauseButton.textContent = paused ? '▶' : 'Ⅱ';
       pauseButton.setAttribute('aria-label', paused ? 'Продолжить' : 'Пауза');
     }
-  }
-
-  setTrussDebugOpen(open) {
-    this.trussDebugOpen = open;
-    const root = this.element.querySelector('[data-truss-debug-root]');
-    const panel = this.element.querySelector('[data-truss-debug-panel]');
-    if (root) root.classList.toggle('is-open', open);
-    if (panel) panel.hidden = !open;
-  }
-
-  syncTrussDebug(next) {
-    const root = this.element.querySelector('[data-truss-debug-root]');
-    if (!root) return;
-    const tuning = normalizeTrussTuning(next);
-    saveTrussTuning(tuning);
-    for (const key of ['scale', 'lift', 'rotation']) {
-      const input = root.querySelector(`[data-truss-debug-input="${key}"]`);
-      const value = root.querySelector(`[data-truss-debug-value="${key}"]`);
-      if (input) input.value = String(tuning[key]);
-      if (value) value.textContent = key === 'scale' ? tuning[key].toFixed(2) : key === 'rotation' ? `${Math.round(tuning[key])}°` : `${Math.round(tuning[key])}px`;
-    }
-    const copy = root.querySelector('[data-truss-debug-copy]');
-    if (copy) copy.textContent = `scale: ${tuning.scale.toFixed(2)} · lift: ${Math.round(tuning.lift)} · rotation: ${Math.round(tuning.rotation)}`;
   }
 
   updateCountdown() {
@@ -522,7 +403,5 @@ export class GameScreen {
     cancelAnimationFrame(this.frame);
     this.detachTouch?.();
     this.element.removeEventListener('click', this.onClick);
-    this.element.removeEventListener('input', this.onInput);
-    window.removeEventListener('hamster-debug-mode-change', this.onDebugModeChange);
   }
 }
