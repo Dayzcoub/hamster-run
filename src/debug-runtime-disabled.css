@@ -1,0 +1,7 @@
+.spawn-assets-debug,
+.truss-debug,
+[data-spawn-assets-debug-root],
+[data-truss-debug-root] {
+  display: none !important;
+  pointer-events: none !important;
+}
