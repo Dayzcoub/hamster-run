@@ -5,6 +5,7 @@ import './render/CanvasRendererSpanielCompanion.js';
 import './spaniel-rescue-patch.js';
 import { Game } from './core/Game.js';
 import './render/CanvasRendererPerspectiveAlignmentV1.js';
+import './render/CanvasRendererThemedObstacleScale.js';
 
 const app = document.querySelector('#app');
 const game = new Game(app);
