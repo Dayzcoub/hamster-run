@@ -1,10 +1,31 @@
 import { backdrops } from '../data/backdrops.js';
 
+const OPTIONAL_THEMED_OBSTACLE_SPRITES = [
+  { visualKey: 'wedding_generator', role: 'pending wedding generator obstacle art', fallbackVisualKey: 'cart', scaleHint: 1.05 },
+  { visualKey: 'wedding_wet_cable', role: 'pending wet cable obstacle art', fallbackVisualKey: 'cable_loop', scaleHint: 0.95 },
+  { visualKey: 'wedding_guest_chair', role: 'pending guest chair obstacle art', fallbackVisualKey: 'mystery_box', scaleHint: 1 },
+  { visualKey: 'concert_subwoofer', role: 'pending concert subwoofer obstacle art', fallbackVisualKey: 'flight_case', scaleHint: 1.15 },
+  { visualKey: 'concert_smoke_machine', role: 'pending smoke machine obstacle art', fallbackVisualKey: 'mystery_box', scaleHint: 0.95 },
+  { visualKey: 'concert_moving_head', role: 'pending moving head obstacle art', fallbackVisualKey: 'mic_stand', scaleHint: 1 },
+  { visualKey: 'kids_toy_car', role: 'pending toy car obstacle art', fallbackVisualKey: 'cart', scaleHint: 0.9 },
+  { visualKey: 'kids_blocks', role: 'pending kids blocks obstacle art', fallbackVisualKey: 'mystery_box', scaleHint: 0.85 },
+  { visualKey: 'kids_sock_trap', role: 'pending sock trap obstacle art', fallbackVisualKey: 'cable_loop', scaleHint: 0.8 },
+].map((sprite) => ({
+  type: 'obstacle',
+  png: `assets/sprites/obstacles/png/${sprite.visualKey}.png`,
+  webp: `assets/sprites/obstacles/webp/${sprite.visualKey}.webp`,
+  sourceSize: { width: 768, height: 768 },
+  anchor: { x: 0.5, y: 0.84 },
+  status: 'pending_art_optional',
+  ...sprite,
+}));
+
 export class AssetLoader {
   constructor(manifestPath) {
     this.manifestPath = manifestPath;
     this.manifest = null;
     this.images = new Map();
+    this.spriteFallbacks = new Map();
   }
 
   async load() {
@@ -12,6 +33,7 @@ export class AssetLoader {
     if (!response.ok) throw new Error(`Failed to load asset manifest: ${response.status}`);
     this.manifest = await response.json();
     await Promise.all(Object.values(this.manifest.sprites).filter(shouldPreloadSprite).map((sprite) => this.loadSprite(sprite)));
+    await this.loadOptionalThemedObstacles();
     await this.loadBackdrops();
   }
 
@@ -23,6 +45,18 @@ export class AssetLoader {
       } catch {
         // Some future level backdrops are intentionally declared before the art exists.
         // Missing files should fall back to the procedural canvas background.
+      }
+    }));
+  }
+
+  async loadOptionalThemedObstacles() {
+    await Promise.all(OPTIONAL_THEMED_OBSTACLE_SPRITES.map(async (sprite) => {
+      this.spriteFallbacks.set(sprite.visualKey, sprite.fallbackVisualKey);
+      try {
+        await this.loadSprite(sprite);
+      } catch {
+        // These obstacle assets are intentionally wired before the final art exists.
+        // The renderer will use fallbackVisualKey until the transparent PNG/WebP is added.
       }
     }));
   }
@@ -184,7 +218,13 @@ export class AssetLoader {
   }
 
   get(visualKey) {
-    return this.images.get(visualKey) || null;
+    const sprite = this.images.get(visualKey);
+    if (sprite) return sprite;
+
+    const fallbackVisualKey = this.spriteFallbacks.get(visualKey);
+    if (fallbackVisualKey) return this.images.get(fallbackVisualKey) || null;
+
+    return null;
   }
 }
 
