@@ -3,6 +3,7 @@ import './final-countdown-patch.js';
 import './gameplay-visual-tuning.js';
 import './render/CanvasRendererSpanielCompanion.js';
 import './spaniel-rescue-patch.js';
+import './spaniel-bread-pickup-patch.js';
 import { Game } from './core/Game.js';
 import './render/CanvasRendererPerspectiveAlignmentV1.js';
 import './render/CanvasRendererThemedObstacleScale.js';
