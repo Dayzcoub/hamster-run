@@ -3,6 +3,8 @@ import { ObjectSpawner } from './ObjectSpawner.js';
 import { CollisionSystem } from './CollisionSystem.js';
 
 const EXTRA_PACKAGE_RESOURCE_POINTS = 25;
+const COMPANION_BREAD_OFFSET_X = -58;
+const COMPANION_BREAD_RADIUS_X = 68;
 
 export class LevelController {
   constructor(level) {
@@ -31,7 +33,8 @@ export class LevelController {
 
     const speed = this.level.speed * (1 + this.elapsedMs / (this.level.duration * 1000) * 0.18);
     for (const object of this.objects) object.x -= (speed * deltaMs) / 1000;
-    this.events = this.collision.check(this.player, this.objects, this.stats);
+    this.events.push(...this.collectCompanionBread());
+    this.events.push(...this.collision.check(this.player, this.objects, this.stats));
     this.objects = this.objects.filter((object) => object.x > -180 && !object.collected);
 
     if (this.player.mistakesLeft <= 0 || this.elapsedMs >= this.level.duration * 1000) {
@@ -39,6 +42,36 @@ export class LevelController {
     }
 
     return null;
+  }
+
+  collectCompanionBread() {
+    if (!this.stats.companionRescueAvailable) return [];
+
+    const events = [];
+    const companionX = this.player.x + COMPANION_BREAD_OFFSET_X;
+    const companionLane = Math.round(this.player.lane);
+
+    for (const object of this.objects) {
+      if (object.collected) continue;
+      if (object.kind !== 'collectible') continue;
+      if (object.resource !== 'bread') continue;
+      if (Math.round(object.lane) !== companionLane) continue;
+      if (Math.abs(object.x - companionX) > COMPANION_BREAD_RADIUS_X) continue;
+
+      object.collected = true;
+      this.stats.collect('bread', object.value || 1);
+      events.push({
+        type: 'companion_bread_pickup',
+        x: object.x,
+        lane: object.lane,
+        objectId: object.objectId,
+        resource: 'bread',
+        value: object.value || 1,
+        visualKey: object.visualKey,
+      });
+    }
+
+    return events;
   }
 
   finish() {
