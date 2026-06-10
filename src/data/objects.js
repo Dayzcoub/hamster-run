@@ -24,7 +24,8 @@ export const objectCatalog = {
 
   concert_subwoofer: { type: 'obstacle', visualKey: 'concert_subwoofer', dodge: 'jump', damage: 1, clearanceHeight: 38 },
   concert_smoke_machine: { type: 'obstacle', visualKey: 'concert_smoke_machine', dodge: 'jump', damage: 1, clearanceHeight: 30 },
-  concert_moving_head: { type: 'obstacle', visualKey: 'concert_moving_head', dodge: 'slide', damage: 1 },
+  concert_moving_head: { type: 'obstacle', visualKey: 'concert_moving_head', dodge: 'jump', damage: 1, clearanceHeight: 30 },
+  concert_cases_with_truss: { type: 'obstacle', visualKey: 'concert_cases_with_truss', dodge: 'slide', damage: 1 },
 
   kids_toy_car: { type: 'obstacle', visualKey: 'kids_toy_car', dodge: 'jump', damage: 1, clearanceHeight: 30 },
   kids_blocks: { type: 'obstacle', visualKey: 'kids_blocks', dodge: 'jump', damage: 1, clearanceHeight: 28 },
