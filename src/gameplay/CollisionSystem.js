@@ -25,6 +25,7 @@ export class CollisionSystem {
           type: 'pickup',
           x: object.x,
           lane: object.lane,
+          objectId: object.objectId,
           resource: object.resource,
           value: object.value || 1,
           visualKey: object.visualKey,
@@ -46,6 +47,7 @@ export class CollisionSystem {
           type: 'companion_rescue',
           x: object.x,
           lane: Math.round(player.lane),
+          objectId: object.objectId,
           visualKey: object.visualKey,
         });
         continue;
@@ -59,6 +61,7 @@ export class CollisionSystem {
           type: 'hit',
           x: object.x,
           lane: Math.round(player.lane),
+          objectId: object.objectId,
           visualKey: object.visualKey,
         });
       }
@@ -83,6 +86,7 @@ export class CollisionSystem {
       action: object.dodgeAction || object.dodge,
       x: player.x + 28,
       lane: object.dodgeLane ?? Math.round(player.lane),
+      objectId: object.objectId,
       visualKey: object.visualKey,
       points: style.points,
       combo: style.combo,
