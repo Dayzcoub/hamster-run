@@ -21,11 +21,13 @@ export const objectCatalog = {
   wedding_generator: { type: 'obstacle', visualKey: 'wedding_generator', dodge: 'jump', damage: 1, clearanceHeight: 42 },
   wedding_wet_cable: { type: 'obstacle', visualKey: 'wedding_wet_cable', dodge: 'jump', damage: 1, clearanceHeight: 16 },
   wedding_guest_chair: { type: 'obstacle', visualKey: 'wedding_guest_chair', dodge: 'jump', damage: 1, clearanceHeight: 32 },
+  wedding_decor_arch: { type: 'obstacle', visualKey: 'wedding_decor_arch', dodge: 'slide', damage: 1 },
 
   concert_subwoofer: { type: 'obstacle', visualKey: 'concert_subwoofer', dodge: 'jump', damage: 1, clearanceHeight: 38 },
   concert_smoke_machine: { type: 'obstacle', visualKey: 'concert_smoke_machine', dodge: 'jump', damage: 1, clearanceHeight: 30 },
   concert_moving_head: { type: 'obstacle', visualKey: 'concert_moving_head', dodge: 'jump', damage: 1, clearanceHeight: 30 },
   concert_cases_with_truss: { type: 'obstacle', visualKey: 'concert_cases_with_truss', dodge: 'slide', damage: 1 },
+  concert_stagehands_carrying_truss: { type: 'obstacle', visualKey: 'concert_stagehands_carrying_truss', dodge: 'slide', damage: 1 },
 
   kids_toy_car: { type: 'obstacle', visualKey: 'kids_toy_car', dodge: 'jump', damage: 1, clearanceHeight: 30 },
   kids_blocks: { type: 'obstacle', visualKey: 'kids_blocks', dodge: 'jump', damage: 1, clearanceHeight: 28 },
