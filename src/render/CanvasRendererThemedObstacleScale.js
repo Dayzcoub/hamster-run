@@ -8,6 +8,7 @@ const THEMED_OBSTACLE_SCALE_OVERRIDES = {
   concert_subwoofer: 1.15,
   concert_smoke_machine: 0.95,
   concert_moving_head: 1,
+  concert_cases_with_truss: 1.08,
 
   kids_toy_car: 0.9,
   kids_blocks: 0.85,
