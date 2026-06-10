@@ -22,6 +22,32 @@ const RESOURCE_LABELS = {
   truss: 'фермы',
 };
 
+const OBSTACLE_HIT_LABELS = {
+  case: 'КОФР!',
+  cable_loop: 'КАБЕЛЬ!',
+  mic_stand: 'СТОЙКА!',
+  mystery_box: 'СЮРПРИЗ!',
+  cart: 'ТЕЛЕЖКА!',
+
+  wedding_generator: 'ГЕНЕРАТОР!',
+  wedding_wet_cable: 'МОКРЫЙ КАБЕЛЬ!',
+  wedding_guest_chair: 'СТУЛ ГОСТЯ!',
+  wedding_decor_arch: 'АРКА!',
+
+  concert_subwoofer: 'САБ!',
+  concert_smoke_machine: 'ДЫМ-МАШИНА!',
+  concert_moving_head: 'ГОЛОВА!',
+  concert_cases_with_truss: 'ФЕРМА НА КОФРАХ!',
+  concert_stagehands_carrying_truss: 'ГРУЗЧИКИ!',
+
+  kids_toy_car: 'МАШИНКА!',
+  kids_blocks: 'КУБИКИ!',
+  kids_sock_trap: 'НОСКИ!',
+
+  truss_section_left: 'ФЕРМА!',
+  truss_section_right: 'ФЕРМА!',
+};
+
 function targetEntries(level) {
   return Object.entries(level.targetResources || {});
 }
@@ -54,6 +80,12 @@ function formatRemainingTime(snapshot) {
 function isFinalPhase(snapshot) {
   if (!snapshot?.level?.duration) return false;
   return remainingSeconds(snapshot) <= FINAL_PHASE_SECONDS;
+}
+
+function hitLabelFromEvents(events = []) {
+  const hitEvent = events.find((event) => event?.type === 'hit');
+  if (!hitEvent) return '-1';
+  return OBSTACLE_HIT_LABELS[hitEvent.objectId] || '-1';
 }
 
 function vibrateCollision() {
@@ -285,7 +317,7 @@ export class GameScreen {
       this.spawnLocalEffect(cleanGained ? 'clean' : 'style', label);
     }
     if (snapshot.player.mistakesLeft < this.previousMistakesLeft) {
-      this.spawnLocalEffect('hit', '-1');
+      this.spawnLocalEffect('hit', hitLabelFromEvents(snapshot.events));
       this.triggerScreenShake();
       vibrateCollision();
     }
