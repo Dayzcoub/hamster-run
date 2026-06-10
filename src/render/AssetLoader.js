@@ -7,6 +7,7 @@ const OPTIONAL_THEMED_OBSTACLE_SPRITES = [
   { visualKey: 'concert_subwoofer', role: 'pending concert subwoofer obstacle art', fallbackVisualKey: 'flight_case', scaleHint: 1.15 },
   { visualKey: 'concert_smoke_machine', role: 'pending smoke machine obstacle art', fallbackVisualKey: 'mystery_box', scaleHint: 0.95 },
   { visualKey: 'concert_moving_head', role: 'pending moving head obstacle art', fallbackVisualKey: 'mic_stand', scaleHint: 1 },
+  { visualKey: 'concert_cases_with_truss', role: 'pending cases with truss slide obstacle art', fallbackVisualKey: 'mic_stand', scaleHint: 1.08 },
   { visualKey: 'kids_toy_car', role: 'pending toy car obstacle art', fallbackVisualKey: 'cart', scaleHint: 0.9 },
   { visualKey: 'kids_blocks', role: 'pending kids blocks obstacle art', fallbackVisualKey: 'mystery_box', scaleHint: 0.85 },
   { visualKey: 'kids_sock_trap', role: 'pending sock trap obstacle art', fallbackVisualKey: 'cable_loop', scaleHint: 0.8 },
@@ -85,7 +86,6 @@ export class AssetLoader {
     canvas.height = image.naturalHeight || image.height;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     const width = canvas.width;
