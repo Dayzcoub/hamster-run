@@ -4,11 +4,13 @@ const THEMED_OBSTACLE_SCALE_OVERRIDES = {
   wedding_generator: 1.05,
   wedding_wet_cable: 0.95,
   wedding_guest_chair: 1,
+  wedding_decor_arch: 1.08,
 
   concert_subwoofer: 1.15,
   concert_smoke_machine: 0.95,
   concert_moving_head: 1,
   concert_cases_with_truss: 1.08,
+  concert_stagehands_carrying_truss: 1.12,
 
   kids_toy_car: 0.9,
   kids_blocks: 0.85,
