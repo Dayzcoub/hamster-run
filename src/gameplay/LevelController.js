@@ -15,11 +15,13 @@ export class LevelController {
     this.distance = 0;
     this.finished = false;
     this.stats = new LevelStats(level);
+    this.events = [];
   }
 
   update(deltaMs, actions) {
     if (this.finished) return null;
 
+    this.events = [];
     this.elapsedMs += deltaMs;
     this.distance += (this.level.speed * deltaMs) / 1000;
     this.player.update(deltaMs, actions);
@@ -29,7 +31,7 @@ export class LevelController {
 
     const speed = this.level.speed * (1 + this.elapsedMs / (this.level.duration * 1000) * 0.18);
     for (const object of this.objects) object.x -= (speed * deltaMs) / 1000;
-    this.collision.check(this.player, this.objects, this.stats);
+    this.events = this.collision.check(this.player, this.objects, this.stats);
     this.objects = this.objects.filter((object) => object.x > -180 && !object.collected);
 
     if (this.player.mistakesLeft <= 0 || this.elapsedMs >= this.level.duration * 1000) {
@@ -50,6 +52,7 @@ export class LevelController {
       level: this.level,
       player: this.player,
       objects: this.objects,
+      events: this.events,
       elapsedMs: this.elapsedMs,
       distance: this.distance,
       progress: Math.min(1, this.elapsedMs / (this.level.duration * 1000)),
