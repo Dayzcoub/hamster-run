@@ -114,7 +114,8 @@ export class ObjectSpawner {
     const nextDelay = minDelay + Math.random() * Math.max(220, maxDelay - minDelay);
     this.timerMs = Math.max(420, nextDelay * finalPhaseDelayFactor * eventDelayFactor);
 
-    if (event?.laneLockWave) {
+    if (event?.laneLockWave && !event.laneLockWaveSpawned) {
+      event.laneLockWaveSpawned = true;
       return this.spawnLaneLockWave(event, finalPhase);
     }
 
@@ -209,6 +210,7 @@ export class ObjectSpawner {
       start: seconds,
       end: seconds + duration,
       random: true,
+      laneLockWaveSpawned: false,
     };
     return this.randomEvent;
   }
