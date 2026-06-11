@@ -20,6 +20,7 @@ const DEFAULT_RANDOM_EVENT_TUNING = {
 };
 
 const FINAL_PHASE_SECONDS = 20;
+const LANE_LOCK_WAVE_X = 1180;
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -113,6 +114,10 @@ export class ObjectSpawner {
     const nextDelay = minDelay + Math.random() * Math.max(220, maxDelay - minDelay);
     this.timerMs = Math.max(420, nextDelay * finalPhaseDelayFactor * eventDelayFactor);
 
+    if (event?.laneLockWave) {
+      return this.spawnLaneLockWave(event, finalPhase);
+    }
+
     let obstacleChance = this.tuning.obstacleBaseChance + progress * this.tuning.obstacleProgressChance;
     if (event) obstacleChance += Number(event.obstacleChanceBonus) || 0;
     if (finalPhase) {
@@ -124,8 +129,11 @@ export class ObjectSpawner {
     const id = isObstacle
       ? this.pickObstacleId(finalPhase, event)
       : weightedPick(this.pickCollectibleSource(progress, stats, finalPhase, packageComplete), event?.collectibleWeights || {});
+    return this.createObject(id, this.pickLane(isObstacle, objectCatalog[id]), LANE_LOCK_WAVE_X);
+  }
+
+  createObject(id, lane, x = LANE_LOCK_WAVE_X) {
     const catalogItem = objectCatalog[id];
-    const lane = this.pickLane(isObstacle, catalogItem);
     const blockedLanes = this.resolveBlockedLanes(catalogItem, lane);
 
     return {
@@ -140,9 +148,31 @@ export class ObjectSpawner {
       lane,
       laneSpan: catalogItem.laneSpan || 1,
       blockedLanes,
-      x: 1180,
+      x,
       collected: false,
     };
+  }
+
+  spawnLaneLockWave(event, finalPhase = false) {
+    const jumpIds = (event.laneLockWave.jump || [])
+      .filter((id) => objectCatalog[id]?.type !== 'collectible' && objectCatalog[id]?.dodge === 'jump');
+    const slideIds = (event.laneLockWave.slide || [])
+      .filter((id) => objectCatalog[id]?.type !== 'collectible' && objectCatalog[id]?.dodge === 'slide');
+    if (!jumpIds.length || !slideIds.length) return null;
+
+    const lanes = [0, 1, 2];
+    const slideLane = lanes[Math.floor(Math.random() * lanes.length)];
+    const secondSlideChance = finalPhase ? 0.35 : 0.18;
+    const secondSlideLane = Math.random() < secondSlideChance
+      ? lanes.filter((lane) => lane !== slideLane)[Math.floor(Math.random() * 2)]
+      : null;
+
+    return lanes.map((lane) => {
+      const shouldSlide = lane === slideLane || lane === secondSlideLane;
+      const source = shouldSlide ? slideIds : jumpIds;
+      const id = weightedPick(source, event.obstacleWeights || {});
+      return this.createObject(id, lane, LANE_LOCK_WAVE_X + randomBetween(-8, 8));
+    });
   }
 
   resolveActiveEvent(elapsedMs) {
