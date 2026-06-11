@@ -9,10 +9,27 @@ const DEFAULT_SPAWN_TUNING = {
   maxDelayProgressDrop: 420,
 };
 
+const DEFAULT_RANDOM_EVENT_TUNING = {
+  minStart: 18,
+  maxStart: 28,
+  minGap: 18,
+  maxGap: 34,
+  minDuration: 7,
+  maxDuration: 12,
+  chance: 0.58,
+};
+
 const FINAL_PHASE_SECONDS = 20;
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function randomBetween(min, max) {
+  const low = Number(min);
+  const high = Number(max);
+  if (!Number.isFinite(low) || !Number.isFinite(high)) return 0;
+  return low + Math.random() * Math.max(0, high - low);
 }
 
 function remainingSeconds(level, elapsedMs) {
@@ -20,7 +37,7 @@ function remainingSeconds(level, elapsedMs) {
   return Math.ceil(Math.max(0, durationMs - elapsedMs) / 1000);
 }
 
-function activeLevelEvent(level, elapsedMs) {
+function fixedLevelEvent(level, elapsedMs) {
   const seconds = elapsedMs / 1000;
   return (level.eventWindows || []).find((event) => seconds >= event.start && seconds <= event.end) || null;
 }
@@ -70,20 +87,25 @@ export class ObjectSpawner {
   constructor(level) {
     this.level = level;
     this.tuning = { ...DEFAULT_SPAWN_TUNING, ...(level.spawnTuning || {}) };
+    this.randomEventTuning = { ...DEFAULT_RANDOM_EVENT_TUNING, ...(level.randomEventTuning || {}) };
     this.timerMs = 500;
     this.lastObstacleLane = null;
     this.activeEvent = null;
+    this.randomEvent = null;
+    this.randomEventSerial = 0;
+    this.nextRandomEventAtMs = this.scheduleNextRandomEvent(0, true);
   }
 
   update(deltaMs, elapsedMs, stats = null) {
+    const event = this.resolveActiveEvent(elapsedMs);
+    this.activeEvent = event;
+
     this.timerMs -= deltaMs;
     if (this.timerMs > 0) return null;
 
     const progress = elapsedMs / (this.level.duration * 1000);
     const finalPhase = remainingSeconds(this.level, elapsedMs) <= FINAL_PHASE_SECONDS;
     const packageComplete = isPackageComplete(this.level, stats);
-    const event = activeLevelEvent(this.level, elapsedMs);
-    this.activeEvent = event;
     const minDelay = this.tuning.minDelayStart - progress * this.tuning.minDelayProgressDrop;
     const maxDelay = this.tuning.maxDelayStart - progress * this.tuning.maxDelayProgressDrop;
     const finalPhaseDelayFactor = finalPhase ? 0.88 : 1;
@@ -121,6 +143,62 @@ export class ObjectSpawner {
       x: 1180,
       collected: false,
     };
+  }
+
+  resolveActiveEvent(elapsedMs) {
+    const fixedEvent = fixedLevelEvent(this.level, elapsedMs);
+    const seconds = elapsedMs / 1000;
+
+    if (this.randomEvent && seconds >= this.randomEvent.end) {
+      this.randomEvent = null;
+      this.nextRandomEventAtMs = this.scheduleNextRandomEvent(elapsedMs, false);
+    }
+
+    if (fixedEvent) return fixedEvent;
+    if (this.randomEvent) return this.randomEvent;
+    if (!(this.level.randomEvents || []).length) return null;
+    if (remainingSeconds(this.level, elapsedMs) <= FINAL_PHASE_SECONDS) return null;
+    if (elapsedMs < this.nextRandomEventAtMs) return null;
+
+    if (Math.random() > this.randomEventTuning.chance) {
+      this.nextRandomEventAtMs = this.scheduleNextRandomEvent(elapsedMs, false);
+      return null;
+    }
+
+    const picked = this.pickRandomEvent();
+    if (!picked) {
+      this.nextRandomEventAtMs = this.scheduleNextRandomEvent(elapsedMs, false);
+      return null;
+    }
+
+    const duration = randomBetween(this.randomEventTuning.minDuration, this.randomEventTuning.maxDuration);
+    this.randomEventSerial += 1;
+    this.randomEvent = {
+      ...picked,
+      id: `random_${picked.id}_${this.randomEventSerial}`,
+      start: seconds,
+      end: seconds + duration,
+      random: true,
+    };
+    return this.randomEvent;
+  }
+
+  scheduleNextRandomEvent(elapsedMs, first = false) {
+    const baseSeconds = elapsedMs / 1000;
+    const min = first ? this.randomEventTuning.minStart : this.randomEventTuning.minGap;
+    const max = first ? this.randomEventTuning.maxStart : this.randomEventTuning.maxGap;
+    return (baseSeconds + randomBetween(min, max)) * 1000;
+  }
+
+  pickRandomEvent() {
+    const pool = this.level.randomEvents || [];
+    const ids = pool.map((event) => event.id);
+    const weights = pool.reduce((acc, event) => {
+      acc[event.id] = Number(event.weight) || 1;
+      return acc;
+    }, {});
+    const id = weightedPick(ids, weights);
+    return pool.find((event) => event.id === id) || null;
   }
 
   pickObstacleId(finalPhase = false, event = null) {
