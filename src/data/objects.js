@@ -32,6 +32,7 @@ export const objectCatalog = {
   kids_toy_car: { type: 'obstacle', visualKey: 'kids_toy_car', dodge: 'jump', damage: 1, clearanceHeight: 30 },
   kids_blocks: { type: 'obstacle', visualKey: 'kids_blocks', dodge: 'jump', damage: 1, clearanceHeight: 28 },
   kids_sock_trap: { type: 'obstacle', visualKey: 'kids_sock_trap', dodge: 'jump', damage: 1, clearanceHeight: 14 },
+  kids_blanket_fort: { type: 'obstacle', visualKey: 'mic_stand', dodge: 'slide', damage: 1 },
 
   // Big Concert two-lane dodge-only obstacles: jump/slide do not clear them.
   truss_section_left: {
