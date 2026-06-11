@@ -14,6 +14,35 @@ export const levels = [
       maxDelayStart: 1680,
       maxDelayProgressDrop: 320,
     },
+    randomEventTuning: {
+      minStart: 20,
+      maxStart: 30,
+      minGap: 20,
+      maxGap: 34,
+      chance: 0.52,
+    },
+    randomEvents: [
+      {
+        id: 'dk_cable_snake',
+        title: 'Кабель ожил:',
+        text: 'петли кабеля полезли под ноги, но кабеля в пакете стало больше',
+        weight: 1.2,
+        delayFactor: 0.92,
+        obstacleChanceBonus: 0.04,
+        obstacleWeights: { cable_loop: 1.65, case: 1.15 },
+        collectibleWeights: { cable: 1.35 },
+      },
+      {
+        id: 'dk_loader_rush',
+        title: 'Грузчики бегут:',
+        text: 'тележки и кофры пошли плотнее, держи дорожку',
+        weight: 1,
+        delayFactor: 0.9,
+        obstacleChanceBonus: 0.05,
+        obstacleWeights: { cart: 1.45, case: 1.35 },
+        collectibleWeights: { bolts: 1.2, c2: 1.15 },
+      },
+    ],
     eventWindows: [
       {
         id: 'dk_manager_walkthrough',
@@ -52,6 +81,35 @@ export const levels = [
       maxDelayStart: 1461,
       maxDelayProgressDrop: 278,
     },
+    randomEventTuning: {
+      minStart: 18,
+      maxStart: 28,
+      minGap: 18,
+      maxGap: 32,
+      chance: 0.58,
+    },
+    randomEvents: [
+      {
+        id: 'wedding_guest_wave',
+        title: 'Гости пошли:',
+        text: 'стулья и коробки внезапно оказались на трассе',
+        weight: 1.1,
+        delayFactor: 0.9,
+        obstacleChanceBonus: 0.05,
+        obstacleWeights: { wedding_guest_chair: 1.65, mystery_box: 1.25 },
+        collectibleWeights: { tape: 1.25, bread: 1.15 },
+      },
+      {
+        id: 'wedding_power_drop',
+        title: 'Питание моргнуло:',
+        text: 'ищи PowerCON, генератор и мокрый кабель мешают добору',
+        weight: 1,
+        delayFactor: 0.88,
+        obstacleChanceBonus: 0.04,
+        obstacleWeights: { wedding_generator: 1.45, wedding_wet_cable: 1.35 },
+        collectibleWeights: { powercon: 1.55, cable: 1.2 },
+      },
+    ],
     eventWindows: [
       {
         id: 'wedding_rain',
@@ -109,6 +167,35 @@ export const levels = [
       maxDelayStart: 1084,
       maxDelayProgressDrop: 206,
     },
+    randomEventTuning: {
+      minStart: 18,
+      maxStart: 26,
+      minGap: 16,
+      maxGap: 28,
+      chance: 0.64,
+    },
+    randomEvents: [
+      {
+        id: 'concert_forklift_beep',
+        title: 'Погрузчик пищит:',
+        text: 'тележки, сабы и кофры едут плотнее',
+        weight: 1,
+        delayFactor: 0.88,
+        obstacleChanceBonus: 0.05,
+        obstacleWeights: { cart: 1.45, concert_subwoofer: 1.25, case: 1.25 },
+        collectibleWeights: { cable: 1.2, bolts: 1.15 },
+      },
+      {
+        id: 'concert_rigger_call',
+        title: 'Риггер орёт:',
+        text: 'фермы пошли через проход, добирай truss и C2',
+        weight: 1.15,
+        delayFactor: 0.86,
+        obstacleChanceBonus: 0.04,
+        obstacleWeights: { truss_section_left: 1.55, truss_section_right: 1.55, concert_cases_with_truss: 1.25 },
+        collectibleWeights: { truss: 1.45, c2: 1.35 },
+      },
+    ],
     eventWindows: [
       {
         id: 'concert_doors_soon',
@@ -175,6 +262,35 @@ export const levels = [
       maxDelayStart: 862,
       maxDelayProgressDrop: 164,
     },
+    randomEventTuning: {
+      minStart: 15,
+      maxStart: 24,
+      minGap: 14,
+      maxGap: 26,
+      chance: 0.7,
+    },
+    randomEvents: [
+      {
+        id: 'kids_sock_attack',
+        title: 'Носочная атака:',
+        text: 'носки расползлись по полу, хлеба тоже стало больше',
+        weight: 1.2,
+        delayFactor: 0.86,
+        obstacleChanceBonus: 0.05,
+        obstacleWeights: { kids_sock_trap: 1.75, cable_loop: 1.2 },
+        collectibleWeights: { bread: 1.45 },
+      },
+      {
+        id: 'kids_toy_avalanche',
+        title: 'Игрушечный обвал:',
+        text: 'кубики и машинки высыпались из ниоткуда',
+        weight: 1,
+        delayFactor: 0.84,
+        obstacleChanceBonus: 0.06,
+        obstacleWeights: { kids_blocks: 1.65, kids_toy_car: 1.45, mystery_box: 1.25 },
+        collectibleWeights: { bread: 1.25, bolts: 1.15 },
+      },
+    ],
     eventWindows: [
       {
         id: 'kids_chaos_wave',
