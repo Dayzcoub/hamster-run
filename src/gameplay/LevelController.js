@@ -31,7 +31,8 @@ export class LevelController {
     this.player.update(deltaMs, actions);
 
     const spawned = this.spawner.update(deltaMs, this.elapsedMs, this.stats);
-    if (spawned) this.objects.push(spawned);
+    if (Array.isArray(spawned)) this.objects.push(...spawned);
+    else if (spawned) this.objects.push(spawned);
 
     const speed = this.level.speed * (1 + this.elapsedMs / (this.level.duration * 1000) * 0.18);
     for (const object of this.objects) object.x -= (speed * deltaMs) / 1000;
