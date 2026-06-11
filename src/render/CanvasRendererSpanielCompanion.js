@@ -147,6 +147,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
 
     let x = projected.x - 10 + animation.x;
     let y = groundedY - yJump + animation.y;
+    let hideRescueBadge = false;
 
     if (companion.mode === 'rescue_smash') {
       const total = companion.rescueTotalMs || 760;
@@ -174,6 +175,31 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       animation.scaleY = 0.97 + punch * 0.04;
       animation.shadowScale = 1.04 + punch * 0.12;
       animation.shadowAlpha = 0.24 + punch * 0.05;
+      hideRescueBadge = true;
+    } else if (companion.mode === 'bread_pickup_dash') {
+      const total = companion.pickupTotalMs || 620;
+      const t = 1 - Math.max(0, Math.min(1, (companion.pickupMs || 0) / total));
+      const attackProgress = Math.min(1, t / 0.45);
+      const returnProgress = Math.max(0, (t - 0.45) / 0.55);
+      const attackEase = 1 - Math.pow(1 - attackProgress, 3);
+      const returnEase = returnProgress * returnProgress * (3 - 2 * returnProgress);
+      const arc = Math.sin(Math.min(1, t) * Math.PI);
+      const pickupLane = Math.max(0, Math.min(2, Number.isFinite(companion.pickupLane) ? companion.pickupLane : visualLane));
+      const pickupProjected = this.projector.project(companion.pickupX || companion.x - 40, pickupLane, this.width, this.height);
+      const pickupBaseY = playfieldY(this, pickupProjected.y);
+      const pickupGroundedY = companionGroundY(pickupBaseY, pickupLane, tuning);
+      const rawDx = pickupProjected.x - projected.x;
+      const rawDy = pickupGroundedY - groundedY;
+      const travel = attackEase * (1 - returnEase);
+      x = projected.x + rawDx * travel - 10;
+      y = groundedY - yJump + rawDy * travel - arc * (this.isCompact ? 18 : 24);
+      size *= 1.06 + arc * 0.14;
+      animation.rotation = Math.sign(rawDy || rawDx || 1) * 0.12 * arc;
+      animation.scaleX = 1.02 + arc * 0.08;
+      animation.scaleY = 0.98 + arc * 0.04;
+      animation.shadowScale = 0.92 + arc * 0.16;
+      animation.shadowAlpha = 0.2 + arc * 0.04;
+      hideRescueBadge = true;
     }
 
     this.drawSprite(
@@ -187,7 +213,7 @@ if (!CanvasRenderer.prototype.__spanielCompanionPatch) {
       animation,
     );
 
-    if (companion.mode !== 'rescue_smash') this.drawSpanielRescueBadge(x, y, size, stats, elapsedMs);
+    if (!hideRescueBadge) this.drawSpanielRescueBadge(x, y, size, stats, elapsedMs);
   };
 
   CanvasRenderer.prototype.drawSpanielRescueBadge = function drawSpanielRescueBadge(x, y, size, stats, elapsedMs = 0) {
