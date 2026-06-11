@@ -4,7 +4,9 @@ import { CollisionSystem } from './CollisionSystem.js';
 
 const EXTRA_PACKAGE_RESOURCE_POINTS = 25;
 const COMPANION_BREAD_OFFSET_X = -58;
-const COMPANION_BREAD_RADIUS_X = 68;
+const COMPANION_BREAD_RADIUS_X = 76;
+const COMPANION_BREAD_MISSED_X = 18;
+const COMPANION_BREAD_MAX_LANE_DISTANCE = 1;
 
 export class LevelController {
   constructor(level) {
@@ -49,13 +51,19 @@ export class LevelController {
 
     const events = [];
     const companionX = this.player.x + COMPANION_BREAD_OFFSET_X;
-    const companionLane = Math.round(this.player.lane);
+    const playerLane = Math.round(this.player.lane);
 
     for (const object of this.objects) {
       if (object.collected) continue;
       if (object.kind !== 'collectible') continue;
       if (object.resource !== 'bread') continue;
-      if (Math.round(object.lane) !== companionLane) continue;
+
+      const objectLane = Math.round(object.lane);
+      const laneDistance = Math.abs(objectLane - playerLane);
+      if (laneDistance <= 0 || laneDistance > COMPANION_BREAD_MAX_LANE_DISTANCE) continue;
+
+      const hasPassedHamster = object.x < this.player.x - COMPANION_BREAD_MISSED_X;
+      if (!hasPassedHamster) continue;
       if (Math.abs(object.x - companionX) > COMPANION_BREAD_RADIUS_X) continue;
 
       object.collected = true;
@@ -64,6 +72,7 @@ export class LevelController {
         type: 'companion_bread_pickup',
         x: object.x,
         lane: object.lane,
+        companionLane: objectLane,
         objectId: object.objectId,
         resource: 'bread',
         value: object.value || 1,
